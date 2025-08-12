@@ -92,9 +92,6 @@ def register_organization(request):
 
 @login_required
 def generate_registration_link(request):
-    """
-    View สำหรับ Organization Admin เพื่อสร้างลิงก์ลงทะเบียนผู้ใช้สำหรับองค์กรของตนเอง
-    """
     if not request.user.is_org_admin:
         messages.error(request, "คุณไม่มีสิทธิ์สร้างลิงก์ลงทะเบียน")
         return redirect('dashboard')
@@ -123,9 +120,6 @@ def generate_registration_link(request):
 
 
 def register_user_via_link(request, organization_id):
-    """
-    View สำหรับผู้ใช้ที่คลิกลิงก์ลงทะเบียนเฉพาะ เพื่อลงทะเบียนเข้าสู่องค์กร
-    """
     organization = get_object_or_404(Organization, id=organization_id)
 
     if request.method == 'POST':
@@ -151,3 +145,89 @@ def register_user_via_link(request, organization_id):
         'organization_name': organization.name 
     }
     return render(request, 'users/register_user_from_link.html', context)
+
+
+@login_required
+def manage_organization_users(request):
+    """
+    View สำหรับ Organization Admin เพื่อจัดการผู้ใช้ในองค์กรของตนเอง
+    แสดงรายชื่อผู้ใช้ทั้งหมดในองค์กร และสถานะของบัญชี
+    """
+    if not request.user.is_org_admin:
+        messages.error(request, "คุณไม่มีสิทธิ์เข้าถึงหน้านี้")
+        return redirect('dashboard')
+    
+    if not request.user.organization:
+        messages.error(request, "บัญชีผู้ดูแลองค์กรของคุณยังไม่ได้ถูกผูกกับองค์กร")
+        return redirect('dashboard')
+
+    organization = request.user.organization
+    # ดึงผู้ใช้ทั้งหมดที่อยู่ในองค์กรเดียวกัน ยกเว้นตัวแอดมินเอง
+    organization_users = CustomUser.objects.filter(organization=organization).exclude(id=request.user.id)
+    
+    context = {
+        'organization_users': organization_users,
+        'organization_name': organization.name
+    }
+    return render(request, 'users/manage_organization_users.html', context)
+
+
+@login_required
+def activate_user(request, user_id):
+    """
+    View สำหรับ Organization Admin เพื่อเปิดใช้งานบัญชีผู้ใช้
+    """
+    if not request.user.is_org_admin:
+        messages.error(request, "คุณไม่มีสิทธิ์ดำเนินการนี้")
+        return redirect('dashboard')
+
+    # ค้นหาผู้ใช้และตรวจสอบว่าเป็นสมาชิกขององค์กรเดียวกัน
+    target_user = get_object_or_404(CustomUser, id=user_id, organization=request.user.organization)
+
+    # ป้องกันแอดมินแก้ไขสถานะของตัวเอง
+    if target_user == request.user:
+        messages.error(request, "คุณไม่สามารถเปิดใช้งานบัญชีของคุณเองได้")
+        return redirect('manage_organization_users')
+
+    # ตรวจสอบว่าผู้ใช้ที่กำลังจะเปิดใช้งานไม่ใช่ Platform Admin
+    if target_user.is_platform_admin:
+        messages.error(request, "คุณไม่สามารถเปิดใช้งานบัญชี Platform Admin ได้")
+        return redirect('manage_organization_users')
+
+    target_user.is_active = True
+    target_user.save()
+    messages.success(request, f"บัญชี '{target_user.username}' ถูกเปิดใช้งานแล้ว")
+    return redirect('manage_organization_users')
+
+
+@login_required
+def deactivate_user(request, user_id):
+    """
+    View สำหรับ Organization Admin เพื่อปิดใช้งานบัญชีผู้ใช้
+    """
+    if not request.user.is_org_admin:
+        messages.error(request, "คุณไม่มีสิทธิ์ดำเนินการนี้")
+        return redirect('dashboard')
+
+    # ค้นหาผู้ใช้และตรวจสอบว่าเป็นสมาชิกขององค์กรเดียวกัน
+    target_user = get_object_or_404(CustomUser, id=user_id, organization=request.user.organization)
+
+    # ป้องกันแอดมินแก้ไขสถานะของตัวเอง
+    if target_user == request.user:
+        messages.error(request, "คุณไม่สามารถปิดใช้งานบัญชีของคุณเองได้")
+        return redirect('manage_organization_users')
+
+    # ป้องกันแอดมินปิดใช้งานบัญชี Organization Admin อื่นๆ
+    if target_user.is_org_admin:
+        messages.error(request, "คุณไม่สามารถปิดใช้งานบัญชีผู้ดูแลองค์กรอื่นได้")
+        return redirect('manage_organization_users')
+
+    # ตรวจสอบว่าผู้ใช้ที่กำลังจะปิดใช้งานไม่ใช่ Platform Admin
+    if target_user.is_platform_admin:
+        messages.error(request, "คุณไม่สามารถปิดใช้งานบัญชี Platform Admin ได้")
+        return redirect('manage_organization_users')
+
+    target_user.is_active = False
+    target_user.save()
+    messages.success(request, f"บัญชี '{target_user.username}' ถูกปิดใช้งานแล้ว")
+    return redirect('manage_organization_users')
