@@ -84,7 +84,83 @@
         {% endif %}
     </div>
 
-    <hr class="my-6 border-gray-300"> {# เพิ่มเส้นแบ่งที่ชัดเจน #}
+    <hr class="my-6 border-gray-300">
+
+    {# ส่วนรายการยืมที่กำลังดำเนินการ (Approved Loans) #}
+    <div class="mb-10 p-6 bg-blue-50 rounded-lg shadow-sm border border-blue-200">
+        <h2 class="text-2xl font-bold text-blue-800 mb-4 border-b pb-2 border-blue-300">รายการยืมที่กำลังดำเนินการ</h2>
+        {% if active_loans %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white rounded-lg overflow-hidden border border-gray-200">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-700 uppercase text-sm leading-normal">
+                            <th class="py-3 px-6 text-left font-semibold">ผู้ยืม</th>
+                            <th class="py-3 px-6 text-left font-semibold">สิ่งของ</th>
+                            <th class="py-3 px-6 text-left font-semibold">วันที่ยืม</th>
+                            <th class="py-3 px-6 text-left font-semibold">วันครบกำหนด</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-700 text-sm">
+                        {% for loan in active_loans %}
+                            <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-150 ease-in-out">
+                                <td class="py-3 px-6 text-left whitespace-nowrap">{{ loan.borrower.username }}</td>
+                                <td class="py-3 px-6 text-left">{{ loan.item.name }}</td>
+                                <td class="py-3 px-6 text-left">{{ loan.borrow_date|date:"M d, Y" }}</td>
+                                <td class="py-3 px-6 text-left">{{ loan.due_date|date:"M d, Y" }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-gray-600 italic py-2">ไม่มีรายการยืมที่กำลังดำเนินการ</p>
+        {% endif %}
+    </div>
+
+    <hr class="my-6 border-gray-300">
+
+    {# ส่วนประวัติการยืม (Returned/Rejected Loans) #}
+    <div class="mb-10 p-6 bg-gray-50 rounded-lg shadow-sm border border-gray-200">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2 border-gray-300">ประวัติการยืม</h2>
+        {% if loan_history %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white rounded-lg overflow-hidden border border-gray-200">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-700 uppercase text-sm leading-normal">
+                            <th class="py-3 px-6 text-left font-semibold">ผู้ยืม</th>
+                            <th class="py-3 px-6 text-left font-semibold">สิ่งของ</th>
+                            <th class="py-3 px-6 text-left font-semibold">วันที่ยืม</th>
+                            <th class="py-3 px-6 text-left font-semibold">วันครบกำหนด</th>
+                            <th class="py-3 px-6 text-left font-semibold">สถานะ</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-700 text-sm">
+                        {% for loan in loan_history %}
+                            <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-150 ease-in-out">
+                                <td class="py-3 px-6 text-left whitespace-nowrap">{{ loan.borrower.username }}</td>
+                                <td class="py-3 px-6 text-left">{{ loan.item.name }}</td>
+                                <td class="py-3 px-6 text-left">{{ loan.borrow_date|default_if_none:"N/A"|date:"M d, Y" }}</td> {# borrow_date อาจเป็น N/A ถ้าถูก reject ทันที #}
+                                <td class="py-3 px-6 text-left">{{ loan.due_date|date:"M d, Y" }}</td>
+                                <td class="py-3 px-6 text-left">
+                                    {% if loan.status == 'returned' %}
+                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">คืนแล้ว</span>
+                                    {% elif loan.status == 'rejected' %}
+                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">ปฏิเสธ</span>
+                                    {% else %}
+                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">{{ loan.status|capfirst }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-gray-600 italic py-2">ไม่มีประวัติการยืม</p>
+        {% endif %}
+    </div>
+
+    <hr class="my-6 border-gray-300">
 
     {# แสดงปุ่ม "สร้างลิงก์ลงทะเบียนผู้ใช้" เฉพาะเมื่อผู้ใช้เป็นแอดมินองค์กร #}
     {% if user.is_org_admin %}
@@ -99,7 +175,7 @@
 
     <div class="mt-8 pt-6 border-t-2 border-gray-200 flex flex-wrap gap-4 justify-center">
         <a href="{% url 'add_item' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-md">เพิ่มสิ่งของใหม่</a>
-        <a href="{% url 'manage_organization_users' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-md">จัดการผู้ใช้ในองค์กร</a> {# เพิ่มลิงก์นี้ #}
+        <a href="{% url 'manage_organization_users' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-md">จัดการผู้ใช้ในองค์กร</a>
     </div>
 </div>
 {% endblock content %}

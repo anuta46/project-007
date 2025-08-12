@@ -30,11 +30,22 @@ def dashboard(request):
         organization = user.organization
         items = Item.objects.filter(organization=organization)
         pending_loans = Loan.objects.filter(item__organization=organization, status='pending')
+        
+        # เพิ่ม: ดึงรายการยืมที่อนุมัติแล้ว (ปัจจุบันกำลังยืมอยู่)
+        active_loans = Loan.objects.filter(item__organization=organization, status='approved')
+        
+        # เพิ่ม: ดึงประวัติการยืม (สถานะ returned หรือ rejected)
+        # ใช้ order_by('-borrow_date') เพื่อเรียงตามวันที่ยืมล่าสุด
+        loan_history = Loan.objects.filter(
+            item__organization=organization
+        ).exclude(status='pending').order_by('-borrow_date') # Exclude pending, order by latest borrow date
 
         context = {
             'organization': organization,
             'items': items,
             'pending_loans': pending_loans,
+            'active_loans': active_loans, # เพิ่มเข้าใน context
+            'loan_history': loan_history, # เพิ่มเข้าใน context
         }
         return render(request, 'users/dashboard.html', context)
     
