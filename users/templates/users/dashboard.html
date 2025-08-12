@@ -20,8 +20,25 @@
         {% endfor %}
     </ul>
 
-    <a href="{% url 'logout' %}">Logout</a>
+    <hr>
 
-    <a href="{% url 'add_item' %}">Add New Item</a>
+    <h2>Pending Loan Requests</h2>
+    <ul>
+        {% for loan in pending_loans %}
+            <li>
+                {{ loan.borrower.username }} wants to borrow "{{ loan.item.name }}" (Available: {{ loan.item.available_quantity }} / Total: {{ loan.item.quantity }})
+                - Request Date: {{ loan.borrow_date|date:"M d, Y" }}
+                <a href="{% url 'approve_loan' loan.id %}">Approve</a> | 
+                <a href="{% url 'reject_loan' loan.id %}">Reject</a>
+            </li>
+        {% empty %}
+            <li>No pending loan requests.</li>
+        {% endfor %}
+    </ul>
+
+    <hr>
+
+    <a href="{% url 'add_item' %}">Add New Item</a> | 
+    <a href="{% url 'logout' %}">Logout</a>
 </body>
 </html>
