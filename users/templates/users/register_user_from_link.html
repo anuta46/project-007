@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ลงทะเบียนผู้ใช้</title>
+</head>
+<body>
+    <h1>ลงทะเบียนผู้ใช้สำหรับองค์กร: {{ organization_name }}</h1>
+    <form method="post">
+        {% csrf_token %}
+        
+        {# ฟอร์มจะแสดงฟิลด์ username, email, password, password_confirm #}
+        {{ form.as_p }} 
+
+        <button type="submit">ลงทะเบียน</button>
+    </form>
+    <p>มีบัญชีอยู่แล้วใช่ไหม? <a href="{% url 'login' %}">เข้าสู่ระบบที่นี่</a></p>
+</body>
+</html>

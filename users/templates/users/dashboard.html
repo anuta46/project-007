@@ -38,6 +38,27 @@
 
     <hr>
 
+    {# แสดงปุ่ม "สร้างลิงก์ลงทะเบียนผู้ใช้" เฉพาะเมื่อผู้ใช้เป็นแอดมินองค์กร #}
+    {% if user.is_org_admin %}
+        <h3>สร้างลิงก์ลงทะเบียนผู้ใช้สำหรับองค์กรของคุณ</h3>
+        <form method="post" action="{% url 'generate_registration_link' %}">
+            {% csrf_token %}
+            <button type="submit">สร้างลิงก์ลงทะเบียน</button>
+        </form>
+    {% endif %}
+
+    {# ส่วนสำหรับแสดงข้อความจาก Django messages framework #}
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                {# ใช้ |safe เพื่อบอก Django ว่าข้อความนี้มี HTML และปลอดภัยที่จะแสดง #}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message|safe }}</li> 
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <hr>
+
     <a href="{% url 'add_item' %}">Add New Item</a> | 
     <a href="{% url 'logout' %}">Logout</a>
 </body>
