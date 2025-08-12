@@ -1,65 +1,104 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Dashboard</title>
-</head>
-<body>
-    <h1>Welcome, {{ user.username }}!</h1>
-    <p>This is the dashboard for your organization.</p>
+{% extends 'users/base.html' %} {# ขยายจาก base.html เพื่อใช้โครงสร้างและสไตล์พื้นฐาน รวมถึง Navbar #}
+
+{% block title %}แดชบอร์ดแอดมิน{% endblock %} {# กำหนดชื่อหน้าสำหรับแท็บเบราว์เซอร์ #}
+
+{% block content %} {# บล็อก content สำหรับเนื้อหาเฉพาะของหน้านี้ #}
+<div class="bg-white p-6 md:p-8 lg:p-10 rounded-xl shadow-lg max-w-4xl mx-auto my-8 border border-gray-200"> {# Container หลักของหน้า - เพิ่ม border #}
+    <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4 text-center">ยินดีต้อนรับ, {{ user.username }}!</h1>
+    <p class="text-gray-700 mb-8 text-center text-lg">จัดการสิ่งของและคำขอยืมสำหรับองค์กรของคุณได้อย่างมีประสิทธิภาพ</p>
     
-    <h2>Organization Details</h2>
-    <p>Organization Name: {{ organization.name }}</p>
-    <p>Address: {{ organization.address }}</p>
-    
-    <h2>Items in your organization</h2>
-    <ul>
-        {% for item in items %}
-            <li>{{ item.name }} - Available: {{ item.available_quantity }} / Total: {{ item.quantity }}</li>
-        {% empty %}
-            <li>No items found.</li>
-        {% endfor %}
-    </ul>
+    <hr class="my-6 border-gray-300"> {# เพิ่มเส้นแบ่งที่ชัดเจน #}
 
-    <hr>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10"> {# ใช้ Grid layout สำหรับ Organization Details และ Items #}
+        {# ส่วนรายละเอียดองค์กร #}
+        <div class="p-6 bg-blue-50 rounded-lg shadow-sm border border-blue-200"> {# เพิ่ม border #}
+            <h2 class="text-2xl font-bold text-blue-800 mb-4 border-b pb-2 border-blue-300">รายละเอียดองค์กร</h2> {# เพิ่มเส้นใต้ #}
+            <p class="text-gray-700 text-lg mb-2"><strong class="text-gray-800">ชื่อองค์กร:</strong> {{ organization.name }}</p>
+            <p class="text-gray-700 text-lg mb-2"><strong class="text-gray-800">ที่อยู่:</strong> {{ organization.address }}</p>
+            <p class="text-gray-700 text-lg"><strong class="text-gray-800">ประเภทธุรกิจ:</strong> {{ organization.business_type }}</p>
+        </div>
+        
+        {# ส่วนสิ่งของในองค์กร #}
+        <div class="p-6 bg-green-50 rounded-lg shadow-sm border border-green-200"> {# เพิ่ม border #}
+            <h2 class="text-2xl font-bold text-green-800 mb-4 border-b pb-2 border-green-300">สิ่งของในองค์กรของคุณ</h2> {# เพิ่มเส้นใต้ #}
+            {% if items %}
+                <div class="overflow-x-auto"> {# ทำให้ตาราง scroll ได้บนจอเล็ก #}
+                    <table class="min-w-full bg-white rounded-lg overflow-hidden border border-gray-200"> {# เพิ่ม border ให้ตาราง #}
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-700 uppercase text-sm leading-normal">
+                                <th class="py-3 px-6 text-left font-semibold">ชื่อสิ่งของ</th> {# font-semibold #}
+                                <th class="py-3 px-6 text-left font-semibold">พร้อมให้ยืม</th>
+                                <th class="py-3 px-6 text-left font-semibold">ทั้งหมด</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-gray-700 text-sm"> {# เปลี่ยน font-light เป็นปกติ #}
+                            {% for item in items %}
+                                <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-150 ease-in-out"> {# เพิ่ม transition #}
+                                    <td class="py-3 px-6 text-left whitespace-nowrap">{{ item.name }}</td>
+                                    <td class="py-3 px-6 text-left">{{ item.available_quantity }}</td>
+                                    <td class="py-3 px-6 text-left">{{ item.quantity }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-gray-600 italic py-2">ไม่พบสิ่งของในองค์กรของคุณ</p>
+            {% endif %}
+        </div>
+    </div>
 
-    <h2>Pending Loan Requests</h2>
-    <ul>
-        {% for loan in pending_loans %}
-            <li>
-                {{ loan.borrower.username }} wants to borrow "{{ loan.item.name }}" (Available: {{ loan.item.available_quantity }} / Total: {{ loan.item.quantity }})
-                - Request Date: {{ loan.borrow_date|date:"M d, Y" }}
-                <a href="{% url 'approve_loan' loan.id %}">Approve</a> | 
-                <a href="{% url 'reject_loan' loan.id %}">Reject</a>
-            </li>
-        {% empty %}
-            <li>No pending loan requests.</li>
-        {% endfor %}
-    </ul>
+    <hr class="my-6 border-gray-300"> {# เพิ่มเส้นแบ่งที่ชัดเจน #}
 
-    <hr>
+    {# ส่วนคำขอยืมที่รอดำเนินการ #}
+    <div class="mb-10 p-6 bg-yellow-50 rounded-lg shadow-sm border border-yellow-200"> {# เพิ่ม border #}
+        <h2 class="text-2xl font-bold text-yellow-800 mb-4 border-b pb-2 border-yellow-300">คำขอยืมที่รอดำเนินการ</h2> {# เพิ่มเส้นใต้ #}
+        {% if pending_loans %}
+            <div class="overflow-x-auto"> {# ทำให้ตาราง scroll ได้บนจอเล็ก #}
+                <table class="min-w-full bg-white rounded-lg overflow-hidden border border-gray-200"> {# เพิ่ม border ให้ตาราง #}
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-700 uppercase text-sm leading-normal">
+                            <th class="py-3 px-6 text-left font-semibold">ผู้ยืม</th>
+                            <th class="py-3 px-6 text-left font-semibold">สิ่งของ</th>
+                            <th class="py-3 px-6 text-left font-semibold">วันที่ขอ</th>
+                            <th class="py-3 px-6 text-center font-semibold">การกระทำ</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-700 text-sm"> {# เปลี่ยน font-light เป็นปกติ #}
+                        {% for loan in pending_loans %}
+                            <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-150 ease-in-out"> {# เพิ่ม transition #}
+                                <td class="py-3 px-6 text-left whitespace-nowrap">{{ loan.borrower.username }}</td>
+                                <td class="py-3 px-6 text-left">{{ loan.item.name }}</td>
+                                <td class="py-3 px-6 text-left">{{ loan.borrow_date|date:"M d, Y" }}</td>
+                                <td class="py-3 px-6 text-center flex justify-center items-center space-x-2"> {# จัดปุ่มให้ชิดกัน #}
+                                    <a href="{% url 'approve_loan' loan.id %}" class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition duration-300 transform hover:scale-105 shadow-md">อนุมัติ</a>
+                                    <a href="{% url 'reject_loan' loan.id %}" class="bg-red-600 hover:bg-red-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition duration-300 transform hover:scale-105 shadow-md">ปฏิเสธ</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-gray-600 italic py-2">ไม่มีคำขอยืมที่รอดำเนินการ</p>
+        {% endif %}
+    </div>
+
+    <hr class="my-6 border-gray-300"> {# เพิ่มเส้นแบ่งที่ชัดเจน #}
 
     {# แสดงปุ่ม "สร้างลิงก์ลงทะเบียนผู้ใช้" เฉพาะเมื่อผู้ใช้เป็นแอดมินองค์กร #}
     {% if user.is_org_admin %}
-        <h3>สร้างลิงก์ลงทะเบียนผู้ใช้สำหรับองค์กรของคุณ</h3>
-        <form method="post" action="{% url 'generate_registration_link' %}">
-            {% csrf_token %}
-            <button type="submit">สร้างลิงก์ลงทะเบียน</button>
-        </form>
+        <div class="mt-8 pt-6 border-t-2 border-gray-200">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">สร้างลิงก์ลงทะเบียนผู้ใช้สำหรับองค์กรของคุณ</h3>
+            <form method="post" action="{% url 'generate_registration_link' %}" class="flex flex-col sm:flex-row items-center gap-4">
+                {% csrf_token %}
+                <button type="submit" class="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2.5 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-md">สร้างลิงก์ลงทะเบียน</button>
+            </form>
+        </div>
     {% endif %}
 
-    {# ส่วนสำหรับแสดงข้อความจาก Django messages framework #}
-    {% if messages %}
-        <ul class="messages">
-            {% for message in messages %}
-                {# ใช้ |safe เพื่อบอก Django ว่าข้อความนี้มี HTML และปลอดภัยที่จะแสดง #}
-                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message|safe }}</li> 
-            {% endfor %}
-        </ul>
-    {% endif %}
-
-    <hr>
-
-    <a href="{% url 'add_item' %}">Add New Item</a> | 
-    <a href="{% url 'logout' %}">Logout</a>
-</body>
-</html>
+    <div class="mt-8 pt-6 border-t-2 border-gray-200 flex flex-wrap gap-4 justify-center">
+        <a href="{% url 'add_item' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-md">เพิ่มสิ่งของใหม่</a>
+    </div>
+</div>
+{% endblock content %}

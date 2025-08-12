@@ -1,25 +1,80 @@
-<h2>Available Items</h2>
-<ul>
-    {% for item in items %}
-        <li>
-            {{ item.name }} - Available: {{ item.available_quantity }} / Total: {{ item.quantity }}
-            <a href="{% url 'borrow_item' item.id %}">Borrow</a>
-        </li>
-    {% empty %}
-        <li>No items available for borrowing.</li>
-    {% endfor %}
-</ul>
+{% extends 'users/base.html' %} {# ขยายจาก base.html #}
 
-<h2>Your Borrowed Items</h2>
-<ul>
-    {% for loan in my_loans %}
-        <li>
-            {{ loan.item.name }} - Borrowed Date: {{ loan.borrow_date }} - Status: {{ loan.status }}
-            {% if loan.status == 'approved' %}
-                <a href="{% url 'return_item' loan.id %}">Return</a>
-            {% endif %}
-        </li>
-    {% empty %}
-        <li>You have not borrowed any items.</li>
-    {% endfor %}
-</ul>
+{% block title %}แดชบอร์ดผู้ใช้{% endblock %} {# กำหนดชื่อหน้า #}
+
+{% block content %}
+<div class="bg-white p-6 rounded-xl shadow-md">
+    <h1 class="text-3xl font-bold text-gray-900 mb-6">ยินดีต้อนรับ, {{ user.username }}!</h1>
+    <p class="text-gray-700 mb-6 text-center">นี่คือแดชบอร์ดสำหรับผู้ใช้งานทั่วไปในองค์กรของคุณ</p>
+
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">สิ่งของที่พร้อมให้ยืม</h2>
+        {% if items %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead>
+                        <tr>
+                            <th>ชื่อสิ่งของ</th>
+                            <th>รายละเอียด</th>
+                            <th>พร้อมให้ยืม</th>
+                            <th>การกระทำ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                            <tr>
+                                <td>{{ item.name }}</td>
+                                <td>{{ item.description }}</td>
+                                <td>{{ item.available_quantity }}</td>
+                                <td class="action-links">
+                                    <a href="{% url 'borrow_item' item.id %}" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">ยืม</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-gray-600">ไม่มีสิ่งของที่พร้อมให้ยืม</p>
+        {% endif %}
+    </div>
+
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">สิ่งของที่คุณยืมอยู่</h2>
+        {% if my_loans %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead>
+                        <tr>
+                            <th>สิ่งของ</th>
+                            <th>สถานะ</th>
+                            <th>วันที่ยืม</th>
+                            <th>วันครบกำหนด</th>
+                            <th>การกระทำ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for loan in my_loans %}
+                            <tr>
+                                <td>{{ loan.item.name }}</td>
+                                <td>{{ loan.status|capfirst }}</td> {# แสดงสถานะตัวพิมพ์ใหญ่ตัวแรก #}
+                                <td>{{ loan.borrow_date|default_if_none:"N/A"|date:"M d, Y" }}</td>
+                                <td>{{ loan.due_date|date:"M d, Y" }}</td>
+                                <td class="action-links">
+                                    {% if loan.status == 'approved' %}
+                                        <a href="{% url 'return_item' loan.id %}" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">คืน</a>
+                                    {% else %}
+                                        <span class="text-gray-500">N/A</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-gray-600">คุณยังไม่ได้ยืมสิ่งของใดๆ</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock content %}

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Borrowing System{% endblock %}</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for consistency and overrides */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container-content {
+            flex-grow: 1; /* Allows content to take up available space */
+            padding: 1.5rem; /* Default padding for content */
+            max-width: 1200px; /* Max width for content area */
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+        }
+        .form-container {
+            background-color: #ffffff;
+            padding: 2.5rem; /* p-10 */
+            border-radius: 1rem; /* rounded-xl */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-xl */
+            max-width: 500px;
+            width: 100%;
+            margin-left: auto; /* Center the form */
+            margin-right: auto; /* Center the form */
+        }
+        h1, h2, h3 {
+            color: #1f2937; /* Dark gray text */
+            font-weight: 700; /* Bold */
+            margin-bottom: 1.5rem; /* Spacing below headings */
+        }
+        h1 { font-size: 2.25rem; /* text-3xl */ text-align: center; }
+        h2 { font-size: 1.875rem; /* text-2xl */ }
+        h3 { font-size: 1.5rem; /* text-xl */ }
+
+        /* Form field styling */
+        .form-field {
+            margin-bottom: 1rem;
+        }
+        .form-field label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+        .form-field input[type="text"],
+        .form-field input[type="email"],
+        .form-field input[type="password"],
+        .form-field input[type="number"],
+        .form-field textarea,
+        .form-field select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            color: #374151;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        .form-field input:focus,
+        .form-field textarea:focus,
+        .form-field select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+        button[type="submit"] {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: #2563eb;
+            color: #ffffff;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+            border: none;
+            margin-top: 1.5rem;
+        }
+        button[type="submit"]:hover {
+            background-color: #1d4ed8;
+        }
+
+        /* Django messages styling */
+        .messages {
+            list-style: none;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+        }
+        .messages li {
+            margin-bottom: 0.5rem;
+        }
+        .messages .success {
+            background-color: #d1fae5; /* green-100 */
+            color: #065f46; /* green-800 */
+            border: 1px solid #34d399; /* green-400 */
+        }
+        .messages .error {
+            background-color: #fee2e2; /* red-100 */
+            color: #991b1b; /* red-800 */
+            border: 1px solid #f87171; /* red-400 */
+        }
+        .messages .info {
+            background-color: #e0f2fe; /* blue-100 */
+            color: #1e40af; /* blue-800 */
+            border: 1px solid #60a5fa; /* blue-400 */
+        }
+
+        /* Error list for form fields */
+        .errorlist {
+            color: #ef4444; /* red-500 */
+            font-size: 0.875rem; /* text-sm */
+            list-style: none;
+            padding: 0;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .errorlist li {
+            margin-bottom: 0.25rem;
+        }
+
+        /* Table styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+            background-color: #ffffff;
+            border-radius: 0.5rem;
+            overflow: hidden; /* Ensures rounded corners on table */
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        th, td {
+            padding: 1rem 1.5rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb; /* gray-200 */
+        }
+        th {
+            background-color: #f9fafb; /* gray-50 */
+            font-weight: 600;
+            color: #374151; /* gray-700 */
+            text-transform: uppercase;
+            font-size: 0.875rem; /* text-sm */
+        }
+        td {
+            color: #4b5563; /* gray-700 */
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        tr:hover {
+            background-color: #f3f4f6; /* gray-100 */
+        }
+        .action-links a {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 500;
+            margin-right: 1rem;
+        }
+        .action-links a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive Navbar adjustments */
+        @media (max-width: 768px) {
+            .navbar-menu {
+                display: none;
+                flex-direction: column;
+                width: 100%;
+                background-color: #1f2937; /* Darker background for dropdown */
+            }
+            .navbar-menu.active {
+                display: flex;
+            }
+            .navbar-menu a {
+                padding: 1rem 1.5rem;
+                text-align: center;
+                border-top: 1px solid #374151; /* Border between items */
+            }
+            .hamburger-menu {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+    <!-- Navbar -->
+    <nav class="bg-gray-800 p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center flex-wrap">
+            <!-- Logo/Site Title -->
+            <a href="{% url 'login' %}" class="text-white text-2xl font-bold rounded-md px-3 py-2 hover:bg-gray-700 transition duration-300">ระบบยืม-คืน</a>
+
+            <!-- Hamburger menu for mobile -->
+            <div class="block md:hidden">
+                <button id="hamburger" class="text-white focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Navigation links -->
+            <div class="w-full md:flex md:items-center md:w-auto navbar-menu" id="navbar-default">
+                <div class="text-sm md:flex-grow">
+                    {% if user.is_authenticated %}
+                        {% if user.is_org_admin %}
+                            <a href="{% url 'dashboard' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">แดชบอร์ดแอดมิน</a>
+                            <a href="{% url 'add_item' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">เพิ่มสิ่งของ</a>
+                        {% else %}
+                            <a href="{% url 'user_dashboard' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">แดชบอร์ดผู้ใช้</a>
+                        {% endif %}
+                        <a href="{% url 'logout' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">ออกจากระบบ</a>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">เข้าสู่ระบบ</a>
+                        <a href="{% url 'register_organization' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">ลงทะเบียนองค์กร</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Django Messages Display -->
+    <div class="container-content mt-4">
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li{% if message.tags %} class="{{ message.tags }} p-3 mb-2 rounded-md"{% endif %}>
+                        {{ message|safe }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <!-- Main Content Block -->
+        <main class="py-4">
+            {% block content %}
+            {# Content from child templates will go here #}
+            {% endblock %}
+        </main>
+    </div>
+
+    <!-- Mobile menu toggle script -->
+    <script>
+        document.getElementById('hamburger').addEventListener('click', function() {
+            var navbarMenu = document.getElementById('navbar-default');
+            navbarMenu.classList.toggle('active');
+        });
+    </script>
+</body>
+</html>

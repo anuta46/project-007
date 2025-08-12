@@ -1,14 +1,33 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Login</title>
-</head>
-<body>
-    <h2>Login</h2>
-    <form method="post">
+{% extends 'users/base.html' %} {# ขยายจาก base.html #}
+
+{% block title %}เข้าสู่ระบบ{% endblock %} {# กำหนดชื่อหน้า #}
+
+{% block content %}
+<div class="form-container flex flex-col items-center">
+    <h1 class="text-3xl font-bold text-gray-900 mb-6">เข้าสู่ระบบ</h1>
+    <form method="post" class="w-full">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Login</button>
+        {% for field in form %}
+            <div class="form-field">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.help_text %}
+                    <p class="text-sm text-gray-500 mt-1">{{ field.help_text }}</p>
+                {% endif %}
+                {% for error in field.errors %}
+                    <p class="errorlist">{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        {% if form.non_field_errors %}
+            <ul class="errorlist">
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        <button type="submit">เข้าสู่ระบบ</button>
     </form>
-</body>
-</html>
+    <p class="login-link mt-6 text-gray-700">ยังไม่มีบัญชีใช่ไหม? <a href="{% url 'register_organization' %}" class="text-blue-700 hover:underline">ลงทะเบียนองค์กรที่นี่</a></p>
+</div>
+{% endblock content %}
