@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+</head>
+<body>
+    <h1>Welcome, {{ user.username }}!</h1>
+    <p>This is the dashboard for your organization.</p>
+    
+    <h2>Organization Details</h2>
+    <p>Organization Name: {{ organization.name }}</p>
+    <p>Address: {{ organization.address }}</p>
+    
+    <h2>Items in your organization</h2>
+    <ul>
+        {% for item in items %}
+            <li>{{ item.name }} - Available: {{ item.available_quantity }} / Total: {{ item.quantity }}</li>
+        {% empty %}
+            <li>No items found.</li>
+        {% endfor %}
+    </ul>
+
+    <a href="{% url 'logout' %}">Logout</a>
+
+    <a href="{% url 'add_item' %}">Add New Item</a>
+</body>
+</html>

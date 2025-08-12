@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Dashboard</title>
+</head>
+<body>
+    <h1>Welcome, {{ user.username }}!</h1>
+    <p>This is the dashboard for end users.</p>
+
+    <h2>Available Items</h2>
+    <ul>
+        {% for item in items %}
+            <li>
+                {{ item.name }} - Available: {{ item.available_quantity }} / Total: {{ item.quantity }}
+                <a href="{% url 'borrow_item' item.id %}">Borrow</a>
+            </li>
+        {% empty %}
+            <li>No items available for borrowing.</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Your Borrowed Items</h2>
+    <ul>
+        {% for loan in my_loans %}
+            <li>
+                {{ loan.item.name }} - Borrowed Date: {{ loan.borrow_date }} - Status: {{ loan.status }}
+                {% if loan.status == 'approved' %}
+                    <a href="{% url 'return_item' loan.id %}">Return</a>
+                {% endif %}
+            </li>
+        {% empty %}
+            <li>You have not borrowed any items.</li>
+        {% endfor %}
+    </ul>
+
+    <a href="{% url 'logout' %}">Logout</a>
+</body>
+</html>
