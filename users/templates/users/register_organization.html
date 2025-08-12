@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ลงทะเบียนองค์กร</title>
+</head>
+<body>
+    <h1>ลงทะเบียนองค์กรใหม่</h1>
+    <form method="post">
+        {% csrf_token %} {# จำเป็นสำหรับ Django Forms เพื่อป้องกัน CSRF attacks #}
+        
+        <h2>ข้อมูลองค์กร</h2>
+        {{ org_form.as_p }} {# แสดงฟอร์มองค์กรแบบย่อ (เป็น paragraph tags) #}
+
+        <h2>ข้อมูลผู้ดูแลองค์กร</h2>
+        {{ user_form.as_p }} {# แสดงฟอร์มผู้ใช้แบบย่อ #}
+
+        <button type="submit">ลงทะเบียน</button>
+    </form>
+    <p>มีบัญชีอยู่แล้วใช่ไหม? <a href="{% url 'login' %}">เข้าสู่ระบบที่นี่</a></p>
+</body>
+</html>
