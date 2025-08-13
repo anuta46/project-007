@@ -215,8 +215,11 @@
                         {% if user.is_org_admin %}
                             <a href="{% url 'dashboard' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">แดชบอร์ดแอดมิน</a>
                             <a href="{% url 'add_item' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">เพิ่มสิ่งของ</a>
+                            <a href="{% url 'manage_organization_users' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">จัดการผู้ใช้</a>
                         {% else %}
-                            <a href="{% url 'user_dashboard' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">แดชบอร์ดผู้ใช้</a>
+                            {# ลบลิงก์ "แดชบอร์ดผู้ใช้" ออกไป เพราะหน้า user_dashboard คือหน้าหลักอยู่แล้ว #}
+                            {# <a href="{% url 'user_dashboard' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">แดชบอร์ดผู้ใช้</a> #}
+                            <a href="{% url 'my_borrowed_items_history' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">ประวัติการยืมของฉัน</a>
                         {% endif %}
                         <a href="{% url 'logout' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">ออกจากระบบ</a>
                     {% else %}

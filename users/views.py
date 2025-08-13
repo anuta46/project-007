@@ -31,21 +31,18 @@ def dashboard(request):
         items = Item.objects.filter(organization=organization)
         pending_loans = Loan.objects.filter(item__organization=organization, status='pending')
         
-        # เพิ่ม: ดึงรายการยืมที่อนุมัติแล้ว (ปัจจุบันกำลังยืมอยู่)
         active_loans = Loan.objects.filter(item__organization=organization, status='approved')
         
-        # เพิ่ม: ดึงประวัติการยืม (สถานะ returned หรือ rejected)
-        # ใช้ order_by('-borrow_date') เพื่อเรียงตามวันที่ยืมล่าสุด
         loan_history = Loan.objects.filter(
             item__organization=organization
-        ).exclude(status='pending').order_by('-borrow_date') # Exclude pending, order by latest borrow date
+        ).exclude(status='pending').order_by('-borrow_date') 
 
         context = {
             'organization': organization,
             'items': items,
             'pending_loans': pending_loans,
-            'active_loans': active_loans, # เพิ่มเข้าใน context
-            'loan_history': loan_history, # เพิ่มเข้าใน context
+            'active_loans': active_loans, 
+            'loan_history': loan_history, 
         }
         return render(request, 'users/dashboard.html', context)
     
@@ -64,11 +61,12 @@ def user_dashboard(request):
 
     organization = user.organization
     items = Item.objects.filter(organization=organization, available_quantity__gt=0)
-    my_loans = Loan.objects.filter(borrower=request.user)
+    # my_loans ถูกย้ายไปที่ my_borrowed_items_history
+    # my_loans = Loan.objects.filter(borrower=request.user) 
     
     context = {
         'items': items,
-        'my_loans': my_loans,
+        # 'my_loans': my_loans,
     }
     return render(request, 'users/user_dashboard.html', context)
 
@@ -173,7 +171,6 @@ def manage_organization_users(request):
         return redirect('dashboard')
 
     organization = request.user.organization
-    # ดึงผู้ใช้ทั้งหมดที่อยู่ในองค์กรเดียวกัน ยกเว้นตัวแอดมินเอง
     organization_users = CustomUser.objects.filter(organization=organization).exclude(id=request.user.id)
     
     context = {
@@ -192,15 +189,12 @@ def activate_user(request, user_id):
         messages.error(request, "คุณไม่มีสิทธิ์ดำเนินการนี้")
         return redirect('dashboard')
 
-    # ค้นหาผู้ใช้และตรวจสอบว่าเป็นสมาชิกขององค์กรเดียวกัน
     target_user = get_object_or_404(CustomUser, id=user_id, organization=request.user.organization)
 
-    # ป้องกันแอดมินแก้ไขสถานะของตัวเอง
     if target_user == request.user:
         messages.error(request, "คุณไม่สามารถเปิดใช้งานบัญชีของคุณเองได้")
         return redirect('manage_organization_users')
 
-    # ตรวจสอบว่าผู้ใช้ที่กำลังจะเปิดใช้งานไม่ใช่ Platform Admin
     if target_user.is_platform_admin:
         messages.error(request, "คุณไม่สามารถเปิดใช้งานบัญชี Platform Admin ได้")
         return redirect('manage_organization_users')
@@ -220,20 +214,16 @@ def deactivate_user(request, user_id):
         messages.error(request, "คุณไม่มีสิทธิ์ดำเนินการนี้")
         return redirect('dashboard')
 
-    # ค้นหาผู้ใช้และตรวจสอบว่าเป็นสมาชิกขององค์กรเดียวกัน
     target_user = get_object_or_404(CustomUser, id=user_id, organization=request.user.organization)
 
-    # ป้องกันแอดมินแก้ไขสถานะของตัวเอง
     if target_user == request.user:
         messages.error(request, "คุณไม่สามารถปิดใช้งานบัญชีของคุณเองได้")
         return redirect('manage_organization_users')
 
-    # ป้องกันแอดมินปิดใช้งานบัญชี Organization Admin อื่นๆ
     if target_user.is_org_admin:
         messages.error(request, "คุณไม่สามารถปิดใช้งานบัญชีผู้ดูแลองค์กรอื่นได้")
         return redirect('manage_organization_users')
 
-    # ตรวจสอบว่าผู้ใช้ที่กำลังจะปิดใช้งานไม่ใช่ Platform Admin
     if target_user.is_platform_admin:
         messages.error(request, "คุณไม่สามารถปิดใช้งานบัญชี Platform Admin ได้")
         return redirect('manage_organization_users')
@@ -242,3 +232,22 @@ def deactivate_user(request, user_id):
     target_user.save()
     messages.success(request, f"บัญชี '{target_user.username}' ถูกปิดใช้งานแล้ว")
     return redirect('manage_organization_users')
+
+
+@login_required
+def my_borrowed_items_history(request):
+    """
+    View สำหรับผู้ใช้ทั่วไปเพื่อดูรายการสิ่งของที่ยืมอยู่และประวัติการยืมทั้งหมด
+    """
+    user = request.user
+    if not user.organization:
+        messages.error(request, "บัญชีของคุณยังไม่ได้ถูกผูกกับองค์กร กรุณาติดต่อผู้ดูแลระบบ.")
+        return redirect('login') 
+
+    # ดึงรายการยืมทั้งหมดของผู้ใช้ปัจจุบัน
+    my_loans = Loan.objects.filter(borrower=request.user).order_by('-borrow_date')
+    
+    context = {
+        'my_loans': my_loans,
+    }
+    return render(request, 'users/my_borrowed_items_history.html', context)

@@ -8,9 +8,9 @@ urlpatterns = [
     path('register-organization/', views.register_organization, name='register_organization'),
     path('generate-registration-link/', views.generate_registration_link, name='generate_registration_link'), 
     path('register/user-via-link/<int:organization_id>/', views.register_user_via_link, name='register_user_via_link'),
-    # URL สำหรับจัดการผู้ใช้ในองค์กร
     path('manage-users/', views.manage_organization_users, name='manage_organization_users'),
-    # URL สำหรับเปิดใช้งาน/ปิดใช้งานผู้ใช้
     path('manage-users/activate/<int:user_id>/', views.activate_user, name='activate_user'),
     path('manage-users/deactivate/<int:user_id>/', views.deactivate_user, name='deactivate_user'),
+    # เพิ่ม URL สำหรับหน้าประวัติการยืมของผู้ใช้
+    path('my-borrowed-items/history/', views.my_borrowed_items_history, name='my_borrowed_items_history'),
 ]
