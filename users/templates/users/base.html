@@ -4,16 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Borrowing System{% endblock %}</title>
+    <!-- Google Fonts: Poppins and Open Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         /* Custom styles for consistency and overrides */
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Open Sans', sans-serif; /* เปลี่ยนฟอนต์หลัก */
             background-color: #f3f4f6; /* Light gray background */
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            color: #374151; /* Default text color */
         }
         .container-content {
             flex-grow: 1; /* Allows content to take up available space */
@@ -34,23 +39,25 @@
             margin-right: auto; /* Center the form */
         }
         h1, h2, h3 {
+            font-family: 'Poppins', sans-serif; /* เปลี่ยนฟอนต์สำหรับหัวข้อ */
             color: #1f2937; /* Dark gray text */
             font-weight: 700; /* Bold */
             margin-bottom: 1.5rem; /* Spacing below headings */
         }
-        h1 { font-size: 2.25rem; /* text-3xl */ text-align: center; }
-        h2 { font-size: 1.875rem; /* text-2xl */ }
-        h3 { font-size: 1.5rem; /* text-xl */ }
+        h1 { font-size: 2.5rem; /* text-4xl เพื่อให้ใหญ่ขึ้น */ text-align: center; margin-bottom: 1rem;} /* ปรับขนาดและระยะห่าง */
+        h2 { font-size: 2rem; /* text-3xl เพื่อให้ใหญ่ขึ้น */ }
+        h3 { font-size: 1.75rem; /* text-2xl เพื่อให้ใหญ่ขึ้น */ }
 
         /* Form field styling */
         .form-field {
-            margin-bottom: 1rem;
+            margin-bottom: 1.25rem; /* เพิ่มระยะห่างระหว่างฟิลด์ */
         }
         .form-field label {
             display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: #374151;
+            margin-bottom: 0.6rem; /* เพิ่มระยะห่างจาก input */
+            font-weight: 600; /* ทำให้ Label หนาขึ้น */
+            color: #4b5563; /* ปรับสี Label */
+            font-size: 0.95rem; /* ปรับขนาด Label */
         }
         .form-field input[type="text"],
         .form-field input[type="email"],
@@ -59,46 +66,56 @@
         .form-field textarea,
         .form-field select {
             width: 100%;
-            padding: 0.75rem;
+            padding: 0.85rem; /* เพิ่ม padding */
             border: 1px solid #d1d5db;
-            border-radius: 0.5rem;
+            border-radius: 0.6rem; /* เพิ่ม rounded corner */
             font-size: 1rem;
             color: #374151;
-            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+            background-color: #fcfcfc; /* สีพื้นหลังฟิลด์ */
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out; /* ปรับ transition */
         }
         .form-field input:focus,
         .form-field textarea:focus,
         .form-field select:focus {
             outline: none;
             border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25); /* เพิ่มความชัดเจนของ focus ring */
         }
         button[type="submit"] {
             width: 100%;
-            padding: 0.75rem;
+            padding: 0.85rem; /* เพิ่ม padding */
             background-color: #2563eb;
             color: #ffffff;
             font-weight: 600;
-            border-radius: 0.5rem;
-            transition: background-color 0.3s ease;
+            border-radius: 0.6rem;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease; /* Add box-shadow transition */
             cursor: pointer;
             border: none;
-            margin-top: 1.5rem;
+            margin-top: 2rem; /* เพิ่มระยะห่างจากฟอร์ม */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* เพิ่มเงาให้ปุ่ม */
         }
         button[type="submit"]:hover {
             background-color: #1d4ed8;
+            transform: translateY(-3px); /* Lift effect on hover */
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15); /* เพิ่มเงาเมื่อ hover */
+        }
+        button[type="submit"]:active {
+            transform: translateY(0); /* Press effect */
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
         }
 
         /* Django messages styling */
         .messages {
             list-style: none;
             padding: 1rem;
-            margin-bottom: 1rem;
-            border-radius: 0.5rem;
+            margin-bottom: 1.5rem; /* เพิ่มระยะห่าง */
+            border-radius: 0.75rem; /* เพิ่ม rounded */
             font-weight: 500;
         }
         .messages li {
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem; /* เพิ่มระยะห่าง */
+            padding: 0.75rem 1rem; /* เพิ่ม padding */
+            border-radius: 0.5rem; /* เพิ่ม rounded */
         }
         .messages .success {
             background-color: #d1fae5; /* green-100 */
@@ -135,9 +152,9 @@
             border-collapse: collapse;
             margin-top: 1.5rem;
             background-color: #ffffff;
-            border-radius: 0.5rem;
+            border-radius: 0.75rem; /* เพิ่ม rounded */
             overflow: hidden; /* Ensures rounded corners on table */
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.05); /* เพิ่มเงาเล็กน้อย */
         }
         th, td {
             padding: 1rem 1.5rem;
@@ -145,29 +162,40 @@
             border-bottom: 1px solid #e5e7eb; /* gray-200 */
         }
         th {
-            background-color: #f9fafb; /* gray-50 */
+            background-color: #f1f5f9; /* Lighten header background */
             font-weight: 600;
-            color: #374151; /* gray-700 */
+            color: #475569; /* ปรับสี header text */
             text-transform: uppercase;
             font-size: 0.875rem; /* text-sm */
+            letter-spacing: 0.05em; /* เพิ่มระยะห่างตัวอักษร */
         }
         td {
             color: #4b5563; /* gray-700 */
+            vertical-align: middle; /* จัดกลางแนวตั้ง */
         }
         tr:last-child td {
             border-bottom: none;
         }
         tr:hover {
-            background-color: #f3f4f6; /* gray-100 */
+            background-color: #e2e8f0; /* Light gray on hover */
+            transition: background-color 0.2s ease; /* เพิ่ม transition */
         }
-        .action-links a {
+        .action-links a, .action-links button {
             color: #2563eb;
             text-decoration: none;
             font-weight: 500;
             margin-right: 1rem;
+            transition: all 0.2s ease; /* เพิ่ม transition */
+            padding: 0.5rem 0.75rem; /* เพิ่ม padding */
+            border-radius: 0.375rem; /* เพิ่ม rounded */
+            display: inline-flex; /* จัดให้ไอคอนกับข้อความอยู่บรรทัดเดียวกัน */
+            align-items: center; /* จัดกลางไอคอนกับข้อความ */
         }
-        .action-links a:hover {
-            text-decoration: underline;
+        .action-links a:hover, .action-links button:hover {
+            text-decoration: none; /* ลบ underline บน hover */
+            background-color: #e0f2fe; /* Light blue background on hover */
+            color: #1e40af; /* Darker blue text on hover */
+            transform: translateY(-1px);
         }
 
         /* Responsive Navbar adjustments */
@@ -190,6 +218,56 @@
                 display: block;
             }
         }
+        /* Dropdown specific styles */
+        .notification-dropdown {
+            position: relative;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 280px; /* Adjusted min-width */
+            max-width: 350px; /* Adjusted max-width */
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 100;
+            right: 0; /* Align to the right of the button */
+            top: 100%; /* Position below the button */
+            border-radius: 0.5rem;
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+            margin-top: 0.5rem; /* Space between button and dropdown */
+        }
+        .dropdown-content.show {
+            display: block;
+        }
+        .dropdown-item {
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s ease;
+            white-space: normal; /* Allow text to wrap */
+        }
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+        .dropdown-item:hover {
+            background-color: #f1f1f1;
+        }
+        .dropdown-item.unread {
+            background-color: #fffbeb; /* Light yellow for unread */
+            font-weight: bold;
+        }
+        .dropdown-item.unread:hover {
+            background-color: #ffecc0;
+        }
+        .dropdown-footer {
+            padding: 8px 16px;
+            text-align: center;
+            background-color: #e2e8f0; /* Light gray */
+            border-top: 1px solid #cbd5e0;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -210,37 +288,87 @@
 
             <!-- Navigation links -->
             <div class="w-full md:flex md:items-center md:w-auto navbar-menu" id="navbar-default">
-                <div class="text-sm md:flex-grow">
+                <div class="text-sm md:flex-grow flex flex-col md:flex-row items-center md:space-x-4"> {# Added flexbox for better alignment #}
                     {% if user.is_authenticated %}
                         {% if user.is_org_admin %}
-                            <a href="{% url 'dashboard' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">แดชบอร์ดแอดมิน</a>
-                            <a href="{% url 'add_item' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">เพิ่มสิ่งของ</a>
-                            <a href="{% url 'manage_organization_users' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">จัดการผู้ใช้</a>
-                            {# ลิงก์แจ้งเตือนสำหรับแอดมินองค์กร #}
-                            <a href="{% url 'user_notifications' %}" class="relative block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">
-                                แจ้งเตือน
-                                {% if unread_notifications_count > 0 %} {# ใช้ตัวแปรที่ส่งมาจาก context processor #}
-                                    <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                                        {{ unread_notifications_count }}
-                                    </span>
-                                {% endif %}
+                            <a href="{% url 'dashboard' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300 flex items-center">
+                                <i class="fas fa-chart-line mr-2"></i> แดชบอร์ดแอดมิน
                             </a>
+                            <a href="{% url 'add_item' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300 flex items-center">
+                                <i class="fas fa-plus-circle mr-2"></i> เพิ่มสิ่งของ
+                            </a>
+                            <a href="{% url 'manage_organization_users' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300 flex items-center">
+                                <i class="fas fa-users-cog mr-2"></i> จัดการผู้ใช้
+                            </a>
+                            {# Dropdown แจ้งเตือนสำหรับแอดมินองค์กร #}
+                            <div class="relative inline-block text-left notification-dropdown">
+                                <button id="notification-bell" class="relative block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300 focus:outline-none flex items-center">
+                                    <i class="fas fa-bell mr-2"></i> แจ้งเตือน
+                                    {% if unread_notifications_count > 0 %}
+                                        <span class="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center -mt-1 -mr-1">
+                                            {{ unread_notifications_count }}
+                                        </span>
+                                    {% endif %}
+                                </button>
+                                <div id="notification-dropdown-content" class="dropdown-content">
+                                    {% if unread_notifications_count > 0 %}
+                                        {# แสดงการแจ้งเตือน 5 รายการล่าสุด หรือเฉพาะที่ยังไม่ได้อ่าน #}
+                                        {% for notification in request.user.notifications.all|slice:":5" %} {# แสดง 5 รายการล่าสุด #}
+                                            <a href="#" class="dropdown-item {% if not notification.is_read %}unread{% endif %}" data-notification-id="{{ notification.id }}">
+                                                {{ notification.message }}
+                                                <span class="block text-xs text-gray-500 mt-1">{{ notification.created_at|date:"M d, H:i" }}</span>
+                                            </a>
+                                        {% endfor %}
+                                        <a href="{% url 'user_notifications' %}" class="dropdown-footer text-blue-700 hover:underline">ดูทั้งหมด</a>
+                                    {% else %}
+                                        <div class="p-3 text-gray-600 text-center text-sm">ไม่มีการแจ้งเตือนใหม่</div>
+                                    {% endif %}
+                                </div>
+                            </div>
                         {% else %}
-                            <a href="{% url 'my_borrowed_items_history' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">ประวัติการยืมของฉัน</a>
-                            {# ลิงก์แจ้งเตือนสำหรับผู้ใช้ทั่วไป #}
-                            <a href="{% url 'user_notifications' %}" class="relative block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">
-                                แจ้งเตือน
-                                {% if unread_notifications_count > 0 %} {# ใช้ตัวแปรที่ส่งมาจาก context processor #}
-                                    <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                                        {{ unread_notifications_count }}
-                                    </span>
-                                {% endif %}
+                            <a href="{% url 'my_borrowed_items_history' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300 flex items-center">
+                                <i class="fas fa-book-reader mr-2"></i> ประวัติการยืมของฉัน
                             </a>
+                            {# Dropdown แจ้งเตือนสำหรับผู้ใช้ทั่วไป #}
+                            <div class="relative inline-block text-left notification-dropdown">
+                                <button id="notification-bell" class="relative block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300 focus:outline-none flex items-center">
+                                    <i class="fas fa-bell mr-2"></i> แจ้งเตือน
+                                    {% if unread_notifications_count > 0 %}
+                                        <span class="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center -mt-1 -mr-1">
+                                            {{ unread_notifications_count }}
+                                        </span>
+                                    {% endif %}
+                                </button>
+                                <div id="notification-dropdown-content" class="dropdown-content">
+                                    {% if unread_notifications_count > 0 %}
+                                        {# แสดงการแจ้งเตือน 5 รายการล่าสุด หรือเฉพาะที่ยังไม่ได้อ่าน #}
+                                        {% for notification in request.user.notifications.all|slice:":5" %} {# แสดง 5 รายการล่าสุด #}
+                                            <a href="#" class="dropdown-item {% if not notification.is_read %}unread{% endif %}" data-notification-id="{{ notification.id }}">
+                                                {{ notification.message }}
+                                                <span class="block text-xs text-gray-500 mt-1">{{ notification.created_at|date:"M d, H:i" }}</span>
+                                            </a>
+                                        {% endfor %}
+                                        <a href="{% url 'user_notifications' %}" class="dropdown-footer text-blue-700 hover:underline">ดูทั้งหมด</a>
+                                    {% else %}
+                                        <div class="p-3 text-gray-600 text-center text-sm">ไม่มีการแจ้งเตือนใหม่</div>
+                                    {% endif %}
+                                </div>
+                            </div>
                         {% endif %}
-                        <a href="{% url 'logout' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">ออกจากระบบ</a>
+                        {# เปลี่ยนจาก <a> tag เป็น <form> สำหรับปุ่ม Logout #}
+                        <form method="post" action="{% url 'logout' %}" class="block mt-4 md:inline-block md:mt-0">
+                            {% csrf_token %}
+                            <button type="submit" class="text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300 flex items-center bg-transparent border-none cursor-pointer w-full text-left">
+                                <i class="fas fa-sign-out-alt mr-2"></i> ออกจากระบบ
+                            </button>
+                        </form>
                     {% else %}
-                        <a href="{% url 'login' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">เข้าสู่ระบบ</a>
-                        <a href="{% url 'register_organization' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">ลงทะเบียนองค์กร</a>
+                        <a href="{% url 'login' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300 flex items-center">
+                            <i class="fas fa-sign-in-alt mr-2"></i> เข้าสู่ระบบ
+                        </a>
+                        <a href="{% url 'register_organization' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300 flex items-center">
+                            <i class="fas fa-building mr-2"></i> ลงทะเบียนองค์กร
+                        </a>
                     {% endif %}
                 </div>
             </div>
@@ -272,6 +400,69 @@
         document.getElementById('hamburger').addEventListener('click', function() {
             var navbarMenu = document.getElementById('navbar-default');
             navbarMenu.classList.toggle('active');
+        });
+
+        // JavaScript for Notification Dropdown
+        document.addEventListener('DOMContentLoaded', function() {
+            const notificationBell = document.getElementById('notification-bell');
+            const dropdownContent = document.getElementById('notification-dropdown-content');
+
+            if (notificationBell && dropdownContent) {
+                notificationBell.addEventListener('click', function(event) {
+                    event.stopPropagation(); // Prevent document click from closing immediately
+                    dropdownContent.classList.toggle('show');
+                });
+
+                // Close the dropdown if the user clicks outside of it
+                window.addEventListener('click', function(event) {
+                    if (!notificationBell.contains(event.target) && !dropdownContent.contains(event.target)) {
+                        dropdownContent.classList.remove('show');
+                    }
+                });
+
+                // Handle clicks on individual notification items (to mark as read via AJAX)
+                dropdownContent.querySelectorAll('.dropdown-item').forEach(item => {
+                    item.addEventListener('click', function(event) {
+                        event.preventDefault(); // Prevent default link behavior
+                        const notificationId = this.dataset.notificationId;
+                        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                        const currentItem = this; // Reference to the clicked item
+
+                        // Send an AJAX request to mark the notification as read
+                        fetch(`/notifications/read/${notificationId}/`, { // Make sure this URL is correct
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': csrfToken,
+                                'Content-Type': 'application/json' // Or application/x-www-form-urlencoded
+                            },
+                            body: JSON.stringify({}) // Empty body for POST request
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                // Update UI: remove 'unread' class, decrease unread count
+                                currentItem.classList.remove('unread');
+                                const unreadCountSpan = notificationBell.querySelector('span');
+                                if (unreadCountSpan) {
+                                    let currentCount = parseInt(unreadCountSpan.textContent);
+                                    currentCount--;
+                                    if (currentCount > 0) {
+                                        unreadCountSpan.textContent = currentCount;
+                                    } else {
+                                        unreadCountSpan.remove(); // Remove the badge if count is 0
+                                    }
+                                }
+                                // Optionally, redirect to a specific page related to the notification
+                                // window.location.href = currentItem.href; // If you want to navigate to a linked page
+                            } else {
+                                console.error('Failed to mark notification as read.');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error marking notification as read:', error);
+                        });
+                    });
+                });
+            }
         });
     </script>
 </body>
