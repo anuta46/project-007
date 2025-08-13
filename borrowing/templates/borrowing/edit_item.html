@@ -1,0 +1,37 @@
+{% extends 'users/base.html' %} {# ขยายจาก base.html เพื่อใช้โครงสร้างและสไตล์พื้นฐาน รวมถึง Navbar #}
+
+{% block title %}แก้ไขสิ่งของ: {{ item.name }}{% endblock %} {# กำหนดชื่อหน้าสำหรับแท็บเบราว์เซอร์ #}
+
+{% block content %} {# บล็อก content สำหรับเนื้อหาเฉพาะของหน้านี้ #}
+<div class="form-container"> {# ใช้ form-container ที่กำหนดไว้ใน base.html เพื่อสไตล์ที่สอดคล้องกัน #}
+    <h1 class="text-3xl font-bold text-gray-900 mb-6 text-center">แก้ไขสิ่งของ: {{ item.name }}</h1>
+    <form method="post" class="w-full">
+        {% csrf_token %}
+        
+        {% for field in form %}
+            <div class="form-field">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.help_text %}
+                    <p class="text-sm text-gray-500 mt-1">{{ field.help_text }}</p>
+                {% endif %}
+                {% for error in field.errors %}
+                    <p class="errorlist">{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        {% if form.non_field_errors %}
+            <ul class="errorlist">
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <button type="submit">บันทึกการแก้ไข</button>
+    </form>
+    <div class="mt-6 text-center">
+        <a href="{% url 'dashboard' %}" class="text-blue-700 hover:underline">กลับสู่แดชบอร์ด</a>
+    </div>
+</div>
+{% endblock content %}

@@ -13,7 +13,7 @@ def add_item(request):
     # ตรวจสอบว่าผู้ใช้มีสิทธิ์เป็น Organization Admin หรือไม่
     # หากไม่ใช่แอดมินองค์กร จะถูกเปลี่ยนเส้นทางกลับไปที่หน้า dashboard
     if not request.user.is_org_admin:
-        messages.error(request, "You do not have permission to add items.")
+        messages.error(request, "คุณไม่มีสิทธิ์เพิ่มสิ่งของ")
         return redirect('dashboard')
 
     if request.method == 'POST':
@@ -28,7 +28,7 @@ def add_item(request):
             item.available_quantity = item.quantity
             # บันทึกสิ่งของลงในฐานข้อมูล
             item.save()
-            messages.success(request, f'Item "{item.name}" added successfully.')
+            messages.success(request, f'สิ่งของ "{item.name}" ถูกเพิ่มเรียบร้อยแล้ว')
             return redirect('dashboard') # กลับไปที่หน้า dashboard หลังจากเพิ่มสิ่งของสำเร็จ
     else:
         # ถ้าเป็นการร้องขอแบบ GET (เข้าสู่หน้าครั้งแรก) ให้สร้างฟอร์มเปล่า
@@ -36,6 +36,73 @@ def add_item(request):
     
     # แสดงหน้าฟอร์มเพิ่มสิ่งของ
     return render(request, 'borrowing/add_item.html', {'form': form})
+
+@login_required
+def edit_item(request, item_id):
+    """
+    View สำหรับ Organization Admin เพื่อแก้ไขข้อมูลสิ่งของ
+    """
+    if not request.user.is_org_admin:
+        messages.error(request, "คุณไม่มีสิทธิ์แก้ไขสิ่งของ")
+        return redirect('dashboard')
+    
+    # ดึงสิ่งของจาก ID และตรวจสอบว่าเป็นขององค์กรเดียวกัน
+    item = get_object_or_404(Item, id=item_id, organization=request.user.organization)
+
+    if request.method == 'POST':
+        form = ItemForm(request.POST, instance=item) # สร้างฟอร์มพร้อมข้อมูลเดิมของสิ่งของ
+        if form.is_valid():
+            new_quantity = form.cleaned_data.get('quantity')
+            old_available_quantity = item.available_quantity
+            old_quantity = item.quantity
+
+            # ตรวจสอบว่าจำนวนที่ถูกยืมไปแล้วไม่เกินจำนวนใหม่
+            borrowed_count = old_quantity - old_available_quantity
+            if new_quantity < borrowed_count:
+                messages.error(request, f"ไม่สามารถตั้งจำนวนทั้งหมดน้อยกว่าจำนวนที่ถูกยืมไปแล้ว ({borrowed_count})")
+                return render(request, 'borrowing/edit_item.html', {'form': form, 'item': item})
+            
+            # ปรับ available_quantity ตามการเปลี่ยนแปลงของ quantity
+            item.available_quantity = new_quantity - borrowed_count
+            form.save()
+            messages.success(request, f'สิ่งของ "{item.name}" ถูกแก้ไขเรียบร้อยแล้ว')
+            return redirect('dashboard')
+    else:
+        form = ItemForm(instance=item) # แสดงฟอร์มพร้อมข้อมูลปัจจุบันของสิ่งของ
+    
+    return render(request, 'borrowing/edit_item.html', {'form': form, 'item': item})
+
+
+@login_required
+def delete_item(request, item_id):
+    """
+    View สำหรับ Organization Admin เพื่อลบสิ่งของ
+    """
+    if not request.user.is_org_admin:
+        messages.error(request, "คุณไม่มีสิทธิ์ลบสิ่งของ")
+        return redirect('dashboard')
+    
+    # ดึงสิ่งของจาก ID และตรวจสอบว่าเป็นขององค์กรเดียวกัน
+    item = get_object_or_404(Item, id=item_id, organization=request.user.organization)
+
+    # ตรวจสอบว่าสิ่งของมีการยืมที่ยังไม่คืนหรือไม่
+    active_loans_for_item = Loan.objects.filter(item=item, status='approved').exists()
+    pending_loans_for_item = Loan.objects.filter(item=item, status='pending').exists()
+
+    if active_loans_for_item or pending_loans_for_item:
+        messages.error(request, f'ไม่สามารถลบสิ่งของ "{item.name}" ได้ เนื่องจากมีการยืมที่ยังไม่คืนหรือรอดำเนินการ')
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        item.delete()
+        messages.success(request, f'สิ่งของ "{item.name}" ถูกลบเรียบร้อยแล้ว')
+        return redirect('dashboard')
+    
+    # หากเป็น GET request จะให้แสดงหน้ายืนยันการลบ (ถ้าคุณมี template สำหรับยืนยัน)
+    # สำหรับตอนนี้ เราจะ redirect กลับไปพร้อมข้อความแจ้งเตือนให้ผู้ใช้ใช้ปุ่ม POST เท่านั้น
+    messages.info(request, f'คุณกำลังจะลบสิ่งของ "{item.name}" หากต้องการยืนยัน โปรดใช้ปุ่มลบจากหน้าแดชบอร์ด.')
+    return redirect('dashboard')
+
 
 @login_required
 def borrow_item(request, item_id):
@@ -58,10 +125,10 @@ def borrow_item(request, item_id):
         item.available_quantity -= 1
         item.save()
         # 5. แสดงข้อความสำเร็จแก่ผู้ใช้
-        messages.success(request, f'Successfully requested to borrow "{item.name}". Please wait for admin approval.')
+        messages.success(request, f'คุณได้ส่งคำขอยืมสิ่งของ "{item.name}" เรียบร้อยแล้ว โปรดรอการอนุมัติจากผู้ดูแล')
     else:
         # 6. ถ้าสิ่งของไม่พร้อมให้ยืม ให้แสดงข้อความผิดพลาด
-        messages.error(request, f'"{item.name}" is not available for borrowing.')
+        messages.error(request, f'"{item.name}" ไม่พร้อมให้ยืมในขณะนี้')
 
     # 7. เปลี่ยนเส้นทางผู้ใช้กลับไปที่หน้า user_dashboard
     return redirect('user_dashboard')
@@ -83,20 +150,20 @@ def return_item(request, loan_id):
         item.save()
 
         # 5. แสดงข้อความสำเร็จแก่ผู้ใช้
-        messages.success(request, f'Successfully returned "{item.name}".')
+        messages.success(request, f'คุณได้คืนสิ่งของ "{item.name}" เรียบร้อยแล้ว')
     else:
         # 6. ถ้าสถานะไม่ถูกต้อง ให้แสดงข้อความผิดพลาด
-        messages.error(request, 'This item cannot be returned at this time.')
+        messages.error(request, 'สิ่งของนี้ไม่สามารถคืนได้ในขณะนี้')
 
     # 7. เปลี่ยนเส้นทางผู้ใช้กลับไปที่หน้า user_dashboard
-    return redirect('user_dashboard')
+    return redirect('my_borrowed_items_history') # เปลี่ยนเส้นทางไปหน้าประวัติการยืม
 
 
 @login_required
 def approve_loan(request, loan_id):
     # ตรวจสอบว่าผู้ใช้งานเป็น Organization Admin
     if not request.user.is_org_admin:
-        messages.error(request, "You do not have permission to approve loans.")
+        messages.error(request, "คุณไม่มีสิทธิ์อนุมัติคำขอเหล่านี้")
         return redirect('dashboard') # หรือหน้าที่เหมาะสม
 
     loan = get_object_or_404(Loan, id=loan_id)
@@ -106,9 +173,9 @@ def approve_loan(request, loan_id):
         loan.status = 'approved'
         loan.borrow_date = timezone.now() # บันทึกวันที่อนุมัติเป็นวันที่ยืมจริง
         loan.save()
-        messages.success(request, f'Loan for "{loan.item.name}" by {loan.borrower.username} has been approved.')
+        messages.success(request, f'คำขอยืมสิ่งของ "{loan.item.name}" โดย {loan.borrower.username} ได้รับการอนุมัติแล้ว')
     else:
-        messages.error(request, 'This loan request cannot be approved.')
+        messages.error(request, 'คำขอยืมนี้ไม่สามารถอนุมัติได้')
         
     return redirect('dashboard') # กลับไปที่หน้า dashboard ของแอดมิน
 
@@ -117,7 +184,7 @@ def approve_loan(request, loan_id):
 def reject_loan(request, loan_id):
     # ตรวจสอบว่าผู้ใช้งานเป็น Organization Admin
     if not request.user.is_org_admin:
-        messages.error(request, "You do not have permission to reject loans.")
+        messages.error(request, "คุณไม่มีสิทธิ์ปฏิเสธคำขอเหล่านี้")
         return redirect('dashboard') # หรือหน้าที่เหมาะสม
 
     loan = get_object_or_404(Loan, id=loan_id)
@@ -131,8 +198,8 @@ def reject_loan(request, loan_id):
         item = loan.item
         item.available_quantity += 1
         item.save()
-        messages.success(request, f'Loan for "{loan.item.name}" by {loan.borrower.username} has been rejected.')
+        messages.success(request, f'คำขอยืมสิ่งของ "{loan.item.name}" โดย {loan.borrower.username} ได้รับการปฏิเสธแล้ว')
     else:
-        messages.error(request, 'This loan request cannot be rejected.')
+        messages.error(request, 'คำขอยืมนี้ไม่สามารถปฏิเสธได้')
         
     return redirect('dashboard') # กลับไปที่หน้า dashboard ของแอดมิน

@@ -26,9 +26,10 @@
                     <table class="min-w-full bg-white rounded-lg overflow-hidden border border-gray-200"> {# เพิ่ม border ให้ตาราง #}
                         <thead>
                             <tr class="bg-gray-100 text-gray-700 uppercase text-sm leading-normal">
-                                <th class="py-3 px-6 text-left font-semibold">ชื่อสิ่งของ</th> {# font-semibold #}
+                                <th class="py-3 px-6 text-left font-semibold">ชื่อสิ่งของ</th>
                                 <th class="py-3 px-6 text-left font-semibold">พร้อมให้ยืม</th>
                                 <th class="py-3 px-6 text-left font-semibold">ทั้งหมด</th>
+                                <th class="py-3 px-6 text-center font-semibold">การกระทำ</th> {# เพิ่มคอลัมน์การกระทำ #}
                             </tr>
                         </thead>
                         <tbody class="text-gray-700 text-sm"> {# เปลี่ยน font-light เป็นปกติ #}
@@ -37,6 +38,13 @@
                                     <td class="py-3 px-6 text-left whitespace-nowrap">{{ item.name }}</td>
                                     <td class="py-3 px-6 text-left">{{ item.available_quantity }}</td>
                                     <td class="py-3 px-6 text-left">{{ item.quantity }}</td>
+                                    <td class="py-3 px-6 text-center flex justify-center items-center space-x-2"> {# เพิ่มปุ่มแก้ไข/ลบ #}
+                                        <a href="{% url 'edit_item' item.id %}" class="bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-semibold py-2 px-3 rounded-lg transition duration-300 transform hover:scale-105 shadow-md">แก้ไข</a>
+                                        <form method="post" action="{% url 'delete_item' item.id %}" onsubmit="return confirm('คุณแน่ใจหรือไม่ที่ต้องการลบสิ่งของ {{ item.name }}?');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition duration-300 transform hover:scale-105 shadow-md">ลบ</button>
+                                        </form>
+                                    </td>
                                 </tr>
                             {% endfor %}
                         </tbody>
