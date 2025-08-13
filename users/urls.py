@@ -11,6 +11,8 @@ urlpatterns = [
     path('manage-users/', views.manage_organization_users, name='manage_organization_users'),
     path('manage-users/activate/<int:user_id>/', views.activate_user, name='activate_user'),
     path('manage-users/deactivate/<int:user_id>/', views.deactivate_user, name='deactivate_user'),
-    # เพิ่ม URL สำหรับหน้าประวัติการยืมของผู้ใช้
     path('my-borrowed-items/history/', views.my_borrowed_items_history, name='my_borrowed_items_history'),
+    # เพิ่ม URL สำหรับหน้าการแจ้งเตือนและการทำเครื่องหมายว่าอ่านแล้ว
+    path('notifications/', views.user_notifications, name='user_notifications'),
+    path('notifications/read/<int:notification_id>/', views.mark_notification_as_read, name='mark_notification_as_read'),
 ]

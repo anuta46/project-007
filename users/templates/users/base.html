@@ -216,10 +216,26 @@
                             <a href="{% url 'dashboard' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">แดชบอร์ดแอดมิน</a>
                             <a href="{% url 'add_item' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">เพิ่มสิ่งของ</a>
                             <a href="{% url 'manage_organization_users' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">จัดการผู้ใช้</a>
+                            {# ลิงก์แจ้งเตือนสำหรับแอดมินองค์กร #}
+                            <a href="{% url 'user_notifications' %}" class="relative block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">
+                                แจ้งเตือน
+                                {% if unread_notifications_count > 0 %} {# ใช้ตัวแปรที่ส่งมาจาก context processor #}
+                                    <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                                        {{ unread_notifications_count }}
+                                    </span>
+                                {% endif %}
+                            </a>
                         {% else %}
-                            {# ลบลิงก์ "แดชบอร์ดผู้ใช้" ออกไป เพราะหน้า user_dashboard คือหน้าหลักอยู่แล้ว #}
-                            {# <a href="{% url 'user_dashboard' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">แดชบอร์ดผู้ใช้</a> #}
                             <a href="{% url 'my_borrowed_items_history' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">ประวัติการยืมของฉัน</a>
+                            {# ลิงก์แจ้งเตือนสำหรับผู้ใช้ทั่วไป #}
+                            <a href="{% url 'user_notifications' %}" class="relative block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">
+                                แจ้งเตือน
+                                {% if unread_notifications_count > 0 %} {# ใช้ตัวแปรที่ส่งมาจาก context processor #}
+                                    <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                                        {{ unread_notifications_count }}
+                                    </span>
+                                {% endif %}
+                            </a>
                         {% endif %}
                         <a href="{% url 'logout' %}" class="block mt-4 md:inline-block md:mt-0 text-gray-300 hover:text-white px-3 py-2 rounded-md transition duration-300">ออกจากระบบ</a>
                     {% else %}

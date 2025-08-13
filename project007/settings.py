@@ -19,7 +19,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-46kzih05rp!jmjh2^##h)pct1l%8q#(+$s(@#u-yd+kh2(2nvw'
+SECRET_KEY = 'django-insecure-46kzih05rp!jmjh2^##h)pct1l%8q#(+$s(@#u-yd+kh2(22nvw' # เปลี่ยน key เล็กน้อยเพื่อความปลอดภัย
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -63,6 +63,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'users.context_processors.unread_notifications_count', # เพิ่มบรรทัดนี้
             ],
         },
     },

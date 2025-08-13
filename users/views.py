@@ -10,7 +10,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.utils.html import format_html
 
 # นำเข้าโมเดลจากแอปพลิเคชันที่ถูกต้อง
-from .models import CustomUser, Organization 
+from .models import CustomUser, Organization, Notification # นำเข้า Notification 
 from borrowing.models import Item, Loan 
 from .forms import OrganizationRegistrationForm, UserRegistrationForm, LinkBasedUserRegistrationForm
 
@@ -61,12 +61,9 @@ def user_dashboard(request):
 
     organization = user.organization
     items = Item.objects.filter(organization=organization, available_quantity__gt=0)
-    # my_loans ถูกย้ายไปที่ my_borrowed_items_history
-    # my_loans = Loan.objects.filter(borrower=request.user) 
     
     context = {
         'items': items,
-        # 'my_loans': my_loans,
     }
     return render(request, 'users/user_dashboard.html', context)
 
@@ -158,10 +155,6 @@ def register_user_via_link(request, organization_id):
 
 @login_required
 def manage_organization_users(request):
-    """
-    View สำหรับ Organization Admin เพื่อจัดการผู้ใช้ในองค์กรของตนเอง
-    แสดงรายชื่อผู้ใช้ทั้งหมดในองค์กร และสถานะของบัญชี
-    """
     if not request.user.is_org_admin:
         messages.error(request, "คุณไม่มีสิทธิ์เข้าถึงหน้านี้")
         return redirect('dashboard')
@@ -182,9 +175,6 @@ def manage_organization_users(request):
 
 @login_required
 def activate_user(request, user_id):
-    """
-    View สำหรับ Organization Admin เพื่อเปิดใช้งานบัญชีผู้ใช้
-    """
     if not request.user.is_org_admin:
         messages.error(request, "คุณไม่มีสิทธิ์ดำเนินการนี้")
         return redirect('dashboard')
@@ -207,9 +197,6 @@ def activate_user(request, user_id):
 
 @login_required
 def deactivate_user(request, user_id):
-    """
-    View สำหรับ Organization Admin เพื่อปิดใช้งานบัญชีผู้ใช้
-    """
     if not request.user.is_org_admin:
         messages.error(request, "คุณไม่มีสิทธิ์ดำเนินการนี้")
         return redirect('dashboard')
@@ -236,18 +223,48 @@ def deactivate_user(request, user_id):
 
 @login_required
 def my_borrowed_items_history(request):
-    """
-    View สำหรับผู้ใช้ทั่วไปเพื่อดูรายการสิ่งของที่ยืมอยู่และประวัติการยืมทั้งหมด
-    """
     user = request.user
     if not user.organization:
         messages.error(request, "บัญชีของคุณยังไม่ได้ถูกผูกกับองค์กร กรุณาติดต่อผู้ดูแลระบบ.")
         return redirect('login') 
 
-    # ดึงรายการยืมทั้งหมดของผู้ใช้ปัจจุบัน
     my_loans = Loan.objects.filter(borrower=request.user).order_by('-borrow_date')
     
     context = {
         'my_loans': my_loans,
     }
     return render(request, 'users/my_borrowed_items_history.html', context)
+
+
+@login_required
+def user_notifications(request):
+    """
+    View สำหรับผู้ใช้เพื่อดูรายการการแจ้งเตือนทั้งหมด
+    และทำเครื่องหมายการแจ้งเตือนที่ยังไม่ได้อ่านว่าอ่านแล้ว
+    """
+    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')
+    
+    # ทำเครื่องหมายการแจ้งเตือนทั้งหมดที่ดึงมาว่าอ่านแล้ว
+    # (หรือคุณอาจเพิ่มปุ่ม "Mark all as read" ใน template ก็ได้)
+    unread_notifications = notifications.filter(is_read=False)
+    for notif in unread_notifications:
+        notif.is_read = True
+        notif.save()
+    # หรือ: unread_notifications.update(is_read=True) เพื่อประสิทธิภาพที่ดีกว่า
+
+    context = {
+        'notifications': notifications
+    }
+    return render(request, 'users/notifications.html', context)
+
+
+@login_required
+def mark_notification_as_read(request, notification_id):
+    """
+    View สำหรับทำเครื่องหมายการแจ้งเตือนเฉพาะว่าเป็นอ่านแล้ว (via POST request)
+    """
+    notification = get_object_or_404(Notification, id=notification_id, user=request.user)
+    notification.is_read = True
+    notification.save()
+    messages.success(request, "การแจ้งเตือนถูกทำเครื่องหมายว่าอ่านแล้ว")
+    return redirect('user_notifications')
