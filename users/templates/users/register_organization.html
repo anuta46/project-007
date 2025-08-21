@@ -1,116 +1,121 @@
-<!DOCTYPE html>
-<html lang="th">
+<!DOCTYPE html> <!-- ประกาศว่าใช้มาตรฐานเอกสาร HTML5 -->
+<html lang="th"> <!-- ระบุภาษาหลักของหน้าเว็บเป็นภาษาไทย ช่วยด้าน SEO/Accessibility -->
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}ลงทะเบียนองค์กร{% endblock %}</title>
-    <!-- Google Fonts: Poppins and Open Sans -->
+    <meta charset="UTF-8"> <!-- กำหนด encoding เป็น UTF-8 รองรับภาษาไทย -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- ทำให้หน้าเว็บ responsive บนอุปกรณ์พกพา -->
+    <title>{% block title %}ลงทะเบียนองค์กร{% endblock %}</title> <!-- ชื่อแท็บเบราว์เซอร์ และเปิดช่องให้ template ลูก override ชื่อได้ -->
+
+    <!-- โหลดฟอนต์ Google: Open Sans และ Poppins เพื่อใช้สลับกันสำหรับตัวอักษรและหัวข้อ -->
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Tailwind CSS CDN -->
+
+    <!-- โหลด Tailwind CSS ผ่าน CDN เพื่อใช้ utility classes -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome for icons (อาจจะไม่จำเป็นหากไม่มีไอคอนในหน้านี้แล้ว) -->
+
+    <!-- (อาจไม่จำเป็น) โหลดไอคอน Font Awesome หากต้องการใช้ไอคอนในภายหลัง -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
     <style>
-        /* Custom styles for consistency and overrides (copied from base.html for standalone page) */
+        /* ====== สไตล์หลักของหน้านี้ (คงที่/ซ้ำกับ base.html เพื่อให้ไฟล์นี้ standalone ได้) ====== */
         body {
-            font-family: 'Open Sans', sans-serif;
-            background-color: #f3f4f6;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            color: #374151;
-            justify-content: center; /* จัดฟอร์มให้อยู่กึ่งกลางแนวตั้ง */
-            align-items: center; /* จัดฟอร์มให้อยู่กึ่งกลางแนวนอน */
+            font-family: 'Open Sans', sans-serif; /* ฟอนต์เนื้อความหลัก */
+            background-color: #f3f4f6; /* เทาอ่อน (เทียบ tailwind: gray-100) */
+            min-height: 100vh; /* ให้สูงเต็มหน้าจอ */
+            display: flex; /* ใช้ Flexbox เพื่อจัดกึ่งกลาง */
+            flex-direction: column; /* วางลูกแนวตั้ง */
+            color: #374151; /* สีตัวอักษร (gray-700) */
+            justify-content: center; /* จัดกึ่งกลางแนวตั้ง */
+            align-items: center; /* จัดกึ่งกลางแนวนอน */
         }
         .container-content {
-            /* ไม่จำเป็นต้องใช้สำหรับหน้านี้ที่ไม่มี Navbar */
+            /* ว่างไว้ เผื่อหน้าอื่นมี Navbar แต่หน้านี้ไม่มี จึงไม่ใช้ */
         }
         .form-container {
-            background-color: #ffffff;
-            padding: 2.5rem;
-            border-radius: 1rem;
+            background-color: #ffffff; /* กล่องฟอร์มสีขาว */
+            padding: 2.5rem; /* ช่องว่างด้านใน */
+            border-radius: 1rem; /* มุมโค้ง */
+            /* เงาแบบนุ่ม ๆ */
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            max-width: 500px;
-            width: 100%;
-            /* ไม่ต้องใช้ margin-left/right auto เพราะ body จัดกลางให้แล้ว */
+            max-width: 500px; /* กำหนดความกว้างสูงสุดของกล่องฟอร์ม */
+            width: 100%; /* ให้กล่องฟอร์มเต็มความกว้างภายในข้อจำกัด */
         }
         h1, h2, h3 {
-            font-family: 'Poppins', sans-serif;
-            color: #1f2937;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
+            font-family: 'Poppins', sans-serif; /* หัวข้อใช้ฟอนต์ Poppins */
+            color: #1f2937; /* สีหัวข้อ (gray-900) */
+            font-weight: 700; /* หนานิดหน่อย */
+            margin-bottom: 1.5rem; /* ช่องว่างด้านล่างหัวข้อ */
         }
-        h1 { font-size: 2.5rem; text-align: center; margin-bottom: 1rem;}
-        h2 { font-size: 2rem; }
-        h3 { font-size: 1.75rem; }
+        h1 { font-size: 2.5rem; text-align: center; margin-bottom: 1rem;} /* ขนาดหัวข้อใหญ่สุด */
+        h2 { font-size: 2rem; }  /* หัวข้อรอง */
+        h3 { font-size: 1.75rem; } /* หัวข้อย่อย */
 
-        .form-field {
+        .form-field { /* กล่องครอบหนึ่งฟิลด์ของฟอร์ม */
             margin-bottom: 1.25rem;
         }
         .form-field label {
-            display: block;
-            margin-bottom: 0.6rem;
-            font-weight: 600;
-            color: #4b5563;
-            font-size: 0.95rem;
+            display: block; /* ให้ label ขึ้นบรรทัดใหม่ */
+            margin-bottom: 0.6rem; /* ช่องว่างใต้ label */
+            font-weight: 600; /* ตัวหนาเล็กน้อย */
+            color: #4b5563; /* สีเทากลาง (gray-600) */
+            font-size: 0.95rem; /* ขนาดอักษร label */
         }
+        /* สไตล์สำหรับ input, textarea, select ทั้งหมดในฟอร์ม */
         .form-field input[type="text"],
         .form-field input[type="email"],
         .form-field input[type="password"],
         .form-field input[type="number"],
         .form-field textarea,
         .form-field select {
-            width: 100%;
-            padding: 0.85rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.6rem;
-            font-size: 1rem;
-            color: #374151;
-            background-color: #fcfcfc;
-            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            width: 100%; /* ให้กว้างเต็มบรรทัด */
+            padding: 0.85rem; /* ช่องว่างภายใน */
+            border: 1px solid #d1d5db; /* เส้นขอบ (gray-300) */
+            border-radius: 0.6rem; /* มุมโค้ง */
+            font-size: 1rem; /* ขนาดอักษรอินพุต */
+            color: #374151; /* สีตัวอักษร */
+            background-color: #fcfcfc; /* สีพื้นหลังของช่องกรอก */
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out; /* แอนิเมชันตอนโฟกัส */
         }
         .form-field input:focus,
         .form-field textarea:focus,
         .form-field select:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25);
+            outline: none; /* เอาเส้นกรอบสีน้ำเงินของเบราว์เซอร์ออก */
+            border-color: #3b82f6; /* เปลี่ยนสีขอบเป็นฟ้า (blue-500) */
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25); /* วงเงาแสดงโฟกัส */
         }
         button[type="submit"] {
-            width: 100%;
+            width: 100%; /* ปุ่มเต็มบรรทัด */
             padding: 0.85rem;
-            background-color: #2563eb;
-            color: #ffffff;
+            background-color: #2563eb; /* พื้นปุ่มฟ้า (blue-600) */
+            color: #ffffff; /* ตัวอักษรสีขาว */
             font-weight: 600;
             border-radius: 0.6rem;
-            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease; /* เอฟเฟกต์ hover/active */
             cursor: pointer;
-            border: none;
+            border: none; /* ไม่มีเส้นขอบ */
             margin-top: 2rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* เงาปุ่ม */
         }
         button[type="submit"]:hover {
-            background-color: #1d4ed8;
-            transform: translateY(-3px);
-            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+            background-color: #1d4ed8; /* ฟ้าเข้มขึ้นเมื่อ hover (blue-700) */
+            transform: translateY(-3px); /* ขยับปุ่มขึ้นเล็กน้อย */
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15); /* เพิ่มเงา */
         }
         button[type="submit"]:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+            transform: translateY(0); /* กลับที่เดิมเมื่อกดค้าง */
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1); /* เงาเบาลง */
         }
-        .messages { /* Styling for Django messages */
-            list-style: none;
+        .messages { /* กล่องรวมข้อความแจ้งเตือนจาก Django messages framework */
+            list-style: none; /* เอาจุดหน้ารายการออก */
             padding: 1rem;
             margin-bottom: 1.5rem;
             border-radius: 0.75rem;
             font-weight: 500;
-            position: absolute; /* ทำให้ข้อความอยู่ด้านบนของหน้า */
-            top: 20px; /* ระยะห่างจากด้านบน */
+            position: absolute; /* ลอยทับด้านบนของหน้า */
+            top: 20px;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translateX(-50%); /* จัดกึ่งกลางแนวนอน */
             width: 90%;
             max-width: 600px;
-            z-index: 1000;
+            z-index: 1000; /* ให้อยู่เหนือองค์ประกอบอื่น */
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         .messages li {
@@ -118,24 +123,24 @@
             padding: 0.75rem 1rem;
             border-radius: 0.5rem;
         }
-        .messages .success {
-            background-color: #d1fae5;
-            color: #065f46;
-            border: 1px solid #34d399;
+        .messages .success { /* สไตล์สำหรับข้อความสำเร็จ */
+            background-color: #d1fae5; /* เขียวอ่อน */
+            color: #065f46; /* เขียวเข้ม */
+            border: 1px solid #34d399; /* ขอบเขียว */
         }
-        .messages .error {
-            background-color: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #f87171;
+        .messages .error { /* สไตล์สำหรับข้อความผิดพลาด */
+            background-color: #fee2e2; /* ชมพูอ่อน */
+            color: #991b1b; /* แดงเข้ม */
+            border: 1px solid #f87171; /* ขอบแดง */
         }
-        .messages .info {
-            background-color: #e0f2fe;
-            color: #1e40af;
-            border: 1px solid #60a5fa;
+        .messages .info { /* สไตล์สำหรับข้อความข้อมูล */
+            background-color: #e0f2fe; /* ฟ้าอ่อน */
+            color: #1e40af; /* น้ำเงินเข้ม */
+            border: 1px solid #60a5fa; /* ขอบฟ้า */
         }
-        .errorlist {
-            color: #ef4444;
-            font-size: 0.875rem;
+        .errorlist { /* รายการ error ของแต่ละ field */
+            color: #ef4444; /* สีแดง */
+            font-size: 0.875rem; /* ตัวเล็กลงนิด */
             list-style: none;
             padding: 0;
             margin-top: 0.5rem;
@@ -146,39 +151,46 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
-    <!-- Django Messages Display (ย้ายมาไว้ที่ Body และให้มัน Floating) -->
-    {% if messages %}
+
+<body class="bg-gray-100 text-gray-800"> <!-- กำหนดสีพื้นหลัง/สีตัวอักษรด้วย utility ของ Tailwind -->
+
+    <!-- ====== กล่องแสดง Django messages แบบลอยทับด้านบน ====== -->
+    {% if messages %} <!-- ถ้ามีข้อความจาก messages framework ให้แสดง -->
         <ul class="messages">
-            {% for message in messages %}
+            {% for message in messages %} <!-- วนลูปแสดงข้อความทีละรายการ -->
+                <!-- ใส่ class ตาม tag (success/error/info) เพื่อแมปรูปแบบสี -->
                 <li{% if message.tags %} class="{{ message.tags }} p-3 mb-2 rounded-md"{% endif %}>
-                    {{ message|safe }}
+                    {{ message|safe }} <!-- แสดงข้อความ และยอม HTML ที่ฝังอยู่ (|safe) -->
                 </li>
             {% endfor %}
         </ul>
     {% endif %}
 
-    <!-- Main Content Block (เฉพาะฟอร์มลงทะเบียนองค์กร) -->
-    <main class="flex-grow flex items-center justify-center py-4">
-        <div class="form-container flex flex-col items-center">
-            <h1 class="text-3xl font-bold text-gray-900 mb-6">ลงทะเบียนองค์กรใหม่</h1>
+    <!-- ====== เนื้อหาหลักของหน้า: ฟอร์มลงทะเบียนองค์กร ====== -->
+    <main class="flex-grow flex items-center justify-center py-4"> <!-- ใช้ flex จัดฟอร์มให้อยู่กลางแนวตั้ง-แนวนอน -->
+        <div class="form-container flex flex-col items-center"> <!-- กล่องครอบฟอร์ม สไตล์ใน <style> ด้านบน -->
+            <h1 class="text-3xl font-bold text-gray-900 mb-6">ลงทะเบียนองค์กรใหม่</h1> <!-- หัวข้อของหน้า -->
+
+            <!-- เริ่มฟอร์ม ใช้เมธอด POST เพื่อส่งข้อมูลไปยัง view -->
             <form method="post" class="w-full">
-                {% csrf_token %}
-                
+                {% csrf_token %} <!-- โทเคนกัน CSRF: บังคับต้องมีใน Django เมื่อใช้ POST -->
+
+                <!-- ====== หมวด: ข้อมูลองค์กร ====== -->
                 <h2 class="text-2xl font-bold text-gray-900 mb-4">ข้อมูลองค์กร</h2>
-                {% for field in org_form %}
+                {% for field in org_form %} <!-- org_form: Django Form ของ Organization ที่ view ส่งมา -->
                     <div class="form-field">
-                        {{ field.label_tag }}
-                        {{ field }}
-                        {% if field.help_text %}
+                        {{ field.label_tag }} <!-- แสดง <label> ของฟิลด์ -->
+                        {{ field }} <!-- แสดง input/select/textarea ตามชนิดฟิลด์ -->
+                        {% if field.help_text %} <!-- ถ้ามีข้อความช่วยเหลือ -->
                             <p class="text-sm text-gray-500 mt-1">{{ field.help_text }}</p>
                         {% endif %}
-                        {% for error in field.errors %}
+                        {% for error in field.errors %} <!-- แสดง error validation ของฟิลด์นี้ -->
                             <p class="errorlist">{{ error }}</p>
                         {% endfor %}
                     </div>
                 {% endfor %}
-                {% if org_form.non_field_errors %}
+
+                {% if org_form.non_field_errors %} <!-- error ที่ไม่ได้ผูกกับฟิลด์ใดฟิลด์หนึ่ง เช่น ความสัมพันธ์ระหว่างฟิลด์ -->
                     <ul class="errorlist">
                         {% for error in org_form.non_field_errors %}
                             <li>{{ error }}</li>
@@ -186,20 +198,22 @@
                     </ul>
                 {% endif %}
 
+                <!-- ====== หมวด: ข้อมูลผู้ดูแลองค์กร ====== -->
                 <h2 class="text-2xl font-bold text-gray-900 mt-8 mb-4">ข้อมูลผู้ดูแลองค์กร</h2>
-                {% for field in user_form %}
+                {% for field in user_form %} <!-- user_form: Django Form สำหรับผู้ใช้/ผู้ดูแล -->
                     <div class="form-field">
-                        {{ field.label_tag }}
-                        {{ field }}
+                        {{ field.label_tag }} <!-- label ของฟิลด์ -->
+                        {{ field }} <!-- ช่องกรอกจริง -->
                         {% if field.help_text %}
                             <p class="text-sm text-gray-500 mt-1">{{ field.help_text }}</p>
                         {% endif %}
-                        {% for error in field.errors %}
+                        {% for error in field.errors %} <!-- แสดง error ของฟิลด์นี้ -->
                             <p class="errorlist">{{ error }}</p>
                         {% endfor %}
                     </div>
                 {% endfor %}
-                {% if user_form.non_field_errors %}
+
+                {% if user_form.non_field_errors %} <!-- error รวมของฟอร์ม (ไม่ผูกฟิลด์) -->
                     <ul class="errorlist">
                         {% for error in user_form.non_field_errors %}
                             <li>{{ error }}</li>
@@ -207,9 +221,15 @@
                     </ul>
                 {% endif %}
 
+                <!-- ปุ่มส่งฟอร์มไปยัง view ที่รับ POST -->
                 <button type="submit">ลงทะเบียน</button>
             </form>
-            <p class="login-link mt-6 text-gray-700">มีบัญชีอยู่แล้วใช่ไหม? <a href="{% url 'login' %}" class="text-blue-700 hover:underline">เข้าสู่ระบบที่นี่</a></p>
+
+            <!-- ลิงก์ไปหน้าล็อกอิน เผื่อผู้ใช้มีบัญชีอยู่แล้ว -->
+            <p class="login-link mt-6 text-gray-700">
+                มีบัญชีอยู่แล้วใช่ไหม?
+                <a href="{% url 'login' %}" class="text-blue-700 hover:underline">เข้าสู่ระบบที่นี่</a> <!-- สร้าง URL จากชื่อ route 'login' -->
+            </p>
         </div>
     </main>
 </body>

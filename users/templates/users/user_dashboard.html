@@ -44,10 +44,10 @@
     </div>
 
     {# ส่วน "สิ่งของที่คุณยืมอยู่" ได้ถูกย้ายไปที่หน้า "ประวัติการยืมของฉัน" แล้ว #}
-    {#
-    <hr class="my-6 border-gray-300">
+    
+    {% comment %} <hr class="my-6 border-gray-300">
     <div class="mb-10 p-6 bg-blue-50 rounded-lg shadow-sm border border-blue-200">
-        <h2 class="text-2xl font-bold text-blue-800 mb-4 border-b pb-2 border-blue-300">สิ่งของที่คุณยืมอยู่</h2>
+        <h2 class="text-2xl font-bold text-blue-800 mb-4 border-b pb-2 border-blue-300"></h2>
         {% if my_loans %}
             <div class="overflow-x-auto">
                 <table class="min-w-full bg-white rounded-lg overflow-hidden border border-gray-200">
@@ -92,8 +92,8 @@
         {% else %}
             <p class="text-gray-600 italic py-2">คุณยังไม่ได้ยืมสิ่งของใดๆ</p>
         {% endif %}
-    </div>
-    #}
+    </div> {% endcomment %}
+    
 
     {# เพิ่มลิงก์สำหรับหน้าอื่นๆ ที่อาจมีในอนาคต #}
     <div class="mt-8 pt-6 border-t-2 border-gray-200 flex flex-wrap gap-4 justify-center">
