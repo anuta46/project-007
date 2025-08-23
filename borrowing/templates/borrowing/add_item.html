@@ -1,15 +1,167 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Add Item</title>
-</head>
-<body>
-    <h1>Add New Item</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Add Item</button>
+{% extends 'users/base.html' %} {# ขยายจาก base.html เพื่อใช้โครงสร้างและสไตล์พื้นฐาน #}
+
+{% block title %}เพิ่มประเภทสิ่งของและอุปกรณ์ใหม่{% endblock %} {# กำหนดชื่อหน้าสำหรับแท็บเบราว์เซอร์ #}
+
+{% block content %} {# บล็อก content สำหรับเนื้อหาเฉพาะของหน้านี้ #}
+<div class="bg-white p-6 md:p-8 lg:p-10 rounded-xl shadow-lg max-w-4xl mx-auto my-8 border border-gray-200">
+    <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4 text-center">เพิ่มประเภทสิ่งของและอุปกรณ์ใหม่</h1>
+    <p class="text-gray-700 mb-8 text-center text-lg">กรอกข้อมูลประเภทสิ่งของและเพิ่มรายละเอียดของอุปกรณ์แต่ละชิ้น</p>
+    
+    <hr class="my-6 border-gray-300">
+
+    {# สำคัญ: เพิ่ม enctype="multipart/form-data" สำหรับการอัปโหลดไฟล์ #}
+    <form method="post" enctype="multipart/form-data" class="w-full">
+        {% csrf_token %} {# CSRF token เพื่อความปลอดภัย #}
+
+        {# ส่วนฟอร์มสำหรับ "ประเภทสิ่งของ" (ItemForm) #}
+        <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2 border-gray-300">ข้อมูลประเภทสิ่งของ</h2>
+        {% for field in item_form %}
+            <div class="form-field">
+                {{ field.label_tag }} {# แสดง Label ของฟิลด์ #}
+                {{ field }} {# แสดง Widget ของฟิลด์ (input, textarea, select) #}
+                {% if field.help_text %}
+                    <p class="text-sm text-gray-500 mt-1">{{ field.help_text }}</p>
+                {% endif %}
+                {% for error in field.errors %}
+                    <p class="errorlist">{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        {# แสดง Non-field errors ของ item_form #}
+        {% if item_form.non_field_errors %}
+            <ul class="errorlist">
+                {% for error in item_form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <hr class="my-8 border-gray-300">
+
+        {# ส่วนฟอร์มสำหรับ "อุปกรณ์แต่ละชิ้น" (AssetFormSet) #}
+        <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2 border-gray-300">เพิ่มอุปกรณ์แต่ละชิ้น</h2>
+        <div id="asset-formset-container">
+            {{ asset_formset.management_form }} {# สำคัญ: Management form สำหรับ formset #}
+            {% for form in asset_formset %}
+                <div class="asset-form bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-200 mb-6 relative">
+                    {% if form.instance.pk %}<p class="absolute top-2 right-4 text-gray-500 text-sm">Asset ID: {{ form.instance.pk }}</p>{% endif %}
+                    {% for hidden_field in form.hidden_fields %}
+                        {{ hidden_field }}
+                    {% endfor %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {% for field in form.visible_fields %}
+                            <div class="form-field">
+                                {{ field.label_tag }}
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <p class="text-sm text-gray-500 mt-1">{{ field.help_text }}</p>
+                                {% endif %}
+                                {% for error in field.errors %}
+                                    <p class="errorlist">{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% if form.instance.pk %} {# สำหรับ Asset ที่มีอยู่แล้ว #}
+                        <div class="mt-4">
+                            {{ form.DELETE }}
+                            <label for="{{ form.DELETE.id_for_label }}" class="text-red-600 ml-2 cursor-pointer">ลบ Asset นี้</label>
+                        </div>
+                    {% endif %}
+                    {# แสดง Non-field errors ของแต่ละ Asset form #}
+                    {% if form.non_field_errors %}
+                        <ul class="errorlist mt-2">
+                            {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        
+        <button type="button" id="add-asset-form" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-300 transform hover:scale-105 shadow-md flex items-center mt-4">
+            <i class="fas fa-plus mr-2"></i> เพิ่มอุปกรณ์อีกชิ้น
+        </button>
+        {# แสดง Formset errors (ถ้ามี) #}
+        {% if asset_formset.non_form_errors %}
+            <ul class="errorlist mt-4">
+                {% for error in asset_formset.non_form_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <button type="submit" class="w-full mt-10 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-md text-lg">บันทึกประเภทสิ่งของและอุปกรณ์ทั้งหมด</button>
     </form>
-    <a href="{% url 'dashboard' %}">Back to Dashboard</a>
-</body>
-</html>
+
+    {# ลิงก์กลับไปยังหน้าแดชบอร์ดแอดมิน #}
+    <div class="mt-8 pt-6 border-t-2 border-gray-200 flex flex-wrap gap-4 justify-center">
+        <a href="{% url 'dashboard' %}" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2.5 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-md flex items-center">
+            <i class="fas fa-arrow-left mr-2"></i> กลับสู่แดชบอร์ด
+        </a>
+    </div>
+</div>
+
+{# JavaScript สำหรับการเพิ่มฟอร์ม Asset แบบ Dynamic #}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const addAssetButton = document.getElementById('add-asset-form');
+        const assetFormsetContainer = document.getElementById('asset-formset-container');
+        const totalForms = document.querySelector('input[name="asset-TOTAL_FORMS"]');
+        const formTemplate = document.querySelector('.asset-form'); // Use the first form as a template
+
+        if (formTemplate) {
+            // Clone the first form to use as a template. Hide it initially.
+            const templateClone = formTemplate.cloneNode(true);
+            templateClone.classList.add('hidden'); // Hide the template
+            templateClone.id = 'empty-form'; // Give it a unique ID
+            templateClone.querySelectorAll('input, select, textarea').forEach(input => {
+                input.value = ''; // Clear values in the template
+                // Clear any error messages from previous attempts if they somehow persist in the template
+                input.classList.remove('border-red-500'); 
+            });
+            templateClone.querySelectorAll('.errorlist').forEach(errorList => errorList.innerHTML = '');
+
+            // Ensure the initial form isn't hidden if there's only one and it's not the template
+            if (assetFormsetContainer.children.length === 1 && assetFormsetContainer.children[0].id === 'empty-form') {
+                 // If only the empty form template is present, remove it from normal flow or handle differently
+                 // For now, let's make sure it's not the ONLY child if we're adding dynamic forms
+            } else if (assetFormsetContainer.children.length > 0) {
+                 // Ensure actual forms are visible
+                 Array.from(assetFormsetContainer.children).forEach(child => child.classList.remove('hidden'));
+            }
+
+            assetFormsetContainer.appendChild(templateClone); // Add the template to the container (hidden)
+        } else {
+             console.error("Form template not found. Dynamic form addition may not work.");
+        }
+       
+
+        addAssetButton.addEventListener('click', function() {
+            const currentForms = parseInt(totalForms.value);
+            const newForm = templateClone.cloneNode(true); // Clone the hidden template
+            newForm.classList.remove('hidden'); // Make it visible
+            newForm.id = ''; // Remove the template ID from the new form
+
+            // Update form fields names/ids to be unique
+            newForm.innerHTML = newForm.innerHTML.replace(/__prefix__/g, currentForms);
+            
+            // Clear values in the new form
+            newForm.querySelectorAll('input, select, textarea').forEach(input => {
+                input.value = '';
+                // Clear any error messages
+                input.classList.remove('border-red-500'); 
+            });
+            newForm.querySelectorAll('.errorlist').forEach(errorList => errorList.innerHTML = '');
+
+
+            assetFormsetContainer.appendChild(newForm);
+            totalForms.value = currentForms + 1;
+
+            // Scroll to the new form (optional)
+            newForm.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        });
+    });
+</script>
+{% endblock content %}

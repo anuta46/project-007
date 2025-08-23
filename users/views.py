@@ -4,68 +4,19 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import transaction
-from django.utils import timezone
-from datetime import timedelta
+from django.conf import settings # จำเป็นสำหรับ MEDIA_URL
+from django.http import JsonResponse
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
 from django.contrib.sites.shortcuts import get_current_site
-from django.utils.html import format_html
+from django.template.loader import render_to_string
+from django.core.mail import EmailMessage
 
-# นำเข้าโมเดลจากแอปพลิเคชันที่ถูกต้อง
-from .models import CustomUser, Organization, Notification # นำเข้า Notification 
-from borrowing.models import Item, Loan 
+from .models import CustomUser, Organization, Notification # นำเข้า Notification ด้วย
+from borrowing.models import Item, Asset, Loan # นำเข้า Asset ด้วย
 from .forms import OrganizationRegistrationForm, UserRegistrationForm, LinkBasedUserRegistrationForm
+from .tokens import account_activation_token
 
-
-@login_required
-def dashboard(request):
-    user = request.user
-    
-    if user.is_platform_admin:
-        return redirect('/admin/')
-    
-    if user.is_org_admin:
-        if not user.organization:
-            messages.error(request, "บัญชีผู้ดูแลองค์กรของคุณยังไม่ได้ถูกผูกกับองค์กร กรุณาติดต่อผู้ดูแลระบบ.")
-            return redirect('login') 
-
-        organization = user.organization
-        items = Item.objects.filter(organization=organization)
-        pending_loans = Loan.objects.filter(item__organization=organization, status='pending')
-        
-        active_loans = Loan.objects.filter(item__organization=organization, status='approved')
-        
-        loan_history = Loan.objects.filter(
-            item__organization=organization
-        ).exclude(status='pending').order_by('-borrow_date') 
-
-        context = {
-            'organization': organization,
-            'items': items,
-            'pending_loans': pending_loans,
-            'active_loans': active_loans, 
-            'loan_history': loan_history, 
-        }
-        return render(request, 'users/dashboard.html', context)
-    
-    else:
-        if not user.organization:
-            messages.error(request, "บัญชีของคุณยังไม่ได้ถูกผูกกับองค์กร กรุณาติดต่อผู้ดูแลระบบ.")
-            return redirect('login') 
-        return redirect('user_dashboard')
-
-@login_required
-def user_dashboard(request):
-    user = request.user
-    if not user.organization:
-        messages.error(request, "บัญชีของคุณยังไม่ได้ถูกผูกกับองค์กร กรุณาติดต่อผู้ดูแลระบบ.")
-        return redirect('login') 
-
-    organization = user.organization
-    items = Item.objects.filter(organization=organization, available_quantity__gt=0)
-    
-    context = {
-        'items': items,
-    }
-    return render(request, 'users/user_dashboard.html', context)
 
 def register_organization(request):
     if request.method == 'POST':
@@ -96,31 +47,68 @@ def register_organization(request):
     }
     return render(request, 'users/register_organization.html', context)
 
+
+@login_required
+def dashboard(request):
+    # ตรวจสอบว่าเป็น Platform Admin (Superuser) หรือไม่
+    if request.user.is_superuser:
+        messages.info(request, "ในฐานะ Platform Admin คุณจะถูกนำไปยังหน้า Django Administration Site เพื่อจัดการข้อมูลทั้งหมด")
+        return redirect('/admin/') 
+    
+    # สำหรับ Organization Admin (ผู้ใช้ที่มี is_org_admin = True)
+    elif request.user.is_org_admin:
+        organization = request.user.organization
+        items = Item.objects.filter(organization=organization).order_by('name')
+        pending_loans = Loan.objects.filter(asset__item__organization=organization, status='pending').order_by('-borrow_date')
+        active_loans = Loan.objects.filter(asset__item__organization=organization, status='approved').order_by('due_date')
+        loan_history = Loan.objects.filter(asset__item__organization=organization).exclude(status__in=['pending', 'approved']).order_by('-borrow_date')
+
+        context = {
+            'is_superuser_dashboard': False, 
+            'organization': organization,
+            'items': items,
+            'pending_loans': pending_loans,
+            'active_loans': active_loans,
+            'loan_history': loan_history,
+        }
+        return render(request, 'users/dashboard.html', context)
+    
+    # สำหรับผู้ใช้ทั่วไป (ไม่ใช่ทั้ง Superuser และ Organization Admin)
+    else:
+        messages.error(request, "คุณไม่มีสิทธิ์เข้าถึงแดชบอร์ดนี้")
+        return redirect('user_dashboard')
+
+
+@login_required
+def user_dashboard(request):
+    """
+    View สำหรับผู้ใช้ทั่วไปเพื่อดูรายการอุปกรณ์แต่ละชิ้น (Assets) ที่พร้อมให้ยืมในองค์กรของตน
+    """
+    # ดึง Asset ทั้งหมดในองค์กรของผู้ใช้ที่มีสถานะ 'available'
+    available_assets = Asset.objects.filter(
+        item__organization=request.user.organization, 
+        status='available'
+    ).order_by('item__name', 'serial_number', 'device_id') # เรียงตามชื่อประเภท, SN, ID
+
+    context = {
+        'available_assets': available_assets, # เปลี่ยนชื่อ context variable
+        'MEDIA_URL': settings.MEDIA_URL, 
+    }
+    return render(request, 'users/user_dashboard.html', context)
+
+
 @login_required
 def generate_registration_link(request):
     if not request.user.is_org_admin:
         messages.error(request, "คุณไม่มีสิทธิ์สร้างลิงก์ลงทะเบียน")
         return redirect('dashboard')
-
-    if not request.user.organization:
-        messages.error(request, "บัญชีผู้ดูแลองค์กรของคุณยังไม่ได้ถูกผูกกับองค์กร ไม่สามารถสร้างลิงก์ได้")
-        return redirect('dashboard')
-
+    
     if request.method == 'POST':
         organization_id = request.user.organization.id
-        
-        current_site = get_current_site(request)
-        domain = current_site.domain
-        protocol = 'https' if request.is_secure() else 'http'
-
-        registration_link_url = f'{protocol}://{domain}/register/user-via-link/{organization_id}/'
-        
-        link_html = format_html(
-            "สร้างลิงก์ลงทะเบียนสำเร็จ! คัดลอกลิงก์นี้เพื่อแชร์: <br>"
-            "<input type='text' value='{}' readonly style='width: 100%; max-width: 500px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; background-color: #f9f9f9;'>",
-            registration_link_url
+        registration_link = request.build_absolute_uri(
+            f'/register/user-via-link/{organization_id}/'
         )
-        messages.info(request, link_html)
+        messages.success(request, f'ลิงก์ลงทะเบียนผู้ใช้สำหรับองค์กรของคุณถูกสร้างแล้ว: <a href="{registration_link}" target="_blank" class="text-blue-500 hover:underline">{registration_link}</a>')
     
     return redirect('dashboard')
 
@@ -139,16 +127,16 @@ def register_user_via_link(request, organization_id):
                     user.is_active = True 
                     user.save()
 
-                    messages.success(request, f'คุณได้ลงทะเบียนสำเร็จกับองค์กร "{organization.name}" แล้ว! กรุณาล็อกอิน')
+                    messages.success(request, f'การลงทะเบียนผู้ใช้สำหรับองค์กร {organization.name} สำเร็จแล้ว! กรุณาเข้าสู่ระบบ')
                     return redirect('login')
             except Exception as e:
                 messages.error(request, f'เกิดข้อผิดพลาดในการลงทะเบียน: {e}')
     else:
         form = LinkBasedUserRegistrationForm()
-
+    
     context = {
         'form': form,
-        'organization_name': organization.name 
+        'organization_name': organization.name,
     }
     return render(request, 'users/register_user_from_link.html', context)
 
@@ -156,19 +144,15 @@ def register_user_via_link(request, organization_id):
 @login_required
 def manage_organization_users(request):
     if not request.user.is_org_admin:
-        messages.error(request, "คุณไม่มีสิทธิ์เข้าถึงหน้านี้")
+        messages.error(request, "คุณไม่มีสิทธิ์จัดการผู้ใช้")
         return redirect('dashboard')
     
-    if not request.user.organization:
-        messages.error(request, "บัญชีผู้ดูแลองค์กรของคุณยังไม่ได้ถูกผูกกับองค์กร")
-        return redirect('dashboard')
-
     organization = request.user.organization
-    organization_users = CustomUser.objects.filter(organization=organization).exclude(id=request.user.id)
-    
+    organization_users = CustomUser.objects.filter(organization=organization).exclude(id=request.user.id).order_by('username')
+
     context = {
-        'organization_users': organization_users,
-        'organization_name': organization.name
+        'organization_name': organization.name,
+        'organization_users': organization_users
     }
     return render(request, 'users/manage_organization_users.html', context)
 
@@ -178,20 +162,16 @@ def activate_user(request, user_id):
     if not request.user.is_org_admin:
         messages.error(request, "คุณไม่มีสิทธิ์ดำเนินการนี้")
         return redirect('dashboard')
-
-    target_user = get_object_or_404(CustomUser, id=user_id, organization=request.user.organization)
-
-    if target_user == request.user:
-        messages.error(request, "คุณไม่สามารถเปิดใช้งานบัญชีของคุณเองได้")
-        return redirect('manage_organization_users')
-
-    if target_user.is_platform_admin:
-        messages.error(request, "คุณไม่สามารถเปิดใช้งานบัญชี Platform Admin ได้")
-        return redirect('manage_organization_users')
-
-    target_user.is_active = True
-    target_user.save()
-    messages.success(request, f"บัญชี '{target_user.username}' ถูกเปิดใช้งานแล้ว")
+    
+    user_to_activate = get_object_or_404(CustomUser, id=user_id, organization=request.user.organization)
+    
+    if not user_to_activate.is_active:
+        user_to_activate.is_active = True
+        user_to_activate.save()
+        messages.success(request, f'ผู้ใช้ "{user_to_activate.username}" ถูกเปิดใช้งานแล้ว')
+    else:
+        messages.info(request, f'ผู้ใช้ "{user_to_activate.username}" ใช้งานอยู่แล้ว')
+    
     return redirect('manage_organization_users')
 
 
@@ -200,36 +180,27 @@ def deactivate_user(request, user_id):
     if not request.user.is_org_admin:
         messages.error(request, "คุณไม่มีสิทธิ์ดำเนินการนี้")
         return redirect('dashboard')
-
-    target_user = get_object_or_404(CustomUser, id=user_id, organization=request.user.organization)
-
-    if target_user == request.user:
-        messages.error(request, "คุณไม่สามารถปิดใช้งานบัญชีของคุณเองได้")
+    
+    user_to_deactivate = get_object_or_404(CustomUser, id=user_id, organization=request.user.organization)
+    
+    if user_to_deactivate.is_org_admin:
+        messages.error(request, "ไม่สามารถปิดใช้งานผู้ดูแลองค์กรได้")
         return redirect('manage_organization_users')
 
-    if target_user.is_org_admin:
-        messages.error(request, "คุณไม่สามารถปิดใช้งานบัญชีผู้ดูแลองค์กรอื่นได้")
-        return redirect('manage_organization_users')
-
-    if target_user.is_platform_admin:
-        messages.error(request, "คุณไม่สามารถปิดใช้งานบัญชี Platform Admin ได้")
-        return redirect('manage_organization_users')
-
-    target_user.is_active = False
-    target_user.save()
-    messages.success(request, f"บัญชี '{target_user.username}' ถูกปิดใช้งานแล้ว")
+    if user_to_deactivate.is_active:
+        user_to_deactivate.is_active = False
+        user_to_deactivate.save()
+        messages.success(request, f'ผู้ใช้ "{user_to_deactivate.username}" ถูกปิดใช้งานแล้ว')
+    else:
+        messages.info(request, f'ผู้ใช้ "{user_to_deactivate.username}" ถูกปิดใช้งานอยู่แล้ว')
+    
     return redirect('manage_organization_users')
 
 
 @login_required
 def my_borrowed_items_history(request):
-    user = request.user
-    if not user.organization:
-        messages.error(request, "บัญชีของคุณยังไม่ได้ถูกผูกกับองค์กร กรุณาติดต่อผู้ดูแลระบบ.")
-        return redirect('login') 
-
     my_loans = Loan.objects.filter(borrower=request.user).order_by('-borrow_date')
-    
+
     context = {
         'my_loans': my_loans,
     }
@@ -238,19 +209,11 @@ def my_borrowed_items_history(request):
 
 @login_required
 def user_notifications(request):
-    """
-    View สำหรับผู้ใช้เพื่อดูรายการการแจ้งเตือนทั้งหมด
-    และทำเครื่องหมายการแจ้งเตือนที่ยังไม่ได้อ่านว่าอ่านแล้ว
-    """
     notifications = Notification.objects.filter(user=request.user).order_by('-created_at')
     
-    # ทำเครื่องหมายการแจ้งเตือนทั้งหมดที่ดึงมาว่าอ่านแล้ว
-    # (หรือคุณอาจเพิ่มปุ่ม "Mark all as read" ใน template ก็ได้)
     unread_notifications = notifications.filter(is_read=False)
-    for notif in unread_notifications:
-        notif.is_read = True
-        notif.save()
-    # หรือ: unread_notifications.update(is_read=True) เพื่อประสิทธิภาพที่ดีกว่า
+    if unread_notifications.exists():
+        unread_notifications.update(is_read=True)
 
     context = {
         'notifications': notifications
@@ -260,11 +223,9 @@ def user_notifications(request):
 
 @login_required
 def mark_notification_as_read(request, notification_id):
-    """
-    View สำหรับทำเครื่องหมายการแจ้งเตือนเฉพาะว่าเป็นอ่านแล้ว (via POST request)
-    """
-    notification = get_object_or_404(Notification, id=notification_id, user=request.user)
-    notification.is_read = True
-    notification.save()
-    messages.success(request, "การแจ้งเตือนถูกทำเครื่องหมายว่าอ่านแล้ว")
-    return redirect('user_notifications')
+    if request.method == 'POST':
+        notification = get_object_or_404(Notification, id=notification_id, user=request.user)
+        notification.is_read = True
+        notification.save()
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'failed', 'message': 'Invalid request method'}, status=405)

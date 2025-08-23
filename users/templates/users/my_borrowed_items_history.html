@@ -17,7 +17,11 @@
                 <table class="min-w-full bg-white rounded-lg overflow-hidden border border-gray-200">
                     <thead>
                         <tr class="bg-gray-100 text-gray-700 uppercase text-sm leading-normal">
-                            <th class="py-3 px-6 text-left font-semibold">สิ่งของ</th>
+                            <th class="py-3 px-6 text-left font-semibold">ประเภทสิ่งของ</th> {# เปลี่ยนชื่อคอลัมน์ #}
+                            <th class="py-3 px-6 text-left font-semibold">Serial/Device ID</th> {# เพิ่มคอลัมน์ #}
+                            <th class="py-3 px-6 text-left font-semibold">สถานที่จัดเก็บ</th> {# เพิ่มคอลัมน์ #}
+                            <th class="py-3 px-6 text-left font-semibold">สภาพ</th> {# เพิ่มคอลัมน์ #}
+                            <th class="py-3 px-6 text-left font-semibold">เหตุผลการยืม</th> {# เพิ่มคอลัมน์ใหม่สำหรับเหตุผล #}
                             <th class="py-3 px-6 text-left font-semibold">สถานะ</th>
                             <th class="py-3 px-6 text-left font-semibold">วันที่ยืม</th>
                             <th class="py-3 px-6 text-left font-semibold">วันครบกำหนด</th>
@@ -27,7 +31,13 @@
                     <tbody class="text-gray-700 text-sm">
                         {% for loan in my_loans %}
                             <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-150 ease-in-out">
-                                <td class="py-3 px-6 text-left whitespace-nowrap">{{ loan.item.name }}</td>
+                                <td class="py-3 px-6 text-left whitespace-nowrap">{{ loan.asset.item.name }}</td> {# เข้าถึงชื่อประเภทสิ่งของผ่าน Asset #}
+                                <td class="py-3 px-6 text-left whitespace-nowrap">
+                                    {{ loan.asset.serial_number|default:loan.asset.device_id|default:"-" }}
+                                </td> {# แสดง Serial/Device ID #}
+                                <td class="py-3 px-6 text-left whitespace-nowrap">{{ loan.asset.location|default:"-" }}</td> {# แสดงสถานที่จัดเก็บ #}
+                                <td class="py-3 px-6 text-left whitespace-nowrap">{{ loan.asset.get_condition_display }}</td> {# แสดงสภาพ #}
+                                <td class="py-3 px-6 text-left whitespace-normal max-w-xs">{{ loan.reason|default:"-" }}</td> {# แสดงเหตุผลการยืม #}
                                 <td class="py-3 px-6 text-left">
                                     {% if loan.status == 'approved' %}
                                         <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">อนุมัติ</span>
@@ -37,6 +47,8 @@
                                         <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">คืนแล้ว</span>
                                     {% elif loan.status == 'rejected' %}
                                         <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">ปฏิเสธ</span>
+                                    {% elif loan.status == 'overdue' %} {# เพิ่มสถานะ overdue #}
+                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">เกินกำหนด</span>
                                     {% endif %}
                                 </td>
                                 <td class="py-3 px-6 text-left">{{ loan.borrow_date|default_if_none:"N/A"|date:"M d, Y" }}</td>

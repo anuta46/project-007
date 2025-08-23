@@ -9,97 +9,67 @@
     
     <hr class="my-6 border-gray-300"> {# เพิ่มเส้นแบ่งที่ชัดเจน #}
 
-    {# ส่วนรายการสิ่งของที่สามารถยืมได้ในองค์กร (Card Layout) #}
+    {# ส่วนรายการอุปกรณ์ที่สามารถยืมได้ในองค์กร (Card Layout) #}
     <div class="mb-10 p-6 bg-green-50 rounded-lg shadow-sm border border-green-200">
-        <h2 class="text-2xl font-bold text-green-800 mb-4 border-b pb-2 border-green-300">รายการสิ่งของที่สามารถยืมได้ในองค์กร</h2>
-        {% if items %}
+        <h2 class="text-2xl font-bold text-green-800 mb-4 border-b pb-2 border-green-300">รายการอุปกรณ์ที่พร้อมให้ยืมในองค์กร</h2> {# เปลี่ยนหัวข้อ #}
+        {% if available_assets %} {# เปลี่ยนจาก items เป็น available_assets #}
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"> {# Grid สำหรับแสดง Card สิ่งของ #}
-                {% for item in items %}
+                {% for asset in available_assets %} {# วนลูปผ่าน available_assets #}
                     <div class="bg-white rounded-lg shadow-md p-5 border border-gray-200 flex flex-col justify-between transform transition duration-200 hover:scale-105 hover:shadow-lg">
                         <div>
-                            <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ item.name }}</h3>
-                            <p class="text-gray-600 text-sm mb-4">{{ item.description|default:"ไม่มีรายละเอียด" }}</p>
+                            {# แสดงรูปภาพของประเภทสิ่งของ #}
+                            {% if asset.item.image %}
+                                <img src="{{ MEDIA_URL }}{{ asset.item.image }}" alt="{{ asset.item.name }}" class="w-full h-40 object-cover rounded-md mb-3">
+                            {% else %}
+                                <div class="w-full h-40 bg-gray-200 flex items-center justify-center rounded-md mb-3 text-gray-500">
+                                    ไม่มีรูปภาพ
+                                </div>
+                            {% endif %}
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ asset.item.name }}</h3> {# ชื่อประเภทสิ่งของ #}
+                            <p class="text-gray-600 text-sm mb-2">{{ asset.item.description|default:"ไม่มีรายละเอียด" }}</p> {# รายละเอียดประเภทสิ่งของ #}
+                            
+                            {# แสดงข้อมูลเฉพาะของ Asset #}
+                            <p class="text-gray-700 text-sm mb-1">
+                                <strong class="text-gray-800">รหัสประจำเครื่อง:</strong> {{ asset.serial_number|default:"-" }}
+                            </p>
+                            <p class="text-gray-700 text-sm mb-1">
+                                <strong class="text-gray-800">รหัสอุปกรณ์:</strong> {{ asset.device_id|default:"-" }}
+                            </p>
+                            <p class="text-gray-700 text-sm mb-1">
+                                <strong class="text-gray-800">สถานที่จัดเก็บ:</strong> {{ asset.location|default:"-" }}
+                            </p>
+                            <p class="text-gray-700 text-sm mb-4">
+                                <strong class="text-gray-800">สภาพ:</strong> {{ asset.get_condition_display }}
+                            </p>
                         </div>
                         <div class="flex justify-between items-center mt-auto pt-4 border-t border-gray-200">
-                            {% if item.available_quantity > 0 %}
+                            {% if asset.status == 'available' %} {# ตรวจสอบสถานะของ Asset #}
                                 <span class="text-green-600 font-medium flex items-center">
                                     <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-                                    พร้อมให้ยืม ({{ item.available_quantity }})
+                                    พร้อมให้ยืม
                                 </span>
-                                <a href="{% url 'borrow_item' item.id %}" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition duration-300 transform hover:scale-105 shadow-md">ยืมสิ่งของ</a>
+                                {# เปลี่ยน URL ของปุ่ม "ยืมอุปกรณ์" เพื่อชี้ไปที่หน้ากรอกเหตุผล #}
+                                <a href="{% url 'borrow_item' asset.id %}" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition duration-300 transform hover:scale-105 shadow-md">ยืมอุปกรณ์</a> 
                             {% else %}
                                 <span class="text-red-600 font-medium flex items-center">
                                     <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
-                                    ไม่พร้อมให้ยืม
+                                    ไม่พร้อมให้ยืม ({{ asset.get_status_display }}) {# แสดงสถานะ Asset #}
                                 </span>
-                                <button class="bg-gray-400 text-white text-sm font-semibold py-2 px-4 rounded-lg cursor-not-allowed" disabled>ยืมสิ่งของ</button>
+                                <button class="bg-gray-400 text-white text-sm font-semibold py-2 px-4 rounded-lg cursor-not-allowed" disabled>ยืมอุปกรณ์</button>
                             {% endif %}
                         </div>
                     </div>
                 {% endfor %}
             </div>
         {% else %}
-            <p class="text-gray-600 italic py-2">ไม่มีสิ่งของที่พร้อมให้ยืม</p>
+            <p class="text-gray-600 italic py-2">ไม่มีอุปกรณ์ที่พร้อมให้ยืมในองค์กรของคุณ</p> {# เปลี่ยนข้อความ #}
         {% endif %}
     </div>
 
-    {# ส่วน "สิ่งของที่คุณยืมอยู่" ได้ถูกย้ายไปที่หน้า "ประวัติการยืมของฉัน" แล้ว #}
-    
-    {% comment %} <hr class="my-6 border-gray-300">
-    <div class="mb-10 p-6 bg-blue-50 rounded-lg shadow-sm border border-blue-200">
-        <h2 class="text-2xl font-bold text-blue-800 mb-4 border-b pb-2 border-blue-300"></h2>
-        {% if my_loans %}
-            <div class="overflow-x-auto">
-                <table class="min-w-full bg-white rounded-lg overflow-hidden border border-gray-200">
-                    <thead>
-                        <tr class="bg-gray-100 text-gray-700 uppercase text-sm leading-normal">
-                            <th class="py-3 px-6 text-left font-semibold">สิ่งของ</th>
-                            <th class="py-3 px-6 text-left font-semibold">สถานะ</th>
-                            <th class="py-3 px-6 text-left font-semibold">วันที่ยืม</th>
-                            <th class="py-3 px-6 text-left font-semibold">วันครบกำหนด</th>
-                            <th class="py-3 px-6 text-center font-semibold">การกระทำ</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-gray-700 text-sm">
-                        {% for loan in my_loans %}
-                            <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-150 ease-in-out">
-                                <td class="py-3 px-6 text-left whitespace-nowrap">{{ loan.item.name }}</td>
-                                <td class="py-3 px-6 text-left">
-                                    {% if loan.status == 'approved' %}
-                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">อนุมัติ</span>
-                                    {% elif loan.status == 'pending' %}
-                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">รอดำเนินการ</span>
-                                    {% elif loan.status == 'returned' %}
-                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">คืนแล้ว</span>
-                                    {% elif loan.status == 'rejected' %}
-                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">ปฏิเสธ</span>
-                                    {% endif %}
-                                </td>
-                                <td class="py-3 px-6 text-left">{{ loan.borrow_date|default_if_none:"N/A"|date:"M d, Y" }}</td>
-                                <td class="py-3 px-6 text-left">{{ loan.due_date|date:"M d, Y" }}</td>
-                                <td class="py-3 px-6 text-center">
-                                    {% if loan.status == 'approved' %}
-                                        <a href="{% url 'return_item' loan.id %}" class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition duration-300 transform hover:scale-105 shadow-md">คืน</a>
-                                    {% else %}
-                                        <span class="text-gray-500 text-sm italic">ไม่มีการกระทำ</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <p class="text-gray-600 italic py-2">คุณยังไม่ได้ยืมสิ่งของใดๆ</p>
-        {% endif %}
-    </div> {% endcomment %}
-    
-
-    {# เพิ่มลิงก์สำหรับหน้าอื่นๆ ที่อาจมีในอนาคต #}
+    {# ลิงก์สำหรับหน้าอื่นๆ ที่อาจมีในอนาคต #}
     <div class="mt-8 pt-6 border-t-2 border-gray-200 flex flex-wrap gap-4 justify-center">
-        {# สามารถเพิ่มลิงก์อื่นๆ ที่เกี่ยวข้องกับผู้ใช้งานทั่วไปได้ที่นี่ #}
-        {# ลิงก์ไปหน้าประวัติการยืมของฉัน (ซึ่งตอนนี้ถูกย้ายไปที่ Navbar แล้ว) #}
-        {# <a href="{% url 'my_borrowed_items_history' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-md">ประวัติการยืมของฉัน</a> #}
+        {# ลิงก์ไปหน้าประวัติการยืมของฉัน #}
+        <a href="{% url 'my_borrowed_items_history' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-md">ประวัติการยืมของฉัน</a>
     </div>
 </div>
 {% endblock content %}
