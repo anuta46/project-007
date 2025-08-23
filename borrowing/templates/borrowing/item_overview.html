@@ -1,0 +1,68 @@
+{% extends 'users/base.html' %} {# ขยายจาก base.html เพื่อใช้โครงสร้างและสไตล์พื้นฐาน #}
+
+{% block title %}ภาพรวมสิ่งของในองค์กร{% endblock %} {# กำหนดชื่อหน้าสำหรับแท็บเบราว์เซอร์ #}
+{% block title_in_header %}ภาพรวมสิ่งของ{% endblock title_in_header %} {# กำหนดชื่อสำหรับ header บนมือถือ #}
+
+{% block content %} {# บล็อก content สำหรับเนื้อหาเฉพาะของหน้านี้ #}
+<div class="bg-white p-6 md:p-8 lg:p-10 rounded-xl shadow-lg max-w-5xl mx-auto my-8 border border-gray-200">
+    <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4 text-center flex items-center justify-center gap-x-3">
+        <i class="fas fa-boxes-alt text-green-600"></i> ภาพรวมสิ่งของในองค์กร
+    </h1>
+    <p class="text-gray-700 mb-8 text-center text-lg max-w-2xl mx-auto">จัดการและตรวจสอบสิ่งของทั้งหมดที่มีอยู่ในองค์กรของคุณ</p>
+    
+    <hr class="my-6 border-gray-300">
+
+    <div class="mb-10 p-6 bg-green-50 rounded-xl shadow-md border border-green-200">
+        <h2 class="text-2xl font-bold text-green-800 mb-4 border-b-2 pb-2 border-green-300 flex items-center gap-x-2">
+            รายการสิ่งของทั้งหมด
+        </h2>
+        {% if items %}
+            <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+                <table class="min-w-full bg-white">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-700 uppercase text-sm leading-normal font-bold">
+                            <th class="py-3 px-6 text-left">ชื่อสิ่งของ</th>
+                            <th class="py-3 px-6 text-left">ประเภทกลุ่มสิ่งของ</th>
+                            <th class="py-3 px-6 text-center">พร้อมยืม</th>
+                            <th class="py-3 px-6 text-center">ทั้งหมด</th>
+                            <th class="py-3 px-6 text-center">การกระทำ</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-700 text-sm divide-y divide-gray-100">
+                        {% for item in items %}
+                            <tr class="hover:bg-gray-50 transition duration-150 ease-in-out">
+                                <td class="py-3 px-6 text-left whitespace-nowrap">{{ item.name }}</td>
+                                <td class="py-3 px-6 text-left">{{ item.item_type|default:"-" }}</td>
+                                <td class="py-3 px-6 text-center font-medium">{{ item.available_quantity }}</td>
+                                <td class="py-3 px-6 text-center font-medium">{{ item.total_quantity }}</td>
+                                <td class="py-3 px-6 text-center flex justify-center items-center space-x-2">
+                                    <a href="{% url 'edit_item' item.id %}" class="bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-semibold py-2 px-3 rounded-lg transition duration-300 transform hover:scale-105 shadow-md flex items-center">
+                                        <i class="fas fa-edit mr-1"></i> แก้ไข
+                                    </a>
+                                    <form method="post" action="{% url 'delete_item' item.id %}" onsubmit="return confirm('คุณแน่ใจหรือไม่ที่ต้องการลบประเภทสิ่งของ {{ item.name }}? การดำเนินการนี้จะลบอุปกรณ์ทั้งหมดที่ผูกอยู่ด้วยหากไม่มีการยืม');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition duration-300 transform hover:scale-105 shadow-md flex items-center">
+                                            <i class="fas fa-trash-alt mr-1"></i> ลบ
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-gray-600 italic py-2">ไม่พบประเภทสิ่งของในองค์กรของคุณ</p>
+        {% endif %}
+    </div>
+
+    <div class="mt-8 pt-6 border-t-2 border-gray-200 flex flex-wrap gap-4 justify-center">
+        <a href="{% url 'dashboard' %}" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2.5 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-md flex items-center">
+            <i class="fas fa-arrow-left mr-2"></i> กลับสู่แดชบอร์ด
+        </a>
+        <a href="{% url 'add_item' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-md flex items-center">
+            <i class="fas fa-plus-square mr-2"></i> เพิ่มประเภทสิ่งของใหม่
+        </a>
+    </div>
+</div>
+{% endblock content %}

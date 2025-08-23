@@ -9,7 +9,7 @@ class ItemForm(forms.ModelForm):
         model = Item
         fields = ['name', 'description', 'image', 'item_type']
         labels = {
-            'name': "ชื่อประเภทสิ่งของ",
+            'name': "ชื่อสิ่งของ",
             'description': "รายละเอียดประเภทสิ่งของ",
             'image': "รูปภาพประเภทสิ่งของ",
             'item_type': "ประเภทกลุ่มสิ่งของ", 

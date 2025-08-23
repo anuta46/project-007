@@ -1,0 +1,64 @@
+{% extends 'users/base.html' %} {# ขยายจาก base.html เพื่อใช้โครงสร้างและสไตล์พื้นฐาน #}
+
+{% block title %}คำขอยืมที่รอดำเนินการ{% endblock %} {# กำหนดชื่อหน้าสำหรับแท็บเบราว์เซอร์ #}
+{% block title_in_header %}คำขอยืมที่รอดำเนินการ{% endblock title_in_header %} {# กำหนดชื่อสำหรับ header บนมือถือ #}
+
+{% block content %} {# บล็อก content สำหรับเนื้อหาเฉพาะของหน้านี้ #}
+<div class="bg-white p-6 md:p-8 lg:p-10 rounded-xl shadow-lg max-w-5xl mx-auto my-8 border border-gray-200">
+    <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4 text-center flex items-center justify-center gap-x-3">
+        <i class="fas fa-hourglass-half text-yellow-600"></i> คำขอยืมที่รอดำเนินการ
+    </h1>
+    <p class="text-gray-700 mb-8 text-center text-lg max-w-2xl mx-auto">จัดการคำขอยืมสิ่งของที่ยังรอการอนุมัติหรือปฏิเสธจากคุณ</p>
+    
+    <hr class="my-6 border-gray-300">
+
+    <div class="mb-10 p-6 bg-yellow-50 rounded-xl shadow-md border border-yellow-200">
+        <h2 class="text-2xl font-bold text-yellow-800 mb-4 border-b-2 pb-2 border-yellow-300 flex items-center gap-x-2">
+            รายการคำขอยืมทั้งหมด
+        </h2>
+        {% if pending_loans %}
+            <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+                <table class="min-w-full bg-white">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-700 uppercase text-sm leading-normal font-bold">
+                            <th class="py-3 px-6 text-left">ผู้ยืม</th>
+                            <th class="py-3 px-6 text-left">ชื่อสิ่งของ</th>
+                            <th class="py-3 px-6 text-left">Serial/Device ID</th>
+                            <th class="py-3 px-6 text-left">เหตุผลการยืม</th>
+                            <th class="py-3 px-6 text-left">วันที่ขอ</th>
+                            <th class="py-3 px-6 text-center">การกระทำ</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-700 text-sm divide-y divide-gray-100">
+                        {% for loan in pending_loans %}
+                            <tr class="hover:bg-gray-50 transition duration-150 ease-in-out">
+                                <td class="py-3 px-6 text-left whitespace-nowrap">{{ loan.borrower.username }}</td>
+                                <td class="py-3 px-6 text-left">{{ loan.asset.item.name }}</td>
+                                <td class="py-3 px-6 text-left">{{ loan.asset.serial_number|default:loan.asset.device_id|default:"-" }}</td>
+                                <td class="py-3 px-6 text-left max-w-xs whitespace-normal">{{ loan.reason|default:"-" }}</td>
+                                <td class="py-3 px-6 text-left">{{ loan.borrow_date|date:"M d, Y" }}</td>
+                                <td class="py-3 px-6 text-center flex justify-center items-center space-x-2">
+                                    <a href="{% url 'approve_loan' loan.id %}" class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition duration-300 transform hover:scale-105 shadow-md flex items-center">
+                                        <i class="fas fa-check-circle mr-1"></i> อนุมัติ
+                                    </a>
+                                    <a href="{% url 'reject_loan' loan.id %}" class="bg-red-600 hover:bg-red-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition duration-300 transform hover:scale-105 shadow-md flex items-center">
+                                        <i class="fas fa-times-circle mr-1"></i> ปฏิเสธ
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-gray-600 italic py-2">ไม่มีคำขอยืมที่รอดำเนินการ</p>
+        {% endif %}
+    </div>
+
+    <div class="mt-8 pt-6 border-t-2 border-gray-200 flex flex-wrap gap-4 justify-center">
+        <a href="{% url 'dashboard' %}" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2.5 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-md flex items-center">
+            <i class="fas fa-arrow-left mr-2"></i> กลับสู่แดชบอร์ด
+        </a>
+    </div>
+</div>
+{% endblock content %}

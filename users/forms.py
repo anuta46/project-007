@@ -1,16 +1,16 @@
 # users/forms.py
 
-from django import forms
-from .models import Organization, CustomUser
+from django import forms # นำเข้าโมดูลฟอร์มจาก Django
+from .models import Organization, CustomUser # นำเข้า models , CustomUser , Organization เพื่อใช้เป็นฐานข้อมูลของฟอร์ม
 
 # ฟอร์มสำหรับข้อมูลองค์กร
-class OrganizationRegistrationForm(forms.ModelForm):
-    class Meta:
-        model = Organization
-        fields = ['name', 'address', 'business_type']
-        widgets = {
-            'address': forms.Textarea(attrs={'rows': 3}),
-            'business_type': forms.TextInput(attrs={'placeholder': 'เช่น เทคโนโลยี, การศึกษา, การผลิต'})
+class OrganizationRegistrationForm(forms.ModelForm): #ประกาศคลาสฟอร์มใหม่
+    class Meta: # กำหนดเมตาดาต้าของฟอร์ม
+        model = Organization # กำหนดโมเดลที่ฟอร์มนี้จะใช้
+        fields = ['name', 'address', 'business_type']# กำหนดฟิลด์ที่ต้องการในฟอร์ม
+        widgets = {# กำหนดวิดเจ็ตสำหรับฟิลด์ต่างๆ
+            'address': forms.Textarea(attrs={'rows': 3}), # ใช้ Textarea สำหรับฟิลด์ address
+            'business_type': forms.TextInput(attrs={'placeholder': 'เช่น เทคโนโลยี, การศึกษา, การผลิต'}) # ใช้ TextInput พร้อม placeholder สำหรับฟิลด์ business_type
         }
 
 # ฟอร์มสำหรับข้อมูลผู้ใช้ที่จะเป็นแอดมินองค์กรคนแรก
