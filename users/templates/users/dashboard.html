@@ -47,13 +47,13 @@
     {% endif %}
 
     {# ส่วนรวมปุ่มการกระทำหลัก #}
-    <div class="mt-8 pt-6 border-t-2 border-gray-200 flex flex-wrap gap-4 justify-center">
+    {% comment %} <div class="mt-8 pt-6 border-t-2 border-gray-200 flex flex-wrap gap-4 justify-center">
         <a href="{% url 'add_item' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-md flex items-center">
             <i class="fas fa-plus-square mr-2"></i> เพิ่มประเภทสิ่งของใหม่
         </a>
         <a href="{% url 'manage_organization_users' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-md flex items-center">
             <i class="fas fa-users-gear mr-2"></i> จัดการผู้ใช้ในองค์กร
         </a>
-    </div>
+    </div> {% endcomment %}
 </div>
 {% endblock content %}

@@ -204,7 +204,7 @@
                         {# ลิงก์ไปยังหน้าภาพรวมสิ่งของที่แยกออกมาใหม่ #}
                         <li>
                             <a href="{% url 'item_overview' %}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 pl-6 rounded-md transition duration-300">
-                                <i class="fas fa-boxes-alt mr-3"></i> ภาพรวมสิ่งของ
+                                <i class="fas fa-boxes-alt mr-3"></i> รายการสิ่งของ
                             </a>
                         </li>
                         {# ลิงก์ไปยังหน้าคำขอยืมที่รอดำเนินการ #}
@@ -226,9 +226,9 @@
                             </a>
                         </li>
                         <li>
-                            <a href="{% url 'add_item' %}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded-md transition duration-300">
+                            {% comment %} <a href="{% url 'add_item' %}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded-md transition duration-300">
                                 <i class="fas fa-plus-circle mr-3"></i> เพิ่มประเภทสิ่งของ
-                            </a>
+                            </a> {% endcomment %}
                         </li>
                         <li>
                             <a href="{% url 'manage_organization_users' %}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded-md transition duration-300">
@@ -237,7 +237,7 @@
                         </li>
                         {# Dropdown แจ้งเตือนสำหรับแอดมินองค์กร #}
                         <li>
-                            <div class="relative notification-dropdown">
+                            {% comment %} <div class="relative notification-dropdown">
                                 <button id="notification-bell-sidebar" class="w-full flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded-md transition duration-300 focus:outline-none">
                                     <i class="fas fa-bell mr-3"></i> แจ้งเตือน
                                     {% if unread_notifications_count > 0 %}
@@ -260,7 +260,7 @@
                                     {% endif %}
                                 </div>
                             </div>
-                        </li>
+                        </li> {% endcomment %}
                     {% else %} {# ผู้ใช้ทั่วไป #}
                         <li>
                             <a href="{% url 'user_dashboard' %}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded-md transition duration-300">

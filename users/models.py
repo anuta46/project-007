@@ -23,10 +23,14 @@ class CustomUser(AbstractUser):
     # เพิ่มฟิลด์ is_platform_admin เพื่อระบุว่าเป็นผู้ดูแลระบบแพลตฟอร์มหรือไม่
     # ผู้ดูแลระบบแพลตฟอร์มควรเป็น is_superuser และ is_staff ด้วย
     is_platform_admin = models.BooleanField(default=False, verbose_name="ผู้ดูแลแพลตฟอร์ม")
+    
+    phone_number = models.CharField(max_length=20, blank=True, null=True) 
+    
 
     class Meta:
         verbose_name = "ผู้ใช้งาน"
         verbose_name_plural = "ผู้ใช้งาน"
+        
         # เพิ่ม unique_together หากต้องการให้ username และ organization ต้องไม่ซ้ำกัน (สำหรับผู้ใช้ทั่วไป)
         # แต่ถ้า is_platform_admin ไม่ควรผูกกับ organization
         # unique_together = ('username', 'organization') # อาจต้องพิจารณาเงื่อนไขนี้

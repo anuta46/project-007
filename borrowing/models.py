@@ -1,98 +1,78 @@
 # borrowing/models.py
 from django.db import models
 from users.models import Organization, CustomUser
+from django.db.models import Sum, F
 
 class Item(models.Model):
-    # ฟิลด์ที่อธิบายถึง "ประเภท" ของสิ่งของ (เช่น Laptop, Projector, Book)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, verbose_name="องค์กร")
     name = models.CharField(max_length=255, verbose_name="ชื่อประเภทสิ่งของ")
-    description = models.TextField(blank=True, verbose_name="รายละเอียดประเภทสิ่งของ")
+    description = models.TextField(blank=True, verbose_name="รายละเอียด")
+    # เปลี่ยน quantity เป็น total_quantity เพื่อให้สอดคล้องกับ Asset
+    total_quantity = models.IntegerField(default=0, verbose_name="จำนวนทั้งหมด") 
+    available_quantity = models.IntegerField(default=0, verbose_name="จำนวนที่เหลืออยู่")
     
-    # ฟิลด์รูปภาพของ "ประเภทสิ่งของ"
-    image = models.ImageField(upload_to='item_images/', blank=True, null=True, verbose_name="รูปภาพประเภทสิ่งของ")
-    
-    # ฟิลด์ประเภทสิ่งของ (เช่น "อุปกรณ์อิเล็กทรอนิกส์", "หนังสือ") - เป็นฟิลด์ของ Item (ประเภท)
-    item_type = models.CharField(max_length=100, blank=True, null=True, verbose_name="ประเภทกลุ่มสิ่งของ")
-
-    # ฟิลด์สำหรับเก็บเวลาที่ "ประเภทสิ่งของ" นี้ถูกเพิ่ม
-    added_at = models.DateTimeField(auto_now_add=True, verbose_name="วันที่เพิ่มประเภทสิ่งของ")
+    image = models.ImageField(upload_to='item_images/', blank=True, null=True, verbose_name="รูปภาพสิ่งของ")
+    item_type = models.CharField(max_length=100, blank=True, null=True, verbose_name="ประเภทสิ่งของ")
+    added_at = models.DateTimeField(auto_now_add=True, verbose_name="วันที่เพิ่ม")
 
     class Meta:
-        verbose_name = "ประเภทสิ่งของ" 
+        verbose_name = "ประเภทสิ่งของ"
         verbose_name_plural = "ประเภทสิ่งของ"
-        unique_together = ('organization', 'name') # ตรวจสอบให้ชื่อประเภทสิ่งของในแต่ละองค์กรไม่ซ้ำกัน
+        unique_together = ('organization', 'name')
 
     def __str__(self):
         return f"{self.name} ({self.organization.name})"
 
-    # เพิ่ม property เพื่อคำนวณจำนวน Assets ที่มีอยู่ทั้งหมดของ Item นี้
-    @property
-    def total_quantity(self):
-        return self.assets.count()
+    # เพิ่มเมธอดสำหรับอัปเดตจำนวนทั้งหมดและจำนวนที่เหลืออยู่ของ Item
+    def update_quantities(self):
+        # นับจำนวน Asset ทั้งหมดที่ผูกกับ Item นี้
+        self.total_quantity = self.assets.count()
+        # นับจำนวน Asset ที่มีสถานะ 'available'
+        self.available_quantity = self.assets.filter(status='available').count()
+        self.save()
 
-    # เพิ่ม property เพื่อคำนวณจำนวน Assets ที่พร้อมให้ยืมของ Item นี้
-    @property
-    def available_quantity(self):
-        return self.assets.filter(status='available').count()
-
-
-# โมเดลใหม่สำหรับ "อุปกรณ์แต่ละชิ้น" (Individual Asset)
 class Asset(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='assets', verbose_name="ประเภทสิ่งของ")
-    
-    # หมายเลขประจำเครื่อง (Serial Number) - สามารถว่างได้ และไม่บังคับว่าต้อง unique ถ้าว่าง
-    serial_number = models.CharField(max_length=255, blank=True, null=True, verbose_name="หมายเลขประจำเครื่อง (Serial Number)")
-    
-    # รหัสอุปกรณ์ (Device ID) - สามารถว่างได้
-    device_id = models.CharField(max_length=255, blank=True, null=True, verbose_name="รหัสอุปกรณ์ (Device ID)")
-    
-    # สถานที่จัดเก็บของ Asset ชิ้นนี้
-    location = models.CharField(max_length=255, blank=True, null=True, verbose_name="สถานที่จัดเก็บ")
-    
-    CONDITION_CHOICES = [
-        ('excellent', 'ดีเยี่ยม'),
-        ('good', 'ดี'),
-        ('fair', 'พอใช้'),
-        ('poor', 'ชำรุด'),
-    ]
-    # สภาพของ Asset ชิ้นนี้
-    condition = models.CharField(max_length=50, choices=CONDITION_CHOICES, default='good', verbose_name="สภาพสิ่งของ")
-
-    ASSET_STATUS_CHOICES = [
-        ('available', 'พร้อมให้ยืม'),
+    serial_number = models.CharField(max_length=255, blank=True, null=True, unique=True, verbose_name="หมายเลขซีเรียล")
+    device_id = models.CharField(max_length=255, blank=True, null=True, unique=True, verbose_name="ID อุปกรณ์")
+    location = models.CharField(max_length=255, blank=True, null=True, verbose_name="ตำแหน่ง")
+    condition = models.CharField(max_length=255, blank=True, null=True, verbose_name="สภาพ")
+    STATUS_CHOICES = [
+        ('available', 'พร้อมใช้งาน'),
         ('on_loan', 'กำลังถูกยืม'),
-        ('in_repair', 'อยู่ระหว่างซ่อม'),
-        ('retired', 'ปลดประจำการ'),
-        ('lost', 'สูญหาย'),
+        ('maintenance', 'บำรุงรักษา'),
+        ('retired', 'ปลดระวาง'),
     ]
-    # สถานะของ Asset ชิ้นนี้
-    status = models.CharField(max_length=50, choices=ASSET_STATUS_CHOICES, default='available', verbose_name="สถานะ Asset")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='available', verbose_name="สถานะ")
 
     class Meta:
-        verbose_name = "อุปกรณ์แต่ละชิ้น"
-        verbose_name_plural = "อุปกรณ์แต่ละชิ้น"
-
+        verbose_name = "อุปกรณ์"
+        verbose_name_plural = "อุปกรณ์"
+        
     def __str__(self):
-        # แสดงผลตาม Serial Number หรือ Device ID หากมี
-        if self.serial_number:
-            return f"{self.item.name} (SN: {self.serial_number})"
-        elif self.device_id:
-            return f"{self.item.name} (ID: {self.device_id})"
-        else:
-            return f"{self.item.name} (Asset {self.id})"
+        identifier = self.serial_number or self.device_id or f"Asset {self.id}"
+        return f"{self.item.name} ({identifier}) - {self.get_status_display()}"
+
+    def save(self, *args, **kwargs):
+        # ตรวจสอบว่ามี serial_number หรือ device_id อย่างน้อยหนึ่งอย่าง
+        if not self.serial_number and not self.device_id:
+            raise ValueError("ต้องระบุหมายเลขซีเรียลหรือ ID อุปกรณ์อย่างใดอย่างหนึ่ง")
+        super().save(*args, **kwargs)
+        # อัปเดต Item quantities หลังจาก Asset ถูกบันทึก
+        self.item.update_quantities()
+
+    def delete(self, *args, **kwargs):
+        super().delete(*args, **kwargs)
+        # อัปเดต Item quantities หลังจาก Asset ถูกลบ
+        self.item.update_quantities()
 
 
 class Loan(models.Model):
-    # เปลี่ยน Item เป็น Asset เพราะการยืมจะผูกกับอุปกรณ์แต่ละชิ้น
-    asset = models.ForeignKey(Asset, on_delete=models.CASCADE, verbose_name="อุปกรณ์ที่ยืม")
+    asset = models.ForeignKey(Asset, on_delete=models.CASCADE, verbose_name="อุปกรณ์") # เปลี่ยนจาก item เป็น asset
     borrower = models.ForeignKey(CustomUser, on_delete=models.CASCADE, verbose_name="ผู้ยืม")
     borrow_date = models.DateTimeField(auto_now_add=True, verbose_name="วันที่ยืม")
-    due_date = models.DateField(verbose_name="กำหนดคืน")
+    due_date = models.DateField(verbose_name="กำหนดคืน") # ใช้ DateField สำหรับวันที่เท่านั้น
     return_date = models.DateTimeField(null=True, blank=True, verbose_name="วันที่คืน")
-    
-    # เพิ่มฟิลด์สำหรับเหตุผลในการยืม
-    reason = models.TextField(blank=True, verbose_name="เหตุผลในการยืม")
-
     STATUS_CHOICES = [
         ('pending', 'รอดำเนินการ'),
         ('approved', 'อนุมัติแล้ว'),
@@ -101,6 +81,7 @@ class Loan(models.Model):
         ('overdue', 'เกินกำหนด'),
     ]
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', verbose_name="สถานะ")
+    reason = models.TextField(blank=True, verbose_name="เหตุผลการยืม") # เพิ่มฟิลด์เหตุผลการยืม
 
     class Meta:
         verbose_name = "รายการยืม"
@@ -108,4 +89,4 @@ class Loan(models.Model):
         ordering = ['-borrow_date']
 
     def __str__(self):
-        return f"Loan of {self.asset.item.name} ({self.asset.serial_number or self.asset.device_id or self.asset.id}) by {self.borrower.username} - Status: {self.status}"
+        return f"Loan of {self.asset.item.name} ({self.asset.serial_number or self.asset.device_id}) by {self.borrower.username} - Status: {self.status}"

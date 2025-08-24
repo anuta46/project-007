@@ -20,10 +20,11 @@ class UserRegistrationForm(forms.ModelForm):
 
     class Meta:
         model = CustomUser
-        fields = ['username', 'email']
+        fields = ['username', 'email' , "phone_number"] # เพิ่มฟิลด์ phone_number
         labels = {
             'username': "ชื่อผู้ใช้งาน",
             'email': "อีเมล",
+            'phone_number': "หมายเลขโทรศัพท์",
         }
 
     def clean(self):
