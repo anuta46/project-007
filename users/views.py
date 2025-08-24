@@ -4,18 +4,19 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import transaction
-from django.conf import settings # จำเป็นสำหรับ MEDIA_URL
+from django.conf import settings
 from django.http import JsonResponse
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
 from django.core.mail import EmailMessage
+from django.utils import timezone # เพิ่มบรรทัดนี้เข้ามา
 
-from .models import CustomUser, Organization, Notification # นำเข้า Notification ด้วย
-from borrowing.models import Item, Asset, Loan # นำเข้า Asset ด้วย
+from .models import CustomUser, Organization, Notification # Import Notification
+from borrowing.models import Item, Asset, Loan # เพิ่ม Asset เข้ามา
 from .forms import OrganizationRegistrationForm, UserRegistrationForm, LinkBasedUserRegistrationForm
-from .tokens import account_activation_token
+from .tokens import account_activation_token # ถ้ามี Token สำหรับ activate user
 
 
 def register_organization(request):
@@ -50,30 +51,60 @@ def register_organization(request):
 
 @login_required
 def dashboard(request):
-    # ตรวจสอบว่าเป็น Platform Admin (Superuser) หรือไม่
     if request.user.is_superuser:
         messages.info(request, "ในฐานะ Platform Admin คุณจะถูกนำไปยังหน้า Django Administration Site เพื่อจัดการข้อมูลทั้งหมด")
-        return redirect('/admin/') 
+        return redirect('/admin/')
     
-    # สำหรับ Organization Admin (ผู้ใช้ที่มี is_org_admin = True)
     elif request.user.is_org_admin:
         organization = request.user.organization
-        items = Item.objects.filter(organization=organization).order_by('name')
-        pending_loans = Loan.objects.filter(asset__item__organization=organization, status='pending').order_by('-borrow_date')
-        active_loans = Loan.objects.filter(asset__item__organization=organization, status='approved').order_by('due_date')
-        loan_history = Loan.objects.filter(asset__item__organization=organization).exclude(status__in=['pending', 'approved']).order_by('-borrow_date')
+        
+        # ข้อมูลสรุปเดิม
+        total_users = CustomUser.objects.filter(organization=organization).count()
+        total_item_types = Item.objects.filter(organization=organization).count()
+        total_assets = Asset.objects.filter(item__organization=organization).count()
+        pending_loans_count = Loan.objects.filter(asset__item__organization=organization, status='pending').count()
+        active_loans_count = Loan.objects.filter(asset__item__organization=organization, status='approved').count()
+
+        # เพิ่มข้อมูลสำหรับ Dashboard Cards
+        # จำนวนรายการยืม/คืนทั้งหมด (นับ approved, returned, rejected, overdue)
+        total_loans_transactions = Loan.objects.filter(
+            asset__item__organization=organization
+        ).exclude(status='pending').count() # ไม่นับ pending เพราะมีส่วนของมันเอง
+
+        # จำนวนรายการค้างคืน (สถานะ approved และเกิน due_date)
+        overdue_loans_count = Loan.objects.filter(
+            asset__item__organization=organization,
+            status='approved',
+            due_date__lt=timezone.now().date() # วันที่ครบกำหนดคืนน้อยกว่าวันนี้
+        ).count()
+
+        # จำนวนสมาชิกที่ใช้งาน (ไม่รวม admin ที่ล็อกอินอยู่)
+        active_users_count = CustomUser.objects.filter(
+            organization=organization,
+            is_active=True
+        ).exclude(id=request.user.id).count() # ไม่นับตัวแอดมินเอง
+
+        # จำนวนสิ่งของทั้งหมดที่ใช้งานอยู่ (available หรือ on_loan)
+        total_active_items = Asset.objects.filter(
+            item__organization=organization
+        ).filter(status__in=['available', 'on_loan']).count()
+
 
         context = {
             'is_superuser_dashboard': False, 
             'organization': organization,
-            'items': items,
-            'pending_loans': pending_loans,
-            'active_loans': active_loans,
-            'loan_history': loan_history,
+            'total_users': total_users,
+            'total_item_types': total_item_types,
+            'total_assets': total_assets,
+            'pending_loans_count': pending_loans_count,
+            'active_loans_count': active_loans_count,
+            'total_loans_transactions': total_loans_transactions,
+            'overdue_loans_count': overdue_loans_count,
+            'active_users_count': active_users_count,
+            'total_active_items': total_active_items,
         }
         return render(request, 'users/dashboard.html', context)
     
-    # สำหรับผู้ใช้ทั่วไป (ไม่ใช่ทั้ง Superuser และ Organization Admin)
     else:
         messages.error(request, "คุณไม่มีสิทธิ์เข้าถึงแดชบอร์ดนี้")
         return redirect('user_dashboard')
@@ -81,17 +112,13 @@ def dashboard(request):
 
 @login_required
 def user_dashboard(request):
-    """
-    View สำหรับผู้ใช้ทั่วไปเพื่อดูรายการอุปกรณ์แต่ละชิ้น (Assets) ที่พร้อมให้ยืมในองค์กรของตน
-    """
-    # ดึง Asset ทั้งหมดในองค์กรของผู้ใช้ที่มีสถานะ 'available'
     available_assets = Asset.objects.filter(
         item__organization=request.user.organization, 
         status='available'
-    ).order_by('item__name', 'serial_number', 'device_id') # เรียงตามชื่อประเภท, SN, ID
+    ).select_related('item').order_by('item__name', 'serial_number', 'device_id')
 
     context = {
-        'available_assets': available_assets, # เปลี่ยนชื่อ context variable
+        'available_assets': available_assets, 
         'MEDIA_URL': settings.MEDIA_URL, 
     }
     return render(request, 'users/user_dashboard.html', context)
@@ -129,9 +156,15 @@ def register_user_via_link(request, organization_id):
 
                     messages.success(request, f'การลงทะเบียนผู้ใช้สำหรับองค์กร {organization.name} สำเร็จแล้ว! กรุณาเข้าสู่ระบบ')
                     return redirect('login')
-            except Exception as e:
+            except Exception as e: # บรรทัดนี้คือบรรทัดที่ 158
                 messages.error(request, f'เกิดข้อผิดพลาดในการลงทะเบียน: {e}')
-    else:
+        # เพิ่ม else block สำหรับกรณีที่ form ไม่ถูกต้อง
+        # เพื่อให้ฟอร์มแสดง error กลับไปที่ผู้ใช้
+        else: 
+            # ถ้า form ไม่ valid, จะไม่มีการ redirect หรือ error message แบบ global
+            # แต่ฟอร์มจะถูกส่งไปที่ template พร้อม error message ในแต่ละ field
+            pass 
+    else: 
         form = LinkBasedUserRegistrationForm()
     
     context = {
@@ -192,7 +225,7 @@ def deactivate_user(request, user_id):
         user_to_deactivate.save()
         messages.success(request, f'ผู้ใช้ "{user_to_deactivate.username}" ถูกปิดใช้งานแล้ว')
     else:
-        messages.info(request, f'ผู้ใช้ "{user_to_deactivate.username}" ถูกปิดใช้งานอยู่แล้ว')
+        messages.info(f'ผู้ใช้ "{user_to_deactivate.username}" ถูกปิดใช้งานอยู่แล้ว')
     
     return redirect('manage_organization_users')
 

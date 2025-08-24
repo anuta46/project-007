@@ -1,72 +1,49 @@
 {% extends 'users/base.html' %} {# ขยายจาก base.html เพื่อใช้โครงสร้างและสไตล์พื้นฐาน #}
 
-{% block title %}ยืมอุปกรณ์: {{ asset.item.name }}{% endblock %} {# กำหนดชื่อหน้าสำหรับแท็บเบราว์เซอร์ #}
+{% block title %}ขอยืมสิ่งของ: {{ asset.item.name }} ({{ asset.serial_number|default:asset.device_id }}){% endblock %} {# กำหนดชื่อหน้าสำหรับแท็บเบราว์เซอร์ #}
 
 {% block content %} {# บล็อก content สำหรับเนื้อหาเฉพาะของหน้านี้ #}
-<div class="bg-white p-6 md:p-8 lg:p-10 rounded-xl shadow-lg max-w-4xl mx-auto my-8 border border-gray-200">
-    <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4 text-center">ยืนยันการยืมอุปกรณ์</h1>
-    <p class="text-gray-700 mb-8 text-center text-lg">โปรดตรวจสอบรายละเอียดอุปกรณ์และระบุเหตุผลในการยืม</p>
+<div class="bg-white p-6 md:p-8 lg:p-10 rounded-xl shadow-lg max-w-2xl mx-auto my-8 border border-gray-200">
+    <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4 text-center">ขอยืมสิ่งของ: {{ asset.item.name }}</h1>
+    <p class="text-gray-700 mb-8 text-center text-lg">
+        คุณกำลังขอยืมอุปกรณ์ Serial/ID: <strong class="text-gray-900">{{ asset.serial_number|default:asset.device_id|default:"N/A" }}</strong>
+    </p>
     
     <hr class="my-6 border-gray-300">
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-        {# ส่วนแสดงรายละเอียดอุปกรณ์ (Asset) #}
-        <div class="p-6 bg-gray-50 rounded-lg shadow-sm border border-gray-200">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2 border-gray-300">รายละเอียดอุปกรณ์</h2>
-            {% if asset.item.image %}
-                <img src="{{ MEDIA_URL }}{{ asset.item.image }}" alt="{{ asset.item.name }}" class="w-full h-48 object-cover rounded-md mb-3">
-            {% else %}
-                <div class="w-full h-48 bg-gray-200 flex items-center justify-center rounded-md mb-3 text-gray-500">
-                    ไม่มีรูปภาพ
-                </div>
-            {% endif %}
-            <p class="text-gray-700 mb-2"><strong class="text-gray-900">ชื่อประเภทสิ่งของ:</strong> {{ asset.item.name }}</p>
-            <p class="text-gray-700 mb-2"><strong class="text-gray-900">Serial Number:</strong> {{ asset.serial_number|default:"-" }}</p>
-            <p class="text-gray-700 mb-2"><strong class="text-gray-900">Device ID:</strong> {{ asset.device_id|default:"-" }}</p>
-            <p class="text-gray-700 mb-2"><strong class="text-gray-900">สถานที่จัดเก็บ:</strong> {{ asset.location|default:"-" }}</p>
-            <p class="text-gray-700 mb-2"><strong class="text-gray-900">สภาพ:</strong> {{ asset.get_condition_display }}</p>
-            <p class="text-gray-700 mb-2"><strong class="text-gray-900">สถานะ:</strong> 
-                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                    {% if asset.status == 'available' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
-                    {{ asset.get_status_display }}
-                </span>
-            </p>
-        </div>
+    <form method="post" class="w-full">
+        {% csrf_token %} {# CSRF token เพื่อความปลอดภัย #}
 
-        {# ส่วนฟอร์มสำหรับกรอกเหตุผล #}
-        <div class="p-6 bg-blue-50 rounded-lg shadow-sm border border-blue-200">
-            <h2 class="text-2xl font-bold text-blue-800 mb-4 border-b pb-2 border-blue-300">ระบุเหตุผลในการยืม</h2>
-            <form method="post" class="w-full">
-                {% csrf_token %} {# CSRF token เพื่อความปลอดภัย #}
-                {% for field in form %}
-                    <div class="form-field">
-                        {{ field.label_tag }} {# แสดง Label ของฟิลด์ #}
-                        {{ field }} {# แสดง Widget ของฟิลด์ #}
-                        {% if field.help_text %}
-                            <p class="text-sm text-gray-500 mt-1">{{ field.help_text }}</p>
-                        {% endif %}
-                        {% for error in field.errors %}
-                            <p class="errorlist">{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                {% endfor %}
-                {% if form.non_field_errors %}
-                    <ul class="errorlist">
-                        {% for error in form.non_field_errors %}
-                            <li>{{ error }}</li>
-                        {% endfor %}
-                    </ul>
+        {# แสดงฟิลด์ทั้งหมดจาก LoanRequestForm (รวมถึง reason และ due_date) #}
+        {% for field in form %}
+            <div class="form-field">
+                {{ field.label_tag }} {# แสดง Label ของฟิลด์ #}
+                {{ field }} {# แสดง Widget ของฟิลด์ (input, textarea, select) #}
+                {% if field.help_text %}
+                    <p class="text-sm text-gray-500 mt-1">{{ field.help_text }}</p>
                 {% endif %}
+                {% for error in field.errors %}
+                    <p class="errorlist">{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endfor %}
 
-                <button type="submit" class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-md text-lg">ส่งคำขอยืม</button>
-            </form>
-        </div>
-    </div>
+        {# แสดง Non-field errors (ข้อผิดพลาดที่ไม่เกี่ยวกับฟิลด์ใดๆ โดยเฉพาะ) #}
+        {% if form.non_field_errors %}
+            <ul class="errorlist">
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
 
-    {# ลิงก์กลับไปยังแดชบอร์ดผู้ใช้ #}
+        <button type="submit">ส่งคำขอยืม</button>
+    </form>
+
+    {# ลิงก์กลับไปยังหน้าแดชบอร์ดผู้ใช้ #}
     <div class="mt-8 pt-6 border-t-2 border-gray-200 flex flex-wrap gap-4 justify-center">
-        <a href="{% url 'user_dashboard' %}" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2.5 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-md">
-            <i class="fas fa-arrow-left mr-2"></i> กลับสู่แดชบอร์ดผู้ใช้
+        <a href="{% url 'user_dashboard' %}" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2.5 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-md flex items-center">
+            <i class="fas fa-arrow-left mr-2"></i> กลับสู่แดชบอร์ด
         </a>
     </div>
 </div>

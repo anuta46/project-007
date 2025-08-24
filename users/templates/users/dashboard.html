@@ -12,6 +12,46 @@
     
     <hr class="my-6 border-gray-300"> {# เพิ่มเส้นแบ่งที่ชัดเจน #}
 
+    {# ส่วนแสดงผล Card สรุป (ใหม่) #}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        {# Card 1: รายการยืม/คืน #}
+        <div class="bg-blue-600 text-white rounded-xl p-6 flex items-center justify-between shadow-lg transform hover:scale-105 transition duration-300 ease-in-out">
+            <div>
+                <div class="text-4xl font-bold">{{ total_loans_transactions }}</div>
+                <div class="text-sm opacity-90">รายการยืม/คืน</div>
+            </div>
+            <i class="fas fa-exchange-alt text-5xl opacity-75"></i>
+        </div>
+
+        {# Card 2: รายการค้างคืน #}
+        <div class="bg-red-600 text-white rounded-xl p-6 flex items-center justify-between shadow-lg transform hover:scale-105 transition duration-300 ease-in-out">
+            <div>
+                <div class="text-4xl font-bold">{{ overdue_loans_count }}</div>
+                <div class="text-sm opacity-90">รายการค้างคืน</div>
+            </div>
+            <i class="fas fa-bell-slash text-5xl opacity-75"></i>
+        </div>
+
+        {# Card 3: รายการสมาชิก #}
+        <div class="bg-yellow-600 text-white rounded-xl p-6 flex items-center justify-between shadow-lg transform hover:scale-105 transition duration-300 ease-in-out">
+            <div>
+                <div class="text-4xl font-bold">{{ active_users_count }}</div>
+                <div class="text-sm opacity-90">รายการสมาชิกที่ใช้งาน</div>
+            </div>
+            <i class="fas fa-users text-5xl opacity-75"></i>
+        </div>
+
+        {# Card 4: รายการสิ่งของ #}
+        <div class="bg-teal-600 text-white rounded-xl p-6 flex items-center justify-between shadow-lg transform hover:scale-105 transition duration-300 ease-in-out">
+            <div>
+                <div class="text-4xl font-bold">{{ total_active_items }}</div>
+                <div class="text-sm opacity-90">จำนวนสิ่งของที่ใช้งาน</div>
+            </div>
+            <i class="fas fa-cubes text-5xl opacity-75"></i>
+        </div>
+    </div>
+    <hr class="my-6 border-gray-300"> 
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10"> {# ใช้ Grid layout สำหรับ Organization Details #}
         {# ส่วนรายละเอียดองค์กร #}
         <div id="organization-details" class="p-6 bg-blue-50 rounded-xl shadow-md border border-blue-200 hover:shadow-lg transition-shadow duration-300"> {# เพิ่ม id #}
@@ -24,9 +64,18 @@
         </div>
         
         {# Placeholder สำหรับส่วนที่เคยเป็น "ภาพรวมสิ่งของ" - อาจจะเอาไว้แสดงข้อมูลสรุปอื่นๆ แทนในอนาคต #}
-        {% comment %} <div class="p-6 bg-gray-50 rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300 flex items-center justify-center">
-            <p class="text-gray-600 italic">ข้อมูลสรุปเพิ่มเติมขององค์กรสามารถเพิ่มได้ที่นี่</p>
-        </div> {% endcomment %}
+        <div class="p-6 bg-green-50 rounded-xl shadow-md border border-green-200 hover:shadow-lg transition-shadow duration-300">
+            <h2 class="text-2xl font-bold text-green-800 mb-4 border-b-2 pb-2 border-green-300 flex items-center gap-x-2">
+                <i class="fas fa-info-circle text-green-600"></i> สรุปสถานะองค์กร
+            </h2>
+            <ul class="space-y-3 text-lg text-gray-700">
+                <li class="flex items-center"><i class="fas fa-users mr-3 text-green-600"></i> <strong class="text-gray-800">ผู้ใช้ทั้งหมด:</strong> {{ total_users }} คน</li>
+                <li class="flex items-center"><i class="fas fa-boxes-stacked mr-3 text-green-600"></i> <strong class="text-gray-800">ประเภทสิ่งของทั้งหมด:</strong> {{ total_item_types }} ประเภท</li>
+                <li class="flex items-center"><i class="fas fa-boxes-alt mr-3 text-green-600"></i> <strong class="text-gray-800">อุปกรณ์ทั้งหมด:</strong> {{ total_assets }} ชิ้น</li>
+                <li class="flex items-center"><i class="fas fa-hourglass-start mr-3 text-green-600"></i> <strong class="text-gray-800">คำขอยืมที่รอดำเนินการ:</strong> {{ pending_loans_count }} รายการ</li>
+                <li class="flex items-center"><i class="fas fa-hand-holding-box mr-3 text-green-600"></i> <strong class="text-gray-800">รายการยืมที่กำลังดำเนินการ:</strong> {{ active_loans_count }} รายการ</li>
+            </ul>
+        </div>
     </div>
 
     <hr class="my-6 border-gray-300">
@@ -47,13 +96,13 @@
     {% endif %}
 
     {# ส่วนรวมปุ่มการกระทำหลัก #}
-    {% comment %} <div class="mt-8 pt-6 border-t-2 border-gray-200 flex flex-wrap gap-4 justify-center">
+    <div class="mt-8 pt-6 border-t-2 border-gray-200 flex flex-wrap gap-4 justify-center">
         <a href="{% url 'add_item' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-md flex items-center">
             <i class="fas fa-plus-square mr-2"></i> เพิ่มประเภทสิ่งของใหม่
         </a>
         <a href="{% url 'manage_organization_users' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-md flex items-center">
             <i class="fas fa-users-gear mr-2"></i> จัดการผู้ใช้ในองค์กร
         </a>
-    </div> {% endcomment %}
+    </div>
 </div>
 {% endblock content %}

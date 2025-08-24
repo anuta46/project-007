@@ -6,10 +6,11 @@
 # https://docs.djangoproject.com/en/5.2/topics/settings/
 
 # For the full list of settings and their values, see
-# https://docs.djangoproject.com/en/5.2/ref/settings/
+# https://docs.djangoproject.com/en/5.2/ref/settings/#values
 
 
 from pathlib import Path
+import os # ตรวจสอบให้แน่ใจว่ามีการ import os ที่นี่
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -60,10 +61,12 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'users.context_processors.unread_notifications_count', # เพิ่มบรรทัดนี้
+                'django.template.context_processors.media', # <--- บรรทัดนี้ถูกต้องแล้ว
+                'users.context_processors.unread_notifications_count',
             ],
         },
     },
@@ -118,6 +121,13 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# เพิ่มการตั้งค่าสำหรับ Media Files (ไฟล์ที่ผู้ใช้อัปโหลด)
+# MEDIA_ROOT คือ path เต็มไปยัง directory บน server ที่จะเก็บไฟล์ที่อัปโหลด
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# MEDIA_URL คือ URL สาธารณะสำหรับเข้าถึงไฟล์เหล่านี้
+MEDIA_URL = '/media/'
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

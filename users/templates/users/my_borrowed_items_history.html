@@ -17,7 +17,7 @@
                 <table class="min-w-full bg-white rounded-lg overflow-hidden border border-gray-200">
                     <thead>
                         <tr class="bg-gray-100 text-gray-700 uppercase text-sm leading-normal">
-                            <th class="py-3 px-6 text-left font-semibold">สิ่งของ</th>
+                            <th class="py-3 px-6 text-left font-semibold">สิ่งของ (SN/ID)</th> {# เปลี่ยนชื่อคอลัมน์ #}
                             <th class="py-3 px-6 text-left font-semibold">สถานะ</th>
                             <th class="py-3 px-6 text-left font-semibold">วันที่ยืม</th>
                             <th class="py-3 px-6 text-left font-semibold">วันครบกำหนด</th>
@@ -27,7 +27,15 @@
                     <tbody class="text-gray-700 text-sm">
                         {% for loan in my_loans %}
                             <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-150 ease-in-out">
-                                <td class="py-3 px-6 text-left whitespace-nowrap">{{ loan.item.name }}</td>
+                                {# อ้างอิงผ่าน asset.item.name และแสดง serial_number/device_id #}
+                                <td class="py-3 px-6 text-left whitespace-nowrap">
+                                    {{ loan.asset.item.name }} 
+                                    {% if loan.asset.serial_number %}
+                                        (SN: {{ loan.asset.serial_number }})
+                                    {% elif loan.asset.device_id %}
+                                        (ID: {{ loan.asset.device_id }})
+                                    {% endif %}
+                                </td>
                                 <td class="py-3 px-6 text-left">
                                     {% if loan.status == 'approved' %}
                                         <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">อนุมัติ</span>
@@ -37,6 +45,8 @@
                                         <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">คืนแล้ว</span>
                                     {% elif loan.status == 'rejected' %}
                                         <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">ปฏิเสธ</span>
+                                    {% elif loan.status == 'overdue' %}
+                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">เกินกำหนด</span> {# เพิ่มสถานะเกินกำหนด #}
                                     {% endif %}
                                 </td>
                                 <td class="py-3 px-6 text-left">{{ loan.borrow_date|default_if_none:"N/A"|date:"M d, Y" }}</td>

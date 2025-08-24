@@ -198,7 +198,7 @@
                     {% if user.is_org_admin %}
                         <li>
                             <a href="{% url 'dashboard' %}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded-md transition duration-300">
-                                <i class="fas fa-chart-line mr-3"></i> แดชบอร์ดแอดมิน
+                                <i class="fas fa-chart-line mr-3"></i> หน้าหลัก
                             </a>
                         </li>
                         {# ลิงก์ไปยังหน้าภาพรวมสิ่งของที่แยกออกมาใหม่ #}
@@ -274,7 +274,7 @@
                         </li>
                         {# Dropdown แจ้งเตือนสำหรับผู้ใช้ทั่วไป #}
                         <li>
-                            <div class="relative notification-dropdown">
+                            {% comment %} <div class="relative notification-dropdown">
                                 <button id="notification-bell-sidebar" class="w-full flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded-md transition duration-300 focus:outline-none">
                                     <i class="fas fa-bell mr-3"></i> แจ้งเตือน
                                     {% if unread_notifications_count > 0 %}
@@ -282,7 +282,7 @@
                                             {{ unread_notifications_count }}
                                         </span>
                                     {% endif %}
-                                </button>
+                                </button> {% endcomment %}
                                 <div id="notification-dropdown-content-sidebar" class="dropdown-content">
                                     {% if unread_notifications_count > 0 %}
                                         {% for notification in request.user.notifications.all|slice:":5" %}

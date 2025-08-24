@@ -1,12 +1,13 @@
 # borrowing/forms.py
 
 from django import forms
-from .models import Item, Asset, Loan # นำเข้า Asset และ Loan
+from django.utils import timezone # นำเข้า timezone
+from datetime import timedelta # นำเข้า timedelta
+from .models import Item, Asset, Loan 
 
 class ItemForm(forms.ModelForm):
     class Meta:
         model = Item
-        # ลบ quantity ออกไป เนื่องจากจะถูกคำนวณจาก Assets
         fields = ['name', 'description', 'image', 'item_type']
         labels = {
             'name': "ชื่อประเภทสิ่งของ",
@@ -45,12 +46,34 @@ class AssetForm(forms.ModelForm):
         return cleaned_data
 
 class LoanRequestForm(forms.ModelForm):
+    # เพิ่มฟิลด์ due_date เข้ามาในฟอร์มเพื่อให้ผู้ใช้เลือกได้
+    # ใช้ DateInput เพื่อให้แสดงเป็นปฏิทินในเบราว์เซอร์
+    due_date = forms.DateField(
+        label="วันที่คืนสิ่งของ",
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        help_text="วันที่ครบกำหนดคืนสิ่งของ (ไม่เกิน 30 วันนับจากวันนี้)"
+    )
+
     class Meta:
         model = Loan
-        fields = ['reason'] # มีเพียงฟิลด์ 'reason' สำหรับผู้ใช้ในการกรอก
+        fields = ['reason', 'due_date'] # เพิ่ม 'due_date' เข้ามาในฟิลด์ที่ฟอร์มจะจัดการ
         labels = {
             'reason': "เหตุผลการยืม",
         }
         widgets = {
             'reason': forms.Textarea(attrs={'rows': 4, 'placeholder': 'โปรดระบุเหตุผลในการยืมสิ่งของนี้อย่างชัดเจน เช่น ใช้สำหรับโครงการ, การเรียนการสอน'}),
         }
+
+    def clean_due_date(self):
+        due_date = self.cleaned_data.get('due_date')
+        if due_date:
+            today = timezone.now().date()
+            # ตรวจสอบว่าวันที่คืนไม่ใช่วันที่ในอดีต
+            if due_date < today:
+                raise forms.ValidationError("วันที่ครบกำหนดคืนไม่สามารถเป็นวันที่ในอดีตได้")
+            
+            # ตรวจสอบว่าวันที่คืนไม่เกิน 30 วันนับจากวันนี้
+            max_due_date = today + timedelta(days=30)
+            if due_date > max_due_date:
+                raise forms.ValidationError(f"วันที่ครบกำหนดคืนต้องไม่เกิน {max_due_date.strftime('%d/%m/%Y')} (สูงสุด 30 วัน)")
+        return due_date

@@ -1,75 +1,87 @@
-{% extends 'users/base.html' %} {# ขยายจาก base.html เพื่อใช้โครงสร้างและสไตล์พื้นฐาน รวมถึง Navbar #}
+{% extends 'users/base.html' %} {# ใช้ base.html เป็นโครงสร้างหลัก #}
 
-{% block title %}แดชบอร์ดผู้ใช้{% endblock %} {# กำหนดชื่อหน้าสำหรับแท็บเบราว์เซอร์ #}
+{% block title %}แดชบอร์ดผู้ใช้{% endblock %}
 
-{% block content %} {# บล็อก content สำหรับเนื้อหาเฉพาะของหน้านี้ #}
-<div class="bg-white p-6 md:p-8 lg:p-10 rounded-xl shadow-lg max-w-4xl mx-auto my-8 border border-gray-200"> {# Container หลักของหน้า #}
-    <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4 text-center">ยินดีต้อนรับ, {{ user.username }}!</h1>
-    <p class="text-gray-700 mb-8 text-center text-lg">ตรวจสอบสิ่งของที่พร้อมให้ยืมและจัดการรายการยืมของคุณ</p>
-    
-    <hr class="my-6 border-gray-300"> {# เพิ่มเส้นแบ่งที่ชัดเจน #}
+{% block content %}
+<div class="max-w-6xl mx-auto my-10 px-4">
+    <!-- Header -->
+    <div class="text-center mb-10">
+        <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-2">
+            ยินดีต้อนรับ, {{ user.username }}!
+        </h1>
+        <p class="text-gray-700 text-lg md:text-xl">
+            ตรวจสอบสิ่งของที่พร้อมให้ยืมและจัดการรายการยืมของคุณ
+        </p>
+    </div>
 
-    {# ส่วนรายการอุปกรณ์ที่สามารถยืมได้ในองค์กร (Card Layout) #}
-    <div class="mb-10 p-6 bg-green-50 rounded-lg shadow-sm border border-green-200">
-        <h2 class="text-2xl font-bold text-green-800 mb-4 border-b pb-2 border-green-300">รายการอุปกรณ์ที่พร้อมให้ยืมในองค์กร</h2> {# เปลี่ยนหัวข้อ #}
-        {% if available_assets %} {# เปลี่ยนจาก items เป็น available_assets #}
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"> {# Grid สำหรับแสดง Card สิ่งของ #}
-                {% for asset in available_assets %} {# วนลูปผ่าน available_assets #}
-                    <div class="bg-white rounded-lg shadow-md p-5 border border-gray-200 flex flex-col justify-between transform transition duration-200 hover:scale-105 hover:shadow-lg">
-                        <div>
-                            {# แสดงรูปภาพของประเภทสิ่งของ #}
-                            {% if asset.item.image %}
-                                <img src="{{ MEDIA_URL }}{{ asset.item.image }}" alt="{{ asset.item.name }}" class="w-full h-40 object-cover rounded-md mb-3">
-                            {% else %}
-                                <div class="w-full h-40 bg-gray-200 flex items-center justify-center rounded-md mb-3 text-gray-500">
-                                    ไม่มีรูปภาพ
-                                </div>
-                            {% endif %}
-                            <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ asset.item.name }}</h3> {# ชื่อประเภทสิ่งของ #}
-                            <p class="text-gray-600 text-sm mb-2">{{ asset.item.description|default:"ไม่มีรายละเอียด" }}</p> {# รายละเอียดประเภทสิ่งของ #}
-                            
-                            {# แสดงข้อมูลเฉพาะของ Asset #}
-                            <p class="text-gray-700 text-sm mb-1">
-                                <strong class="text-gray-800">รหัสประจำเครื่อง:</strong> {{ asset.serial_number|default:"-" }}
-                            </p>
-                            <p class="text-gray-700 text-sm mb-1">
-                                <strong class="text-gray-800">รหัสอุปกรณ์:</strong> {{ asset.device_id|default:"-" }}
-                            </p>
-                            <p class="text-gray-700 text-sm mb-1">
-                                <strong class="text-gray-800">สถานที่จัดเก็บ:</strong> {{ asset.location|default:"-" }}
-                            </p>
-                            <p class="text-gray-700 text-sm mb-4">
-                                <strong class="text-gray-800">สภาพ:</strong> {{ asset.get_condition_display }}
-                            </p>
-                        </div>
-                        <div class="flex justify-between items-center mt-auto pt-4 border-t border-gray-200">
-                            {% if asset.status == 'available' %} {# ตรวจสอบสถานะของ Asset #}
-                                <span class="text-green-600 font-medium flex items-center">
-                                    <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-                                    พร้อมให้ยืม
-                                </span>
-                                {# เปลี่ยน URL ของปุ่ม "ยืมอุปกรณ์" เพื่อชี้ไปที่หน้ากรอกเหตุผล #}
-                                <a href="{% url 'borrow_item' asset.id %}" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition duration-300 transform hover:scale-105 shadow-md">ยืมอุปกรณ์</a> 
-                            {% else %}
-                                <span class="text-red-600 font-medium flex items-center">
-                                    <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
-                                    ไม่พร้อมให้ยืม ({{ asset.get_status_display }}) {# แสดงสถานะ Asset #}
-                                </span>
-                                <button class="bg-gray-400 text-white text-sm font-semibold py-2 px-4 rounded-lg cursor-not-allowed" disabled>ยืมอุปกรณ์</button>
-                            {% endif %}
-                        </div>
+    <hr class="border-gray-300 mb-10">
+
+    <!-- Available Assets Section -->
+    <section class="mb-12">
+        <div class="bg-green-50 p-6 md:p-8 rounded-xl shadow-sm border border-green-200">
+            <h2 class="text-2xl md:text-3xl font-bold text-green-800 mb-6 border-b pb-2 border-green-300">
+                รายการอุปกรณ์ที่พร้อมให้ยืมในองค์กร
+            </h2>
+
+            {% if available_assets %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for asset in available_assets %}
+                <div class="bg-white rounded-xl shadow-md p-5 border border-gray-200 flex flex-col justify-between hover:shadow-xl hover:scale-105 transition transform">
+                    <!-- Asset Image -->
+                    <div class="mb-4">
+                        {% if asset.item.image %}
+                            {# เปลี่ยนกลับมาใช้ asset.item.image.url เพื่อให้ Django จัดการ URL ให้ถูกต้อง #}
+                            <img src="{{ asset.item.image.url }}" alt="{{ asset.item.name }}" class="w-full h-40 object-cover rounded-lg mb-3">
+                        {% else %}
+                            <div class="w-full h-40 bg-gray-200 flex items-center justify-center rounded-lg mb-3 text-gray-500">
+                                <i class="fas fa-image text-5xl"></i> ไม่มีรูปภาพ
+                            </div>
+                        {% endif %}
+
+                        <!-- Asset Name & Description -->
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ asset.item.name }}</h3>
+                        <p class="text-gray-600 text-sm mb-2">{{ asset.item.description|default:"ไม่มีรายละเอียด" }}</p>
+
+                        <!-- Asset Details -->
+                        <ul class="text-gray-700 text-sm space-y-1">
+                            <li><strong class="text-gray-800">รหัสประจำเครื่อง:</strong> {{ asset.serial_number|default:"-" }}</li>
+                            <li><strong class="text-gray-800">รหัสอุปกรณ์:</strong> {{ asset.device_id|default:"-" }}</li>
+                            <li><strong class="text-gray-800">สถานที่จัดเก็บ:</strong> {{ asset.location|default:"-" }}</li>
+                            <li><strong class="text-gray-800">สภาพ:</strong> {{ asset.get_condition_display }}</li>
+                        </ul>
                     </div>
+
+                    <!-- Action Buttons -->
+                    <div class="mt-4 flex justify-between items-center pt-4 border-t border-gray-200">
+                        {% if asset.status == 'available' %}
+                        <span class="text-green-600 font-medium flex items-center">
+                            <i class="fas fa-check-circle mr-1"></i> พร้อมให้ยืม
+                        </span>
+                        <a href="{% url 'borrow_item' asset.id %}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition transform hover:scale-105 shadow-md">
+                            ยืมอุปกรณ์
+                        </a>
+                        {% else %}
+                        <span class="text-red-600 font-medium flex items-center">
+                            <i class="fas fa-times-circle mr-1"></i> ไม่พร้อมให้ยืม ({{ asset.get_status_display }})
+                        </span>
+                        <button class="bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg cursor-not-allowed" disabled>ยืมอุปกรณ์</button>
+                        {% endif %}
+                    </div>
+                </div>
                 {% endfor %}
             </div>
-        {% else %}
-            <p class="text-gray-600 italic py-2">ไม่มีอุปกรณ์ที่พร้อมให้ยืมในองค์กรของคุณ</p> {# เปลี่ยนข้อความ #}
-        {% endif %}
-    </div>
+            {% else %}
+            <p class="text-gray-600 italic text-center py-4">ไม่มีอุปกรณ์ที่พร้อมให้ยืมในองค์กรของคุณ</p>
+            {% endif %}
+        </div>
+    </section>
 
-    {# ลิงก์สำหรับหน้าอื่นๆ ที่อาจมีในอนาคต #}
-    <div class="mt-8 pt-6 border-t-2 border-gray-200 flex flex-wrap gap-4 justify-center">
-        {# ลิงก์ไปหน้าประวัติการยืมของฉัน #}
-        <a href="{% url 'my_borrowed_items_history' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-md">ประวัติการยืมของฉัน</a>
-    </div>
+    <!-- Links Section -->
+    <section class="flex flex-wrap justify-center gap-4 mt-6">
+        {% comment %} <a href="{% url 'my_borrowed_items_history' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-6 rounded-lg transition transform hover:scale-105 shadow-md">
+            ประวัติการยืมของฉัน
+        </a> {% endcomment %}
+        <!-- สามารถเพิ่มลิงก์อื่น ๆ ได้ที่นี่ -->
+    </section>
 </div>
 {% endblock content %}
