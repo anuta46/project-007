@@ -4,105 +4,159 @@
 {% block title_in_header %}แดชบอร์ดแอดมิน{% endblock title_in_header %} {# กำหนดชื่อสำหรับ header บนมือถือ #}
 
 {% block content %} {# บล็อก content สำหรับเนื้อหาเฉพาะของหน้านี้ #}
-<div class="bg-white p-6 md:p-8 lg:p-10 rounded-xl shadow-lg max-w-5xl mx-auto my-8 border border-gray-200"> {# Container หลักของหน้า - เพิ่ม max-w-5xl เพื่อให้กว้างขึ้นเล็กน้อย #}
-    <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4 text-center flex items-center justify-center gap-x-3">
-        <i class="fas fa-cubes text-indigo-600"></i> ยินดีต้อนรับ, {{ user.username }}!
+<div class="bg-gradient-to-br from-white to-blue-50 p-6 md:p-8 lg:p-10 rounded-3xl shadow-2xl max-w-6xl mx-auto my-10 border border-blue-100 animate-fade-in"> {# Container หลักของหน้า - ปรับ max-w-6xl ให้กว้างขึ้น และเพิ่ม gradient, shadow, border, animation #}
+    <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6 text-center flex flex-col sm:flex-row items-center justify-center gap-x-3 leading-tight">
+        <i class="fas fa-cubes text-indigo-600 text-5xl mb-2 sm:mb-0"></i> <span class="tracking-wide">ยินดีต้อนรับ,</span> <span class="text-indigo-700">{{ user.username }}!</span>
     </h1>
-    <p class="text-gray-700 mb-8 text-center text-lg max-w-2xl mx-auto">จัดการประเภทสิ่งของ อุปกรณ์ และคำขอยืมสำหรับองค์กรของคุณได้อย่างมีประสิทธิภาพ</p>
+    <p class="text-gray-600 mb-10 text-center text-lg md:text-xl max-w-3xl mx-auto leading-relaxed">
+        จัดการประเภทสิ่งของ อุปกรณ์ และคำขอยืมสำหรับองค์กรของคุณได้อย่างมีประสิทธิภาพและง่ายดาย
+    </p>
     
-    <hr class="my-6 border-gray-300"> {# เพิ่มเส้นแบ่งที่ชัดเจน #}
+    <hr class="my-8 border-blue-200"> {# เพิ่มเส้นแบ่งที่ชัดเจนและสีสัน #}
 
     {# ส่วนแสดงผล Card สรุป (ใหม่) #}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
         {# Card 1: รายการยืม/คืน #}
-        <div class="bg-blue-600 text-white rounded-xl p-6 flex items-center justify-between shadow-lg transform hover:scale-105 transition duration-300 ease-in-out">
-            <div>
-                <div class="text-4xl font-bold">{{ total_loans_transactions }}</div>
-                <div class="text-sm opacity-90">รายการยืม/คืน</div>
+        <div class="relative bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-2xl p-7 flex flex-col justify-between shadow-xl transform hover:scale-105 transition-all duration-300 ease-in-out cursor-pointer overflow-hidden">
+            <div class="absolute inset-0 bg-white opacity-10 rounded-2xl -rotate-12 scale-150 transform origin-top-left"></div>
+            <div class="relative z-10">
+                <div class="text-5xl font-extrabold mb-2">{{ total_loans_transactions }}</div>
+                <div class="text-lg font-medium opacity-90">รายการยืม/คืน</div>
             </div>
-            <i class="fas fa-exchange-alt text-5xl opacity-75"></i>
+            <i class="fas fa-exchange-alt text-6xl opacity-20 absolute bottom-4 right-4"></i>
         </div>
 
         {# Card 2: รายการค้างคืน #}
-        <div class="bg-red-600 text-white rounded-xl p-6 flex items-center justify-between shadow-lg transform hover:scale-105 transition duration-300 ease-in-out">
-            <div>
-                <div class="text-4xl font-bold">{{ overdue_loans_count }}</div>
-                <div class="text-sm opacity-90">รายการค้างคืน</div>
+        <div class="relative bg-gradient-to-r from-red-500 to-red-700 text-white rounded-2xl p-7 flex flex-col justify-between shadow-xl transform hover:scale-105 transition-all duration-300 ease-in-out cursor-pointer overflow-hidden">
+            <div class="absolute inset-0 bg-white opacity-10 rounded-2xl -rotate-12 scale-150 transform origin-top-left"></div>
+            <div class="relative z-10">
+                <div class="text-5xl font-extrabold mb-2">{{ overdue_loans_count }}</div>
+                <div class="text-lg font-medium opacity-90">รายการค้างคืน</div>
             </div>
-            <i class="fas fa-bell-slash text-5xl opacity-75"></i>
+            <i class="fas fa-bell-slash text-6xl opacity-20 absolute bottom-4 right-4"></i>
         </div>
 
         {# Card 3: รายการสมาชิก #}
-        <div class="bg-yellow-600 text-white rounded-xl p-6 flex items-center justify-between shadow-lg transform hover:scale-105 transition duration-300 ease-in-out">
-            <div>
-                <div class="text-4xl font-bold">{{ active_users_count }}</div>
-                <div class="text-sm opacity-90">รายการสมาชิกที่ใช้งาน</div>
+        <div class="relative bg-gradient-to-r from-yellow-500 to-yellow-700 text-white rounded-2xl p-7 flex flex-col justify-between shadow-xl transform hover:scale-105 transition-all duration-300 ease-in-out cursor-pointer overflow-hidden">
+            <div class="absolute inset-0 bg-white opacity-10 rounded-2xl -rotate-12 scale-150 transform origin-top-left"></div>
+            <div class="relative z-10">
+                <div class="text-5xl font-extrabold mb-2">{{ active_users_count }}</div>
+                <div class="text-lg font-medium opacity-90">สมาชิกที่ใช้งาน</div>
             </div>
-            <i class="fas fa-users text-5xl opacity-75"></i>
+            <i class="fas fa-users text-6xl opacity-20 absolute bottom-4 right-4"></i>
         </div>
 
         {# Card 4: รายการสิ่งของ #}
-        <div class="bg-teal-600 text-white rounded-xl p-6 flex items-center justify-between shadow-lg transform hover:scale-105 transition duration-300 ease-in-out">
-            <div>
-                <div class="text-4xl font-bold">{{ total_active_items }}</div>
-                <div class="text-sm opacity-90">จำนวนสิ่งของที่ใช้งาน</div>
+        <div class="relative bg-gradient-to-r from-teal-500 to-teal-700 text-white rounded-2xl p-7 flex flex-col justify-between shadow-xl transform hover:scale-105 transition-all duration-300 ease-in-out cursor-pointer overflow-hidden">
+            <div class="absolute inset-0 bg-white opacity-10 rounded-2xl -rotate-12 scale-150 transform origin-top-left"></div>
+            <div class="relative z-10">
+                <div class="text-5xl font-extrabold mb-2">{{ total_active_items }}</div>
+                <div class="text-lg font-medium opacity-90">สิ่งของที่ใช้งาน</div>
             </div>
-            <i class="fas fa-cubes text-5xl opacity-75"></i>
+            <i class="fas fa-cubes text-6xl opacity-20 absolute bottom-4 right-4"></i>
         </div>
     </div>
-    <hr class="my-6 border-gray-300"> 
+    <hr class="my-8 border-blue-200"> 
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10"> {# ใช้ Grid layout สำหรับ Organization Details #}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-12"> {# ใช้ Grid layout สำหรับ Organization Details และ Summary #}
         {# ส่วนรายละเอียดองค์กร #}
-        <div id="organization-details" class="p-6 bg-blue-50 rounded-xl shadow-md border border-blue-200 hover:shadow-lg transition-shadow duration-300"> {# เพิ่ม id #}
-            <h2 class="text-2xl font-bold text-blue-800 mb-4 border-b-2 pb-2 border-blue-300 flex items-center gap-x-2">
-                <i class="fas fa-building text-blue-600"></i> รายละเอียดองค์กร
+        <div id="organization-details" class="p-8 bg-blue-50 rounded-2xl shadow-lg border border-blue-200 hover:shadow-xl transition-shadow duration-300 animate-slide-in-left"> {# เพิ่ม id, padding, border, shadow, animation #}
+            <h2 class="text-3xl font-bold text-blue-800 mb-5 pb-3 border-b-2 border-blue-300 flex items-center gap-x-3">
+                <i class="fas fa-building text-blue-600 text-3xl"></i> รายละเอียดองค์กร
             </h2>
-            <p class="text-gray-700 text-lg mb-2"><strong class="text-gray-800">ชื่อองค์กร:</strong> {{ organization.name }}</p>
-            <p class="text-gray-700 text-lg mb-2"><strong class="text-gray-800">ที่อยู่:</strong> {{ organization.address }}</p>
-            <p class="text-gray-700 text-lg"><strong class="text-gray-800">ประเภทธุรกิจ:</strong> {{ organization.business_type }}</p>
+            <ul class="space-y-4 text-lg text-gray-700">
+                <li class="flex items-start">
+                    <strong class="text-gray-800 w-32 flex-shrink-0">ชื่อองค์กร:</strong> 
+                    <span class="flex-grow">{{ organization.name }}</span>
+                </li>
+                <li class="flex items-start">
+                    <strong class="text-gray-800 w-32 flex-shrink-0">ที่อยู่:</strong> 
+                    <span class="flex-grow">{{ organization.address }}</span>
+                </li>
+                <li class="flex items-start">
+                    <strong class="text-gray-800 w-32 flex-shrink-0">ประเภทธุรกิจ:</strong> 
+                    <span class="flex-grow">{{ organization.business_type }}</span>
+                </li>
+            </ul>
         </div>
         
-        {# Placeholder สำหรับส่วนที่เคยเป็น "ภาพรวมสิ่งของ" - อาจจะเอาไว้แสดงข้อมูลสรุปอื่นๆ แทนในอนาคต #}
-        <div class="p-6 bg-green-50 rounded-xl shadow-md border border-green-200 hover:shadow-lg transition-shadow duration-300">
-            <h2 class="text-2xl font-bold text-green-800 mb-4 border-b-2 pb-2 border-green-300 flex items-center gap-x-2">
-                <i class="fas fa-info-circle text-green-600"></i> สรุปสถานะองค์กร
+        {# สรุปสถานะองค์กร #}
+        <div class="p-8 bg-green-50 rounded-2xl shadow-lg border border-green-200 hover:shadow-xl transition-shadow duration-300 animate-slide-in-right"> {# เพิ่ม padding, border, shadow, animation #}
+            <h2 class="text-3xl font-bold text-green-800 mb-5 pb-3 border-b-2 border-green-300 flex items-center gap-x-3">
+                <i class="fas fa-info-circle text-green-600 text-3xl"></i> สรุปสถานะองค์กร
             </h2>
-            <ul class="space-y-3 text-lg text-gray-700">
-                <li class="flex items-center"><i class="fas fa-users mr-3 text-green-600"></i> <strong class="text-gray-800">ผู้ใช้ทั้งหมด:</strong> {{ total_users }} คน</li>
-                <li class="flex items-center"><i class="fas fa-boxes-stacked mr-3 text-green-600"></i> <strong class="text-gray-800">ประเภทสิ่งของทั้งหมด:</strong> {{ total_item_types }} ประเภท</li>
-                <li class="flex items-center"><i class="fas fa-boxes-alt mr-3 text-green-600"></i> <strong class="text-gray-800">อุปกรณ์ทั้งหมด:</strong> {{ total_assets }} ชิ้น</li>
-                <li class="flex items-center"><i class="fas fa-hourglass-start mr-3 text-green-600"></i> <strong class="text-gray-800">คำขอยืมที่รอดำเนินการ:</strong> {{ pending_loans_count }} รายการ</li>
-                <li class="flex items-center"><i class="fas fa-hand-holding-box mr-3 text-green-600"></i> <strong class="text-gray-800">รายการยืมที่กำลังดำเนินการ:</strong> {{ active_loans_count }} รายการ</li>
+            <ul class="space-y-4 text-lg text-gray-700">
+                <li class="flex items-center"><i class="fas fa-users mr-4 text-green-600 text-xl"></i> <strong class="text-gray-800">ผู้ใช้ทั้งหมด:</strong> <span class="ml-auto text-xl font-semibold">{{ total_users }} คน</span></li>
+                <li class="flex items-center"><i class="fas fa-boxes-stacked mr-4 text-green-600 text-xl"></i> <strong class="text-gray-800">ประเภทสิ่งของทั้งหมด:</strong> <span class="ml-auto text-xl font-semibold">{{ total_item_types }} ประเภท</span></li>
+                <li class="flex items-center"><i class="fas fa-boxes-alt mr-4 text-green-600 text-xl"></i> <strong class="text-gray-800">อุปกรณ์ทั้งหมด:</strong> <span class="ml-auto text-xl font-semibold">{{ total_assets }} ชิ้น</span></li>
+                <li class="flex items-center"><i class="fas fa-hourglass-start mr-4 text-green-600 text-xl"></i> <strong class="text-gray-800">คำขอยืมที่รอดำเนินการ:</strong> <span class="ml-auto text-xl font-semibold">{{ pending_loans_count }} รายการ</span></li>
+                <li class="flex items-center"><i class="fas fa-hand-holding-box mr-4 text-green-600 text-xl"></i> <strong class="text-gray-800">รายการยืมที่กำลังดำเนินการ:</strong> <span class="ml-auto text-xl font-semibold">{{ active_loans_count }} รายการ</span></li>
             </ul>
         </div>
     </div>
 
-    <hr class="my-6 border-gray-300">
+    <hr class="my-8 border-blue-200">
 
     {# แสดงปุ่ม "สร้างลิงก์ลงทะเบียนผู้ใช้" เฉพาะเมื่อผู้ใช้เป็นแอดมินองค์กร #}
     {% if user.is_org_admin %}
-        <div class="mt-8 pt-6 border-t-2 border-gray-200 p-6 bg-purple-50 rounded-xl shadow-md border border-purple-200 hover:shadow-lg transition-shadow duration-300">
-            <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-x-2">
-                <i class="fas fa-link text-purple-600"></i> สร้างลิงก์ลงทะเบียนผู้ใช้สำหรับองค์กรของคุณ
+        <div class="mt-8 pt-6 border-t-2 border-gray-200 p-8 bg-purple-50 rounded-2xl shadow-lg border border-purple-200 hover:shadow-xl transition-shadow duration-300 animate-fade-in">
+            <h3 class="text-2xl font-bold text-purple-800 mb-5 flex items-center gap-x-3">
+                <i class="fas fa-link text-purple-600 text-2xl"></i> สร้างลิงก์ลงทะเบียนผู้ใช้สำหรับองค์กรของคุณ
             </h3>
-            <form method="post" action="{% url 'generate_registration_link' %}" class="flex flex-col sm:flex-row items-center gap-4">
+            <form method="post" action="{% url 'generate_registration_link' %}" class="flex flex-col sm:flex-row items-center gap-6">
                 {% csrf_token %}
-                <button type="submit" class="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2.5 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-md flex items-center">
-                    <i class="fas fa-user-plus mr-2"></i> สร้างลิงก์ลงทะเบียน
+                <button type="submit" class="w-full sm:w-auto bg-gradient-to-r from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 text-white font-bold py-3 px-8 rounded-full transition duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center text-lg">
+                    <i class="fas fa-user-plus mr-3"></i> สร้างลิงก์ลงทะเบียน
                 </button>
             </form>
         </div>
     {% endif %}
 
     {# ส่วนรวมปุ่มการกระทำหลัก #}
-    <div class="mt-8 pt-6 border-t-2 border-gray-200 flex flex-wrap gap-4 justify-center">
-        <a href="{% url 'add_item' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-md flex items-center">
-            <i class="fas fa-plus-square mr-2"></i> เพิ่มประเภทสิ่งของใหม่
+    <div class="mt-10 pt-8 border-t-2 border-gray-200 flex flex-wrap gap-6 justify-center animate-fade-in-up">
+        <a href="{% url 'add_item' %}" class="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold py-3 px-8 rounded-full transition duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center text-lg">
+            <i class="fas fa-plus-square mr-3"></i> เพิ่มประเภทสิ่งของใหม่
         </a>
-        <a href="{% url 'manage_organization_users' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-md flex items-center">
-            <i class="fas fa-users-gear mr-2"></i> จัดการผู้ใช้ในองค์กร
+        <a href="{% url 'manage_organization_users' %}" class="bg-gradient-to-r from-indigo-500 to-indigo-700 hover:from-indigo-600 hover:to-indigo-800 text-white font-bold py-3 px-8 rounded-full transition duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center text-lg">
+            <i class="fas fa-users-gear mr-3"></i> จัดการผู้ใช้ในองค์กร
         </a>
     </div>
 </div>
+
+<style>
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @keyframes slideInLeft {
+        from { opacity: 0; transform: translateX(-20px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes slideInRight {
+        from { opacity: 0; transform: translateX(20px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-fade-in {
+        animation: fadeIn 0.8s ease-out forwards;
+    }
+    .animate-slide-in-left {
+        animation: slideInLeft 0.8s ease-out forwards;
+    }
+    .animate-slide-in-right {
+        animation: slideInRight 0.8s ease-out forwards;
+    }
+    .animate-fade-in-up {
+        animation: fadeInUp 0.8s ease-out forwards;
+    }
+
+    /* Additional subtle hover effects for general text elements, if desired */
+    .text-indigo-700:hover {
+        color: #4f46e5; /* Slightly darker indigo on hover */
+    }
+</style>
 {% endblock content %}

@@ -1,0 +1,51 @@
+{% extends 'users/base.html' %}
+
+{% block title %}แก้ไขข้อมูลส่วนตัว{% endblock %}
+{% block title_in_header %}แก้ไขโปรไฟล์{% endblock title_in_header %}
+
+{% block content %}
+<div class="bg-white p-6 md:p-8 lg:p-10 rounded-xl shadow-lg max-w-xl mx-auto my-8 border border-gray-200">
+    <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4 text-center">แก้ไขข้อมูลส่วนตัว</h1>
+    <p class="text-gray-700 mb-8 text-center text-lg">
+        อัปเดตข้อมูลบัญชีของคุณให้เป็นปัจจุบัน
+    </p>
+    
+    <hr class="my-6 border-gray-300">
+
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+        
+        {% for field in form %}
+            <div class="form-group mb-4">
+                <label for="{{ field.id_for_label }}" class="block text-gray-700 text-sm font-bold mb-2">
+                    {{ field.label }}
+                </label>
+                {{ field }} {# แสดง input field #}
+                {% if field.help_text %}
+                    <p class="text-xs text-gray-500 mt-1">{{ field.help_text }}</p>
+                {% endif %}
+                {% for error in field.errors %}
+                    <p class="text-red-500 text-xs italic">{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endfor %}
+
+        {% if form.non_field_errors %}
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                {% for error in form.non_field_errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="flex items-center justify-center gap-4 mt-6">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-300 transform hover:scale-105 shadow-md">
+                บันทึกการเปลี่ยนแปลง
+            </button>
+            <a href="{% url 'user_dashboard' %}" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-300 transform hover:scale-105 shadow-md">
+                ยกเลิก
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock content %}

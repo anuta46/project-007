@@ -50,10 +50,11 @@ class LinkBasedUserRegistrationForm(forms.ModelForm):
 
     class Meta:
         model = CustomUser
-        fields = ['username', 'email'] # ไม่มีฟิลด์ organization เพราะจะผูกใน View
+        fields = ['username', 'email' , 'phone_number'] # ไม่มีฟิลด์ organization เพราะจะผูกใน View
         labels = {
-            'username': "ชื่อผู้ใช้งาน",
+            'username': "ชื่อ-สกุล",
             'email': "อีเมล",
+           'phone_number': "หมายเลขโทรศัพท์",
         }
 
     def clean(self):
