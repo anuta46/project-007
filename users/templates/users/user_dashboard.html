@@ -1,87 +1,185 @@
 {% extends 'users/base.html' %} {# ใช้ base.html เป็นโครงสร้างหลัก #}
 
 {% block title %}แดชบอร์ดผู้ใช้{% endblock %}
+{% block title_in_header %}แดชบอร์ดผู้ใช้{% endblock title_in_header %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto my-10 px-4">
-    <!-- Header -->
-    <div class="text-center mb-10">
-        <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-2">
-            ยินดีต้อนรับ, {{ user.username }}!
-        </h1>
-        <p class="text-gray-700 text-lg md:text-xl">
-            ตรวจสอบสิ่งของที่พร้อมให้ยืมและจัดการรายการยืมของคุณ
-        </p>
+<div class="max-w-7xl mx-auto my-10 px-4">
+    <!-- Hero / Header -->
+    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-500 text-white p-8 md:p-10 mb-8">
+        <div class="relative z-10">
+            <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">
+                สวัสดี, {{ user.username }} 👋
+            </h1>
+            <p class="mt-2 text-white/90 text-base md:text-lg">
+                สำรวจอุปกรณ์ที่พร้อมให้ยืม จัดการรายการของคุณได้ในที่เดียว
+            </p>
+        </div>
+        <div class="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-white/10 blur-2xl"></div>
+        <div class="absolute -left-10 -bottom-10 w-40 h-40 rounded-full bg-white/10 blur-xl"></div>
     </div>
 
-    <hr class="border-gray-300 mb-10">
+    <!-- Toolbar: ค้นหา + กรอง -->
+    <form method="get" class="mb-8">
+        <div class="bg-white/80 backdrop-blur rounded-xl border border-gray-200/80 shadow-sm p-4 md:p-5">
+            <div class="grid gap-3 md:gap-4 grid-cols-1 md:grid-cols-12">
+                <div class="md:col-span-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ค้นหาชื่ออุปกรณ์</label>
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" name="q" value="{{ current_query|default:'' }}" placeholder="เช่น Laptop, Router, Projector, SN, ID"
+                               class="w-full pl-10 pr-3 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                </div>
+                <div class="md:col-span-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">สภาพ</label>
+                    <select name="condition"
+                            class="w-full py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">ทั้งหมด</option>
+                        {# อัปเดตตัวเลือกสภาพให้ตรงกับโมเดล #}
+                        <option value="excellent" {% if current_condition == 'excellent' %}selected{% endif %}>ดีเยี่ยม</option>
+                        <option value="good" {% if current_condition == 'good' %}selected{% endif %}>ดี</option>
+                        <option value="fair" {% if current_condition == 'fair' %}selected{% endif %}>พอใช้</option>
+                        <option value="poor" {% if current_condition == 'poor' %}selected{% endif %}>ชำรุด</option>
+                    </select>
+                </div>
+                <div class="md:col-span-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">สถานะ</label>
+                    <select name="status"
+                            class="w-full py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">ทั้งหมด</option>
+                        <option value="available" {% if current_status == 'available' %}selected{% endif %}>พร้อมให้ยืม</option>
+                        <option value="unavailable" {% if current_status == 'unavailable' %}selected{% endif %}>ไม่พร้อม</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-4 flex gap-3 justify-end">
+                <a href="." class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">
+                    <i class="fas fa-sync-alt"></i> ล้างตัวกรอง
+                </a>
+                <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow">
+                    <i class="fas fa-filter"></i> ใช้ตัวกรอง
+                </button>
+            </div>
+        </div>
+    </form>
 
-    <!-- Available Assets Section -->
-    <section class="mb-12">
-        <div class="bg-green-50 p-6 md:p-8 rounded-xl shadow-sm border border-green-200">
-            <h2 class="text-2xl md:text-3xl font-bold text-green-800 mb-6 border-b pb-2 border-green-300">
-                รายการอุปกรณ์ที่พร้อมให้ยืมในองค์กร
-            </h2>
-
+    <!-- รายการอุปกรณ์ -->
+    <section>
+        <div class="flex items-center justify-between mb-5">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-900">อุปกรณ์ที่พร้อมให้ยืม</h2>
             {% if available_assets %}
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {% for asset in available_assets %}
-                <div class="bg-white rounded-xl shadow-md p-5 border border-gray-200 flex flex-col justify-between hover:shadow-xl hover:scale-105 transition transform">
-                    <!-- Asset Image -->
-                    <div class="mb-4">
-                        {% if asset.item.image %}
-                            {# เปลี่ยนกลับมาใช้ asset.item.image.url เพื่อให้ Django จัดการ URL ให้ถูกต้อง #}
-                            <img src="{{ asset.item.image.url }}" alt="{{ asset.item.name }}" class="w-full h-40 object-cover rounded-lg mb-3">
+                <span class="inline-flex items-center text-sm px-3 py-1 rounded-full bg-gray-100 text-gray-700 border border-gray-200">
+                    ทั้งหมด {{ available_assets|length }} รายการ
+                </span>
+            {% endif %}
+        </div>
+
+        {% if available_assets %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
+            {% for asset in available_assets %}
+            <div class="group relative bg-white rounded-2xl border border-gray-200 hover:border-indigo-300 shadow-sm hover:shadow-lg transition">
+                <!-- รูป -->
+                <div class="aspect-[4/3] overflow-hidden rounded-t-2xl bg-gray-100">
+                    {% if asset.item.image %}
+                        <img src="{{ asset.item.image.url }}"
+                             alt="{{ asset.item.name }}"
+                             class="w-full h-full object-cover group-hover:scale-105 transition">
+                    {% else %}
+                        <div class="w-full h-full grid place-items-center text-gray-400">
+                            <i class="fas fa-image text-4xl"></i>
+                            <span class="mt-1 text-sm">ไม่มีรูปภาพ</span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- เนื้อหา -->
+                <div class="p-5">
+                    <div class="flex items-start justify-between gap-3">
+                        <h3 class="text-lg font-semibold text-gray-900 leading-snug">
+                            {{ asset.item.name }}
+                        </h3>
+
+                        {# Badge สถานะ #}
+                        {% if asset.status == 'available' %}
+                            <span class="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-green-100 text-green-800 border border-green-200">
+                                <i class="fas fa-check-circle"></i> พร้อมยืม
+                            </span>
                         {% else %}
-                            <div class="w-full h-40 bg-gray-200 flex items-center justify-center rounded-lg mb-3 text-gray-500">
-                                <i class="fas fa-image text-5xl"></i> ไม่มีรูปภาพ
-                            </div>
+                            <span class="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-red-100 text-red-800 border border-red-200">
+                                <i class="fas fa-times-circle"></i> {{ asset.get_status_display }}
+                            </span>
                         {% endif %}
-
-                        <!-- Asset Name & Description -->
-                        <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ asset.item.name }}</h3>
-                        <p class="text-gray-600 text-sm mb-2">{{ asset.item.description|default:"ไม่มีรายละเอียด" }}</p>
-
-                        <!-- Asset Details -->
-                        <ul class="text-gray-700 text-sm space-y-1">
-                            <li><strong class="text-gray-800">รหัสประจำเครื่อง:</strong> {{ asset.serial_number|default:"-" }}</li>
-                            <li><strong class="text-gray-800">รหัสอุปกรณ์:</strong> {{ asset.device_id|default:"-" }}</li>
-                            <li><strong class="text-gray-800">สถานที่จัดเก็บ:</strong> {{ asset.location|default:"-" }}</li>
-                            <li><strong class="text-gray-800">สภาพ:</strong> {{ asset.get_condition_display }}</li>
-                        </ul>
                     </div>
 
-                    <!-- Action Buttons -->
-                    <div class="mt-4 flex justify-between items-center pt-4 border-t border-gray-200">
+                    <p class="mt-2 text-sm text-gray-600">
+                        {{ asset.item.description|default:"ไม่มีรายละเอียด" }}
+                    </p>
+
+                    <dl class="mt-4 grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                            <dt class="text-gray-500">รหัสประจำเครื่อง</dt>
+                            <dd class="font-medium text-gray-800">{{ asset.serial_number|default:"-" }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-gray-500">รหัสอุปกรณ์</dt>
+                            <dd class="font-medium text-gray-800">{{ asset.device_id|default:"-" }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-gray-500">สถานที่จัดเก็บ</dt>
+                            <dd class="font-medium text-gray-800">{{ asset.location|default:"-" }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-gray-500">สภาพ</dt>
+                            <dd class="font-medium text-gray-800">{{ asset.get_condition_display }}</dd>
+                        </div>
+                    </dl>
+
+                    <div class="mt-5 flex items-center justify-between">
+                        <div class="text-xs text-gray-500">
+                            ID: {{ asset.id }}
+                        </div>
+
                         {% if asset.status == 'available' %}
-                        <span class="text-green-600 font-medium flex items-center">
-                            <i class="fas fa-check-circle mr-1"></i> พร้อมให้ยืม
-                        </span>
-                        <a href="{% url 'borrow_item' asset.id %}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition transform hover:scale-105 shadow-md">
-                            ยืมอุปกรณ์
-                        </a>
+                            <a href="{% url 'borrow_item' asset.id %}"
+                               class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg shadow">
+                                <i class="fas fa-handshake"></i> ยืมอุปกรณ์
+                            </a>
                         {% else %}
-                        <span class="text-red-600 font-medium flex items-center">
-                            <i class="fas fa-times-circle mr-1"></i> ไม่พร้อมให้ยืม ({{ asset.get_status_display }})
-                        </span>
-                        <button class="bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg cursor-not-allowed" disabled>ยืมอุปกรณ์</button>
+                            <button class="inline-flex items-center gap-2 bg-gray-300 text-gray-600 font-medium py-2 px-4 rounded-lg cursor-not-allowed">
+                                <i class="fas fa-ban"></i> ไม่พร้อมให้ยืม
+                            </button>
                         {% endif %}
                     </div>
                 </div>
-                {% endfor %}
+
+                {# เส้นไฮไลต์เมื่อโฮเวอร์ #}
+                <div class="pointer-events-none absolute inset-x-0 -bottom-px h-px bg-gradient-to-r from-transparent via-indigo-300 to-transparent opacity-0 group-hover:opacity-100 transition"></div>
             </div>
-            {% else %}
-            <p class="text-gray-600 italic text-center py-4">ไม่มีอุปกรณ์ที่พร้อมให้ยืมในองค์กรของคุณ</p>
-            {% endif %}
+            {% endfor %}
         </div>
+        {% else %}
+            <!-- Empty State -->
+            <div class="bg-white rounded-2xl border border-dashed border-gray-300 p-10 text-center">
+                <div class="mx-auto w-14 h-14 rounded-full bg-gray-100 grid place-items-center text-gray-500">
+                    <i class="fas fa-box-open text-xl"></i>
+                </div>
+                <h3 class="mt-4 text-lg font-semibold text-gray-900">ยังไม่มีอุปกรณ์ที่พร้อมให้ยืม</h3>
+                <p class="mt-1 text-gray-600">โปรดติดต่อผู้ดูแลระบบหรือกลับมาตรวจสอบอีกครั้ง</p>
+                <div class="mt-5">
+                    <a href="." class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-rotate-right"></i> โหลดใหม่
+                    </a>
+                </div>
+            </div>
+        {% endif %}
     </section>
 
-    <!-- Links Section -->
-    <section class="flex flex-wrap justify-center gap-4 mt-6">
-        {% comment %} <a href="{% url 'my_borrowed_items_history' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-6 rounded-lg transition transform hover:scale-105 shadow-md">
-            ประวัติการยืมของฉัน
-        </a> {% endcomment %}
-        <!-- สามารถเพิ่มลิงก์อื่น ๆ ได้ที่นี่ -->
+    <!-- ลิงก์อื่น ๆ -->
+    <section class="flex flex-wrap justify-center gap-3 mt-10">
+        <a href="{% url 'my_borrowed_items_history' %}" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 px-5 rounded-lg shadow">
+            <i class="fas fa-clock-rotate-left"></i> ประวัติการยืมของฉัน
+        </a>
     </section>
 </div>
 {% endblock content %}

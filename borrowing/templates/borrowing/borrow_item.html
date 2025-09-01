@@ -1,50 +1,248 @@
-{% extends 'users/base.html' %} {# ขยายจาก base.html เพื่อใช้โครงสร้างและสไตล์พื้นฐาน #}
+{% extends 'users/base.html' %}
 
-{% block title %}ขอยืมสิ่งของ: {{ asset.item.name }} ({{ asset.serial_number|default:asset.device_id }}){% endblock %} {# กำหนดชื่อหน้าสำหรับแท็บเบราว์เซอร์ #}
+{% block title %}ขอยืมสิ่งของ: {{ asset.item.name }} ({{ asset.serial_number|default:asset.device_id }}){% endblock %}
 
-{% block content %} {# บล็อก content สำหรับเนื้อหาเฉพาะของหน้านี้ #}
-<div class="bg-white p-6 md:p-8 lg:p-10 rounded-xl shadow-lg max-w-2xl mx-auto my-8 border border-gray-200">
-    <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4 text-center">ขอยืมสิ่งของ: {{ asset.item.name }}</h1>
-    <p class="text-gray-700 mb-8 text-center text-lg">
-        คุณกำลังขอยืมอุปกรณ์ Serial/ID: <strong class="text-gray-900">{{ asset.serial_number|default:asset.device_id|default:"N/A" }}</strong>
-    </p>
-    
-    <hr class="my-6 border-gray-300">
+{% block content %}
+<div class="max-w-5xl mx-auto my-10 px-4">
+    <!-- Breadcrumb -->
+    <nav class="mb-4 text-sm text-gray-600">
+        <ol class="flex items-center gap-2">
+            <li><a href="{% url 'user_dashboard' %}" class="hover:underline">แดชบอร์ด</a></li>
+            <li class="text-gray-400">/</li>
+            <li class="text-gray-800 font-medium">ขอยืมสิ่งของ</li>
+        </ol>
+    </nav>
 
-    <form method="post" class="w-full">
-        {% csrf_token %} {# CSRF token เพื่อความปลอดภัย #}
+    <!-- HERO -->
+    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-500 text-white p-7 md:p-9 mb-8">
+        <div class="relative z-10">
+            <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">ขอยืมสิ่งของ</h1>
+            <p class="mt-2 text-white/90">
+                คุณกำลังขอยืม: <span class="font-semibold">{{ asset.item.name }}</span>
+                <span class="mx-1">•</span>
+                Serial/ID: <button id="copy-id" type="button" class="inline-flex items-center gap-1 font-semibold underline decoration-white/40 hover:decoration-white" data-copy="{{ asset.serial_number|default:asset.device_id|default:'N/A' }}">
+                    {{ asset.serial_number|default:asset.device_id|default:"N/A" }}
+                    <i class="fas fa-copy text-xs"></i>
+                </button>
+            </p>
+        </div>
+        <div class="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-white/10 blur-2xl"></div>
+        <div class="absolute -left-10 -bottom-10 w-40 h-40 rounded-full bg-white/10 blur-xl"></div>
+    </div>
 
-        {# แสดงฟิลด์ทั้งหมดจาก LoanRequestForm (รวมถึง reason และ due_date) #}
-        {% for field in form %}
-            <div class="form-field">
-                {{ field.label_tag }} {# แสดง Label ของฟิลด์ #}
-                {{ field }} {# แสดง Widget ของฟิลด์ (input, textarea, select) #}
-                {% if field.help_text %}
-                    <p class="text-sm text-gray-500 mt-1">{{ field.help_text }}</p>
-                {% endif %}
-                {% for error in field.errors %}
-                    <p class="errorlist">{{ error }}</p>
-                {% endfor %}
+    <!-- CONTENT GRID -->
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <!-- ASSET CARD -->
+        <aside class="lg:col-span-2">
+            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                <div class="aspect-[4/3] bg-gray-100">
+                    {% if asset.item.image %}
+                        <img src="{{ asset.item.image.url }}" alt="{{ asset.item.name }}" class="w-full h-full object-cover">
+                    {% else %}
+                        <div class="w-full h-full grid place-items-center text-gray-400">
+                            <i class="fas fa-image text-4xl"></i>
+                            <span class="mt-1 text-sm">ไม่มีรูปภาพ</span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="p-5">
+                    <div class="flex items-start justify-between gap-3">
+                        <h2 class="text-xl font-bold text-gray-900 leading-snug">{{ asset.item.name }}</h2>
+
+                        {% if asset.status == 'available' %}
+                            <span class="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-green-100 text-green-800 border border-green-200">
+                                <i class="fas fa-check-circle"></i> พร้อมให้ยืม
+                            </span>
+                        {% else %}
+                            <span class="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-red-100 text-red-800 border border-red-200">
+                                <i class="fas fa-times-circle"></i> {{ asset.get_status_display }}
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <dl class="mt-4 grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                            <dt class="text-gray-500">Serial</dt>
+                            <dd class="font-medium text-gray-800">{{ asset.serial_number|default:"-" }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-gray-500">Device ID</dt>
+                            <dd class="font-medium text-gray-800">{{ asset.device_id|default:"-" }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-gray-500">สถานที่จัดเก็บ</dt>
+                            <dd class="font-medium text-gray-800">{{ asset.location|default:"-" }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-gray-500">สภาพ</dt>
+                            <dd class="font-medium text-gray-800">{{ asset.get_condition_display }}</dd>
+                        </div>
+                    </dl>
+
+                    {% if asset.item.description %}
+                        <p class="mt-4 text-sm text-gray-600">{{ asset.item.description }}</p>
+                    {% endif %}
+                </div>
             </div>
-        {% endfor %}
 
-        {# แสดง Non-field errors (ข้อผิดพลาดที่ไม่เกี่ยวกับฟิลด์ใดๆ โดยเฉพาะ) #}
-        {% if form.non_field_errors %}
-            <ul class="errorlist">
-                {% for error in form.non_field_errors %}
-                    <li>{{ error }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
+            <!-- TIP -->
+            <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-900 p-4 text-sm">
+                <div class="flex items-start gap-3">
+                    <i class="fas fa-lightbulb mt-0.5"></i>
+                    <p>โปรดระบุเหตุผลและกำหนดวันส่งคืนให้ชัดเจน เพื่อให้ผู้ดูแลอนุมัติได้รวดเร็วขึ้น</p>
+                </div>
+            </div>
+        </aside>
 
-        <button type="submit">ส่งคำขอยืม</button>
-    </form>
+        <!-- FORM CARD -->
+        <section class="lg:col-span-3">
+            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-gray-900">ฟอร์มคำขอยืม</h3>
+                    <span class="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
+                        <i class="fas fa-shield-check"></i> ปลอดภัยด้วย CSRF
+                    </span>
+                </div>
 
-    {# ลิงก์กลับไปยังหน้าแดชบอร์ดผู้ใช้ #}
-    <div class="mt-8 pt-6 border-t-2 border-gray-200 flex flex-wrap gap-4 justify-center">
-        <a href="{% url 'user_dashboard' %}" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2.5 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-md flex items-center">
-            <i class="fas fa-arrow-left mr-2"></i> กลับสู่แดชบอร์ด
-        </a>
+                {# สไตล์สำหรับฟิลด์ (ใช้ได้แม้ไม่ติดตั้ง widget_tweaks) #}
+                <style>
+                    form.borrow-form .form-field { margin-bottom: 1rem; }
+                    form.borrow-form .form-field label {
+                        display:block; margin-bottom: .4rem; font-weight:600; color:#374151; font-size:.95rem;
+                    }
+                    form.borrow-form .form-field input,
+                    form.borrow-form .form-field select,
+                    form.borrow-form .form-field textarea {
+                        width:100%; border:1px solid #d1d5db; border-radius:.7rem; padding:.7rem .9rem;
+                        outline: none; transition: box-shadow .15s, border-color .15s; background:#fff;
+                    }
+                    form.borrow-form .form-field textarea { min-height: 120px; }
+                    form.borrow-form .form-field input:focus,
+                    form.borrow-form .form-field select:focus,
+                    form.borrow-form .form-field textarea:focus {
+                        border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,.2);
+                    }
+                    form.borrow-form .errorlist { color:#b91c1c; font-size:.875rem; margin-top:.375rem; }
+                </style>
+
+                <form method="post" class="borrow-form" id="borrow-form">
+                    {% csrf_token %}
+
+                    {# วนเรนเดอร์ฟิลด์ทั้งหมดจาก LoanRequestForm #}
+                    {% for field in form %}
+                        <div class="form-field">
+                            <label for="{{ field.id_for_label }}" class="flex items-center gap-2">
+                                {% if field.name == 'reason' %}
+                                    <i class="fas fa-align-left text-gray-400"></i>
+                                {% elif field.name == 'due_date' %}
+                                    <i class="fas fa-calendar-day text-gray-400"></i>
+                                {% else %}
+                                    <i class="fas fa-pen text-gray-400"></i>
+                                {% endif %}
+                                <span>{{ field.label }}</span>
+                            </label>
+
+                            {{ field }}
+
+                            {% if field.name == 'reason' %}
+                                <div class="mt-1 flex items-center justify-between text-xs text-gray-500">
+                                    <span>อธิบายวัตถุประสงค์ในการยืมโดยสรุป</span>
+                                    <span id="reason-count">0/500</span>
+                                </div>
+                            {% endif %}
+
+                            {% if field.help_text %}
+                                <p class="text-sm text-gray-500 mt-1">{{ field.help_text }}</p>
+                            {% endif %}
+
+                            {% for error in field.errors %}
+                                <p class="errorlist">• {{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+
+                    {# Non-field errors #}
+                    {% if form.non_field_errors %}
+                        <ul class="errorlist mb-4">
+                            {% for error in form.non_field_errors %}
+                                <li>• {{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
+                    <!-- ACTIONS -->
+                    <div class="mt-6 flex flex-wrap items-center gap-3">
+                        <button type="submit" id="submit-btn"
+                                class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-5 rounded-xl shadow disabled:opacity-60 disabled:cursor-not-allowed">
+                            <i class="fas fa-paper-plane"></i>
+                            <span>ส่งคำขอยืม</span>
+                        </button>
+
+                        <a href="{% url 'user_dashboard' %}"
+                           class="inline-flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2.5 px-5 rounded-xl shadow">
+                            <i class="fas fa-arrow-left"></i> กลับสู่แดชบอร์ด
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- POLICY / NOTE -->
+            <div class="mt-4 rounded-2xl border border-gray-200 bg-white p-4">
+                <div class="flex items-start gap-3 text-sm text-gray-700">
+                    <i class="fas fa-info-circle mt-0.5 text-gray-500"></i>
+                    <p>
+                        เมื่อส่งคำขอยืมแล้ว ระบบจะส่งต่อให้ผู้ดูแลตรวจสอบและอนุมัติ/ปฏิเสธ
+                        คุณสามารถติดตามสถานะได้ที่เมนู <span class="font-semibold">“รายการยืมของฉัน”</span>
+                    </p>
+                </div>
+            </div>
+        </section>
     </div>
 </div>
+
+<!-- Small JS: copy, counter, loading -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Copy Serial/ID
+    const copyBtn = document.getElementById('copy-id');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', async () => {
+            const text = copyBtn.dataset.copy || '';
+            try {
+                await navigator.clipboard.writeText(text);
+                copyBtn.classList.add('text-emerald-200');
+                copyBtn.innerHTML = text + ' <i class="fas fa-check text-xs"></i>';
+                setTimeout(() => {
+                    copyBtn.classList.remove('text-emerald-200');
+                    copyBtn.innerHTML = text + ' <i class="fas fa-copy text-xs"></i>';
+                }, 1500);
+            } catch (e) { console.error(e); }
+        });
+    }
+
+    // Reason character counter (assumes max_length=500 ถ้า form กำหนดอื่น ปรับได้)
+    const reasonEl = document.getElementById('id_reason');
+    const counter = document.getElementById('reason-count');
+    if (reasonEl && counter) {
+        const maxLen = reasonEl.getAttribute('maxlength') ? parseInt(reasonEl.getAttribute('maxlength')) : 500;
+        const update = () => {
+            const len = reasonEl.value.length;
+            counter.textContent = `${len}/${maxLen}`;
+        };
+        update();
+        reasonEl.addEventListener('input', update);
+    }
+
+    // Loading state on submit
+    const form = document.getElementById('borrow-form');
+    const submitBtn = document.getElementById('submit-btn');
+    if (form && submitBtn) {
+        form.addEventListener('submit', () => {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span> กำลังส่ง...</span>';
+        });
+    }
+});
+</script>
 {% endblock content %}

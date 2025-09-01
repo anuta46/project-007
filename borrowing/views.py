@@ -2,87 +2,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.utils import timezone
+from datetime import timedelta
 from django.forms import inlineformset_factory 
-from django.utils import timezone 
-from datetime import timedelta 
+from django.db.models import Q # นำเข้า Q object สำหรับการค้นหาแบบ OR
 
 from .forms import ItemForm, AssetForm, LoanRequestForm 
 from .models import Item, Asset, Loan 
 from users.models import Notification, CustomUser 
-
-
-@login_required
-def item_overview(request):
-    """
-    View สำหรับ Organization Admin เพื่อดูภาพรวมสิ่งของทั้งหมดในองค์กร
-    """
-    if not request.user.is_org_admin:
-        messages.error(request, "คุณไม่มีสิทธิ์เข้าถึงหน้านี้")
-        return redirect('dashboard')
-    
-    # ดึงสิ่งของทั้งหมดขององค์กรของผู้ดูแลระบบ
-    items = Item.objects.filter(organization=request.user.organization).order_by('name')
-    
-    context = {
-        'items': items,
-        'organization_name': request.user.organization.name 
-    }
-    return render(request, 'borrowing/item_overview.html', context)
-
-
-@login_required
-def pending_loans_view(request):
-    """
-    View สำหรับ Organization Admin เพื่อดูคำขอยืมที่รอดำเนินการทั้งหมดในองค์กร
-    """
-    if not request.user.is_org_admin:
-        messages.error(request, "คุณไม่มีสิทธิ์เข้าถึงหน้านี้")
-        return redirect('dashboard')
-    
-    # ดึงคำขอยืมที่รอดำเนินการทั้งหมดขององค์กรของผู้ดูแลระบบ
-    pending_loans = Loan.objects.filter(asset__item__organization=request.user.organization, status='pending').order_by('-borrow_date')
-    
-    context = {
-        'pending_loans': pending_loans,
-    }
-    return render(request, 'borrowing/pending_loans.html', context)
-
-
-@login_required
-def active_loans_view(request):
-    """
-    View สำหรับ Organization Admin เพื่อดูรายการยืมที่กำลังดำเนินการทั้งหมดในองค์กร
-    """
-    if not request.user.is_org_admin:
-        messages.error(request, "คุณไม่มีสิทธิ์เข้าถึงหน้านี้")
-        return redirect('dashboard')
-    
-    # ดึงรายการยืมที่อนุมัติแล้วและกำลังดำเนินการทั้งหมดขององค์กรของผู้ดูแลระบบ
-    active_loans = Loan.objects.filter(asset__item__organization=request.user.organization, status='approved').order_by('due_date')
-    
-    context = {
-        'active_loans': active_loans,
-    }
-    return render(request, 'borrowing/active_loans.html', context)
-
-
-@login_required
-def loan_history_admin_view(request):
-    """
-    View สำหรับ Organization Admin เพื่อดูประวัติการยืมทั้งหมดในองค์กร
-    (รวมถึงที่คืนแล้ว, ถูกปฏิเสธ, เกินกำหนด)
-    """
-    if not request.user.is_org_admin:
-        messages.error(request, "คุณไม่มีสิทธิ์เข้าถึงหน้านี้")
-        return redirect('dashboard')
-    
-    # ดึงประวัติการยืมทั้งหมด (ยกเว้น 'pending' และ 'approved' ที่มีหน้าเฉพาะ)
-    loan_history = Loan.objects.filter(asset__item__organization=request.user.organization).exclude(status__in=['pending', 'approved']).order_by('-borrow_date')
-    
-    context = {
-        'loan_history': loan_history,
-    }
-    return render(request, 'borrowing/loan_history_admin.html', context)
 
 
 @login_required
@@ -108,11 +35,9 @@ def add_item(request):
 
             asset_formset.instance = item
             asset_formset.save()
-            
-            item.update_quantities() # เรียกใช้เมธอดใหม่ในโมเดล Item
-            
+
             messages.success(request, f'ประเภทสิ่งของ "{item.name}" และอุปกรณ์ถูกเพิ่มเรียบร้อยแล้ว')
-            return redirect('item_overview') 
+            return redirect('dashboard')
     else:
         item_form = ItemForm()
         asset_formset = AssetFormSet(prefix='asset')
@@ -146,10 +71,8 @@ def edit_item(request, item_id):
             item_form.save() 
             asset_formset.save() 
 
-            item.update_quantities() # เรียกใช้เมธอดใหม่ในโมเดล Item
-
             messages.success(request, f'ประเภทสิ่งของ "{item.name}" และอุปกรณ์ถูกแก้ไขเรียบร้อยแล้ว')
-            return redirect('item_overview') 
+            return redirect('dashboard')
     else:
         item_form = ItemForm(instance=item)
         asset_formset = AssetFormSet(instance=item, prefix='asset')
@@ -174,46 +97,41 @@ def delete_item(request, item_id):
     
     item = get_object_or_404(Item, id=item_id, organization=request.user.organization)
 
-    # ตรวจสอบว่ามี Loan ที่อนุมัติแล้วหรือรอดำเนินการผูกกับ Asset ของ Item นี้หรือไม่
-    if Loan.objects.filter(asset__item=item, status__in=['pending', 'approved']).exists():
-        messages.error(request, f'ไม่สามารถลบประเภทสิ่งของ "{item.name}" ได้ เนื่องจากมีอุปกรณ์ภายใต้ประเภทนี้ที่มีรายการยืมที่ยังไม่เสร็จสิ้น (รอดำเนินการหรืออนุมัติแล้ว)')
-        return redirect('item_overview')
-
-    # ตรวจสอบว่ามี Asset ผูกอยู่หรือไม่
     if item.assets.exists():
-        messages.error(request, f'ไม่สามารถลบประเภทสิ่งของ "{item.name}" ได้ เนื่องจากยังมีอุปกรณ์ ({item.assets.count()} ชิ้น) ผูกอยู่ กรุณาลบอุปกรณ์แต่ละชิ้นจากหน้าแก้ไขสิ่งของก่อน')
-        return redirect('item_overview')
-    
+        messages.error(request, f'ไม่สามารถลบประเภทสิ่งของ "{item.name}" ได้ เนื่องจากมีอุปกรณ์ ({item.assets.count()} ชิ้น) ผูกอยู่ กรุณาลบอุปกรณ์แต่ละชิ้นก่อน')
+        return redirect('dashboard')
+
     if request.method == 'POST':
         item.delete()
         messages.success(request, f'ประเภทสิ่งของ "{item.name}" ถูกลบเรียบร้อยแล้ว')
-        return redirect('item_overview') 
+        return redirect('dashboard')
     
-    messages.info(request, f'คุณกำลังจะลบประเภทสิ่งของ "{item.name}" หากต้องการยืนยัน โปรดใช้ปุ่มลบจากหน้าภาพรวมสิ่งของ.')
-    return redirect('item_overview') 
+    messages.info(request, f'คุณกำลังจะลบประเภทสิ่งของ "{item.name}" หากต้องการยืนยัน โปรดใช้ปุ่มลบจากหน้าแดชบอร์ด.')
+    return redirect('dashboard') 
 
 
 @login_required
 def borrow_item(request, asset_id):
     """
-    View สำหรับผู้ใช้ทั่วไปเพื่อส่งคำขอยืมอุปกรณ์แต่ละชิ้น (Asset) พร้อมเหตุผลและวันครบกำหนดคืน
+    View สำหรับผู้ใช้ทั่วไปเพื่อส่งคำขอยืมอุปกรณ์แต่ละชิ้น (Asset) พร้อมเหตุผล
     """
     asset = get_object_or_404(Asset, id=asset_id)
     
     if request.method == 'POST':
-        form = LoanRequestForm(request.POST) 
+        form = LoanRequestForm(request.POST) # ใช้ LoanRequestForm
         if form.is_valid():
-            if asset.status == 'available': 
-                # รับค่า due_date จากฟอร์มที่ผู้ใช้กรอก
-                due_date = form.cleaned_data['due_date']
+            if asset.status == 'available':
+                due_date = timezone.now() + timedelta(days=7)
                 
-                loan = form.save(commit=False) 
+                loan = form.save(commit=False) # บันทึกฟอร์มแต่ยังไม่บันทึกเข้า DB
                 loan.asset = asset
                 loan.borrower = request.user
-                loan.status = 'pending' 
-                loan.borrow_date = timezone.now() # ตั้งค่า borrow_date เป็นเวลาปัจจุบันที่ส่งคำขอ
-                loan.due_date = due_date # กำหนด due_date จากที่ผู้ใช้เลือก
+                loan.status = 'pending'
+                loan.due_date = due_date
                 loan.save()
+
+                asset.status = 'on_loan' # เปลี่ยนสถานะของ Asset เป็น 'on_loan'
+                asset.save()
 
                 messages.success(request, f'คุณได้ส่งคำขอยืมสิ่งของ "{asset.item.name}" (SN/ID: {asset.serial_number or asset.device_id or asset.id}) เรียบร้อยแล้ว โปรดรอการอนุมัติจากผู้ดูแล')
 
@@ -230,15 +148,15 @@ def borrow_item(request, asset_id):
             else:
                 messages.error(request, f'"{asset.item.name}" (SN/ID: {asset.serial_number or asset.device_id or asset.id}) ไม่พร้อมให้ยืมในขณะนี้ (สถานะ: {asset.get_status_display()})')
             return redirect('user_dashboard')
-    else: 
+    else: # GET request, แสดงฟอร์ม
         form = LoanRequestForm()
     
     context = {
         'asset': asset,
         'form': form,
-        'MEDIA_URL': 'media/' 
+        'MEDIA_URL': 'media/' # Assuming MEDIA_URL is '/media/'
     }
-    return render(request, 'borrowing/borrow_item.html', context)
+    return render(request, 'borrowing/borrow_item.html', context) # ต้องสร้าง template นี้
 
 
 @login_required
@@ -256,8 +174,7 @@ def return_item(request, loan_id):
         asset = loan.asset
         asset.status = 'available' 
         asset.save()
-        asset.item.update_quantities() # อัปเดตจำนวนของ Item ที่เกี่ยวข้อง
-        
+
         messages.success(request, f'คุณได้คืนสิ่งของ "{asset.item.name}" (SN/ID: {asset.serial_number or asset.device_id or asset.id}) เรียบร้อยแล้ว')
     else:
         messages.error(request, 'สิ่งของนี้ไม่สามารถคืนได้ในขณะนี้')
@@ -279,12 +196,11 @@ def approve_loan(request, loan_id):
     if loan.status == 'pending':
         if loan.asset.status == 'available': 
             loan.status = 'approved'
-            loan.borrow_date = timezone.now() # ตั้งค่า borrow_date เมื่ออนุมัติ
+            loan.borrow_date = timezone.now()
             loan.save()
 
             loan.asset.status = 'on_loan' 
             loan.asset.save()
-            loan.asset.item.update_quantities() # อัปเดตจำนวนของ Item ที่เกี่ยวข้อง
 
             messages.success(request, f'คำขอยืมสิ่งของ "{loan.asset.item.name}" (SN/ID: {loan.asset.serial_number or loan.asset.device_id or loan.asset.id}) โดย {loan.borrower.username} ได้รับการอนุมัติแล้ว')
 
@@ -294,11 +210,11 @@ def approve_loan(request, loan_id):
             )
         else:
             messages.error(request, f'ไม่สามารถอนุมัติคำขอยืมนี้ได้: อุปกรณ์ "{loan.asset.item.name}" (SN/ID: {loan.asset.serial_number or loan.asset.device_id or loan.asset.id}) ไม่อยู่ในสถานะพร้อมให้ยืม ({loan.asset.get_status_display()})')
-            return redirect('pending_loans_view')
+            return redirect('dashboard')
     else:
         messages.error(request, 'คำขอยืมนี้ไม่สามารถอนุมัติได้')
         
-    return redirect('pending_loans_view')
+    return redirect('dashboard')
 
 
 @login_required
@@ -316,17 +232,202 @@ def reject_loan(request, loan_id):
         loan.status = 'rejected'
         loan.save()
         
-        loan.asset.status = 'available' 
-        loan.asset.save()
-        loan.asset.item.update_quantities() # อัปเดตจำนวนของ Item ที่เกี่ยวข้อง
+        if loan.asset.status == 'on_loan': 
+             loan.asset.status = 'available' 
+             loan.asset.save()
+        elif loan.asset.status == 'available': 
+            pass 
 
         messages.success(request, f'คำขอยืมสิ่งของ "{loan.asset.item.name}" (SN/ID: {loan.asset.serial_number or loan.asset.device_id or loan.asset.id}) โดย {loan.borrower.username} ได้รับการปฏิเสธแล้ว')
 
         Notification.objects.create(
             user=loan.borrower,
-            message=f"คำขอยืมสิ่งของ \"{loan.asset.item.name}\" (SN/ID: {loan.asset.serial_number or loan.asset.id}) ของคุณถูกปฏิเสธแล้ว"
+            message=f"คำขอยืมสิ่งของ \"{loan.asset.item.name}\" (SN/ID: {loan.asset.serial_number or loan.asset.device_id or loan.asset.id}) ของคุณถูกปฏิเสธแล้ว"
         )
     else:
         messages.error(request, 'คำขอยืมนี้ไม่สามารถปฏิเสธได้')
         
-    return redirect('pending_loans_view')
+    return redirect('dashboard')
+
+
+# ############## VIEWS สำหรับ REPORTS ##############
+@login_required
+def weekly_report(request):
+    """
+    View สำหรับผู้ดูแลองค์กรเพื่อดูรายงานการยืม-คืนประจำสัปดาห์
+    """
+    if not request.user.is_org_admin:
+        messages.error(request, "คุณไม่มีสิทธิ์เข้าถึงรายงานนี้")
+        return redirect('dashboard')
+
+    organization = request.user.organization
+    
+    # คำนวณช่วงเวลา: 7 วันที่ผ่านมา (นับจากวันนี้ถึง 7 วันย้อนหลัง)
+    today = timezone.now().date()
+    start_of_week = today - timedelta(days=today.weekday()) # วันจันทร์ของสัปดาห์ปัจจุบัน
+    end_of_week = start_of_week + timedelta(days=6) # วันอาทิตย์ของสัปดาห์ปัจจุบัน
+
+    # ดึงข้อมูล Loan ที่เกิดขึ้นในสัปดาห์นี้
+    loans_this_week = Loan.objects.filter(
+        asset__item__organization=organization,
+        borrow_date__date__range=[start_of_week, end_of_week]
+    ).select_related('asset__item', 'borrower').order_by('-borrow_date')
+
+    # สรุปข้อมูล
+    total_loans_this_week = loans_this_week.count()
+    returned_this_week = loans_this_week.filter(status='returned').count()
+    approved_this_week = loans_this_week.filter(status='approved').count()
+    pending_this_week = loans_this_week.filter(status='pending').count()
+    overdue_this_week = loans_this_week.filter(status='overdue', due_date__lt=today).count() # เฉพาะที่เกินกำหนดและยังไม่คืน
+
+    context = {
+        'report_title': 'รายงานประจำสัปดาห์',
+        'report_period': f'ช่วงวันที่ {start_of_week.strftime("%d/%m/%Y")} - {end_of_week.strftime("%d/%m/%Y")}',
+        'loans': loans_this_week,
+        'total_loans': total_loans_this_week,
+        'returned_loans': returned_this_week,
+        'approved_loans': approved_this_week,
+        'pending_loans': pending_this_week,
+        'overdue_loans': overdue_this_week,
+        'organization_name': organization.name,
+    }
+    return render(request, 'borrowing/weekly_report.html', context)
+
+
+@login_required
+def monthly_report(request):
+    """
+    View สำหรับผู้ดูแลองค์กรเพื่อดูรายงานการยืม-คืนประจำเดือน
+    """
+    if not request.user.is_org_admin:
+        messages.error(request, "คุณไม่มีสิทธิ์เข้าถึงรายงานนี้")
+        return redirect('dashboard')
+
+    organization = request.user.organization
+
+    # คำนวณช่วงเวลา: เดือนปัจจุบัน
+    today = timezone.now().date()
+    # หาเดือนและปีของวันปัจจุบัน
+    year = today.year
+    month = today.month
+
+    # กำหนดวันที่เริ่มต้นและสิ้นสุดของเดือน
+    first_day_of_month = today.replace(day=1)
+    # หา last day of month
+    if month == 12:
+        last_day_of_month = today.replace(year=year + 1, month=1, day=1) - timedelta(days=1)
+    else:
+        last_day_of_month = today.replace(month=month + 1, day=1) - timedelta(days=1)
+
+    # ดึงข้อมูล Loan ที่เกิดขึ้นในเดือนนี้
+    loans_this_month = Loan.objects.filter(
+        asset__item__organization=organization,
+        borrow_date__date__range=[first_day_of_month, last_day_of_month]
+    ).select_related('asset__item', 'borrower').order_by('-borrow_date')
+
+    # สรุปข้อมูล
+    total_loans_this_month = loans_this_month.count()
+    returned_this_month = loans_this_month.filter(status='returned').count()
+    approved_this_month = loans_this_month.filter(status='approved').count()
+    pending_this_month = loans_this_month.filter(status='pending').count()
+    overdue_this_month = loans_this_month.filter(status='overdue', due_date__lt=today).count()
+
+    context = {
+        'report_title': 'รายงานประจำเดือน',
+        'report_period': f'เดือน {first_day_of_month.strftime("%B %Y")}',
+        'loans': loans_this_month,
+        'total_loans': total_loans_this_month,
+        'returned_loans': returned_this_month,
+        'approved_loans': approved_this_month,
+        'pending_loans': pending_this_month,
+        'overdue_loans': overdue_this_month,
+        'organization_name': organization.name,
+    }
+    return render(request, 'borrowing/monthly_report.html', context)
+
+
+# ############## VIEWS สำหรับ ADMIN DASHBOARD ##############
+@login_required
+def item_overview(request):
+    """
+    View สำหรับ Organization Admin เพื่อดูภาพรวมประเภทสิ่งของและจำนวน Assets
+    """
+    if not request.user.is_org_admin:
+        messages.error(request, "คุณไม่มีสิทธิ์เข้าถึงหน้านี้")
+        return redirect('dashboard')
+    
+    organization = request.user.organization
+    items = Item.objects.filter(organization=organization).order_by('name')
+
+    context = {
+        'items': items,
+        'organization_name': organization.name,
+    }
+    return render(request, 'borrowing/item_overview.html', context)
+
+
+@login_required
+def pending_loans_view(request):
+    """
+    View สำหรับ Organization Admin เพื่อดูคำขอยืมที่รอดำเนินการ
+    """
+    if not request.user.is_org_admin:
+        messages.error(request, "คุณไม่มีสิทธิ์เข้าถึงหน้านี้")
+        return redirect('dashboard')
+    
+    organization = request.user.organization
+    pending_loans = Loan.objects.filter(
+        asset__item__organization=organization, 
+        status='pending'
+    ).select_related('asset__item', 'borrower').order_by('-borrow_date')
+
+    context = {
+        'pending_loans': pending_loans,
+        'organization_name': organization.name,
+    }
+    return render(request, 'borrowing/pending_loans.html', context)
+
+
+@login_required
+def active_loans_view(request):
+    """
+    View สำหรับ Organization Admin เพื่อดูรายการยืมที่กำลังดำเนินการ (อนุมัติแล้ว)
+    """
+    if not request.user.is_org_admin:
+        messages.error(request, "คุณไม่มีสิทธิ์เข้าถึงหน้านี้")
+        return redirect('dashboard')
+    
+    organization = request.user.organization
+    active_loans = Loan.objects.filter(
+        asset__item__organization=organization, 
+        status='approved'
+    ).select_related('asset__item', 'borrower').order_by('due_date')
+
+    context = {
+        'active_loans': active_loans,
+        'organization_name': organization.name,
+    }
+    return render(request, 'borrowing/active_loans.html', context)
+
+
+@login_required
+def loan_history_admin_view(request):
+    """
+    View สำหรับ Organization Admin เพื่อดูประวัติการยืมทั้งหมด (รวมที่คืนแล้ว, ปฏิเสธ, เกินกำหนด)
+    """
+    if not request.user.is_org_admin:
+        messages.error(request, "คุณไม่มีสิทธิ์เข้าถึงหน้านี้")
+        return redirect('dashboard')
+    
+    organization = request.user.organization
+    loan_history = Loan.objects.filter(
+        asset__item__organization=organization
+    ).exclude(
+        status__in=['pending', 'approved'] # ไม่รวม pending และ approved เพื่อเน้นประวัติ
+    ).select_related('asset__item', 'borrower').order_by('-borrow_date')
+
+    context = {
+        'loan_history': loan_history,
+        'organization_name': organization.name,
+    }
+    return render(request, 'borrowing/loan_history_admin.html', context)

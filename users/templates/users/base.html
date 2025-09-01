@@ -1,490 +1,309 @@
-<!DOCTYPE html> <!-- ประกาศว่าเป็น HTML5 -->
-<html lang="th"> <!-- ภาษาไทย -->
+<!DOCTYPE html>
+<html lang="th">
 <head>
-    <meta charset="UTF-8"> <!-- กำหนด Character Encoding เป็น UTF-8 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive บนอุปกรณ์มือถือ -->
-    <title>{% block title %}Borrowing System{% endblock %}</title> <!-- ชื่อหน้า ใช้ Django template block -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Borrowing System{% endblock %}</title>
 
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root{--sbw:16rem}
+    body{
+      font-family:'Open Sans',sans-serif;
+      background:#f7f7fb;
+      color:#374151;
+      min-height:100vh;
+      display:flex;
+    }
+    /* Sidebar */
+    .sidebar{
+      position:fixed; z-index:50; inset:0 auto 0 0;
+      width:var(--sbw); height:100vh; overflow-y:auto;
+      background:#111827; /* gray-900 */
+      color:#e5e7eb;      /* gray-200 */
+      padding:1.25rem 1rem;
+      box-shadow: 0 10px 15px -3px rgba(175, 157, 157, 0.2), 0 4px 6px -4px rgba(150, 144, 144, 0.2);
+      transform:translateX(0); transition:transform .3s ease;
+    }
+    .sidebar a{ color:#cbd5e1 } /* gray-300 */
+    .sidebar a:hover{ color:#fff }
 
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    /* Content area */
+    .content-area{
+      flex:1; margin-left:var(--sbw);
+      transition:margin-left .3s ease;
+    }
 
-    <style>
-        /* BODY */
-        body {
-            font-family: 'Open Sans', sans-serif; /* ฟอนต์หลัก */
-            background-color: #f3f4f6; /* สีพื้นหลังเทาอ่อน */
-            min-height: 100vh; /* ความสูงเต็มหน้าจอ */
-            display: flex; /* ใช้ Flexbox จัด layout sidebar + content */
-            color: #374151; /* สีข้อความหลัก */
-        }
+    /* Mobile */
+    @media (max-width: 767px){
+      .sidebar{ transform:translateX(-100%) }
+      .sidebar.open{ transform:translateX(0) }
+      .content-area{ margin-left:0 }
+    }
 
-        /* SIDEBAR */
-        .sidebar {
-            width: 16rem; /* ความกว้าง sidebar */
-            background-color: #1f2937; /* สีพื้นหลัง sidebar */
-            color: #d1d5db; /* สีข้อความ sidebar */
-            display: flex; /* Flex layout */
-            flex-direction: column; /* จัดแนวตั้ง */
-            padding: 1.5rem 1rem; /* ระยะขอบ */
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); /* เงา */
-            transition: transform 0.3s ease-in-out; /* animation เปิด/ปิด sidebar */
-            position: fixed; /* fix sidebar ติดหน้าจอ */
-            height: 100vh; /* สูงเต็มหน้าจอ */
-            z-index: 50; /* อยู่บนสุด */
-            transform: translateX(0); /* เริ่มต้นแสดง sidebar */
-        }
+    /* Messages */
+    .messages{ margin:1rem 0 }
+    .messages li{ border-radius:.75rem; padding:.75rem 1rem; margin:.5rem 0; border:1px solid transparent }
+    .messages li.success{ background:#ecfdf5; color:#065f46; border-color:#34d399 }
+    .messages li.error{ background:#fee2e2; color:#991b1b; border-color:#f87171 }
+    .messages li.info{ background:#e0f2fe; color:#1e40af; border-color:#60a5fa }
 
-        /* Hide sidebar on small screens */
-        @media (max-width: 767px) {
-            .sidebar {
-                transform: translateX(-100%); /* ซ่อน sidebar ออกไปทางซ้าย */
-                position: fixed;
-                width: 16rem;
-                height: 100vh;
-            }
-            .sidebar.open {
-                transform: translateX(0); /* แสดง sidebar เมื่อถูกเปิด */
-            }
-            .content-area {
-                margin-left: 0; /* ไม่มี margin เมื่อ sidebar ซ่อน */
-                width: 100%; /* ใช้เต็มความกว้าง */
-            }
-        }
+    /* Dropdown (notifications) */
+    .dropdown-content{
+      display:none; position:absolute; right:0; top:calc(100% + .5rem);
+      min-width:18rem; max-height:22rem; overflow:auto;
+      background:#fff; color:#5c4c4c;
+      border:1px solid #e5e7eb; border-radius:.75rem;
+      box-shadow:0 12px 30px rgba(0,0,0,.12);
+      padding:.5rem;
+    }
+    .dropdown-content.show{ display:block }
+    .dropdown-item{
+      display:block; padding:.6rem .75rem; border-radius:.5rem; color:#374151; text-decoration:none
+    }
+    .dropdown-item:hover{ background:#f3f4f6 }
+    .dropdown-item.unread{ background:#eef2ff } /* indigo-50 */
+    .dropdown-footer{ display:block; padding:.6rem .75rem; text-align:center }
 
-        /* CONTENT AREA */
-        .content-area {
-            flex-grow: 1; /* ขยายเต็มพื้นที่ */
-            margin-left: 16rem; /* เว้นพื้นที่ sidebar */
-            padding: 1.5rem; /* padding content */
-            transition: margin-left 0.3s ease-in-out;
-        }
-
-        /* FORM CONTAINER */
-        .form-container {
-            background-color: #ffffff; /* สีขาว */
-            padding: 2.5rem; /* padding รอบ ๆ */
-            border-radius: 1rem; /* มุมโค้ง */
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); /* เงา */
-            max-width: 500px; /* ความกว้างสูงสุด */
-            width: 100%;
-            margin-left: auto; margin-right: auto; /* กึ่งกลาง */
-        }
-
-        /* HEADINGS */
-        h1, h2, h3 {
-            font-family: 'Poppins', sans-serif; /* ฟอนต์หัวข้อ */
-            color: #1f2937; /* สีข้อความเข้ม */
-            font-weight: 700; /* ตัวหนา */
-            margin-bottom: 1.5rem; /* ระยะห่างด้านล่าง */
-        }
-        h1 { font-size: 2.5rem; text-align: center; margin-bottom: 1rem;} /* ขนาดใหญ่และกึ่งกลาง */
-        h2 { font-size: 2rem; }
-        h3 { font-size: 1.75rem; }
-
-        /* FORM FIELD */
-        .form-field {
-            margin-bottom: 1.25rem; /* ช่องว่างระหว่างฟิลด์ */
-        }
-        .form-field label {
-            display: block;
-            margin-bottom: 0.6rem; /* ระยะห่างจาก input */
-            font-weight: 600;
-            color: #4b5563;
-            font-size: 0.95rem;
-        }
-        .form-field input,
-        .form-field textarea,
-        .form-field select {
-            width: 100%; /* เต็มความกว้างฟิลด์ */
-            padding: 0.85rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.6rem; /* มุมโค้ง */
-            font-size: 1rem;
-            background-color: #fcfcfc; /* สีพื้นหลัง */
-            transition: border-color 0.2s, box-shadow 0.2s; /* animation focus */
-        }
-        .form-field input:focus,
-        .form-field textarea:focus,
-        .form-field select:focus {
-            outline: none; /* ลบเส้น focus ปกติ */
-            border-color: #3b82f6; /* ขอบสีฟ้า */
-            box-shadow: 0 0 0 4px rgba(59,130,246,0.25); /* focus ring */
-        }
-
-        /* BUTTON */
-        button[type="submit"] {
-            width: 100%;
-            padding: 0.85rem;
-            background-color: #2563eb; /* ฟ้าเข้ม */
-            color: #fff;
-            font-weight: 600;
-            border-radius: 0.6rem; /* มุมโค้ง */
-            cursor: pointer;
-            margin-top: 2rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: background-color 0.3s, transform 0.2s, box-shadow 0.2s;
-        }
-        button[type="submit"]:hover {
-            background-color: #1d4ed8;
-            transform: translateY(-3px); /* effect ลอยเมื่อ hover */
-            box-shadow: 0 6px 10px rgba(0,0,0,0.15);
-        }
-        button[type="submit"]:active {
-            transform: translateY(0); /* effect กดปุ่ม */
-            box-shadow: 0 2px 3px rgba(0,0,0,0.1);
-        }
-
-        /* DJANGO MESSAGES */
-        .messages li.success { background-color: #d1fae5; color: #065f46; border: 1px solid #34d399; }
-        .messages li.error { background-color: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
-        .messages li.info { background-color: #e0f2fe; color: #1e40af; border: 1px solid #60a5fa; }
-
-        /* TABLE */
-        table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; background-color: #fff; border-radius: 0.75rem; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
-        th, td { padding: 1rem 1.5rem; border-bottom: 1px solid #e5e7eb; text-align: left; }
-        tr:hover { background-color: #e2e8f0; transition: background-color 0.2s; }
-
-        /* ACTION LINKS */
-        .action-links a, .action-links button {
-            color: #2563eb; /* สีน้ำเงิน */
-            text-decoration: none;
-            font-weight: 500;
-            margin-right: 1rem;
-            padding: 0.5rem 0.75rem;
-            border-radius: 0.375rem;
-            display: inline-flex;
-            align-items: center;
-            transition: all 0.2s ease;
-        }
-        .action-links a:hover, .action-links button:hover {
-            background-color: #e0f2fe; /* สีฟ้าอ่อนเมื่อ hover */
-            color: #1e40af; /* สีข้อความเข้ม */
-            transform: translateY(-1px); /* effect ลอยเล็กน้อย */
-        }
-
-        /* DROPDOWN / NOTIFICATION */
-        .dropdown-content { display: none; position: absolute; background
-
-    </style>
+    /* Form baseline (optional, child pagesสามารถทับได้) */
+    .form-field{ margin-bottom:1rem }
+    .form-field label{ display:block; margin-bottom:.4rem; font-weight:600; color:#374151 }
+    .form-field input,.form-field select,.form-field textarea{
+      width:100%; border:1px solid #d1d5db; border-radius:.65rem;
+      padding:.65rem .9rem; background:#fff; transition:border-color .2s, box-shadow .2s
+    }
+    .form-field input:focus,.form-field select:focus,.form-field textarea:focus{
+      outline:none; border-color:#6366f1; box-shadow:0 0 0 4px rgba(185, 186, 226, 0.2)
+    }
+  </style>
 </head>
+
 <body>
-    {# Overlay สำหรับปิด Sidebar บนมือถือ #}
-    <div id="sidebar-overlay" class="fixed inset-0 bg-black opacity-50 z-40 hidden md:hidden"></div>
+  <!-- Overlay (mobile) -->
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden"></div>
 
-    <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar">
-        <!-- Sidebar Header (Logo/Title and Close Button) -->
-        <div class="flex items-center justify-between mb-8 pb-4 border-b border-gray-700">
-            <a href="{% url 'login' %}" class="text-white text-2xl font-bold flex items-center gap-x-2">
-                <i class="fas fa-cubes text-indigo-400"></i> ยืม-คืน
-            </a>
-            <button id="sidebar-close-btn" class="md:hidden text-gray-400 hover:text-white focus:outline-none">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
-        </div>
+  <!-- Sidebar -->
+  <!-- Sidebar -->
+<aside id="sidebar" class="sidebar flex flex-col">
+  <!-- Brand -->
+  <div class="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+    <a href="{% url 'login' %}" class="text-white text-xl font-bold tracking-tight flex items-center gap-2">
+      <i class="fa-solid fa-cubes text-indigo-400"></i> ยืม-คืน
+    </a>
+    <button id="sidebar-close-btn" class="md:hidden text-gray-400 hover:text-white">
+      <i class="fa-solid fa-xmark text-xl"></i>
+    </button>
+  </div>
 
-        <!-- Navigation links -->
-        <nav class="flex-grow">
-            <ul class="space-y-3">
-                {% if user.is_authenticated %}
-                    {% if user.is_org_admin %}
-                        <li>
-                            <a href="{% url 'dashboard' %}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded-md transition duration-300">
-                                <i class="fas fa-chart-line mr-3"></i> หน้าหลัก
-                            </a>
-                        </li>
-                        {# ลิงก์ไปยังหน้าภาพรวมสิ่งของที่แยกออกมาใหม่ #}
-                        <li>
-                            <a href="{% url 'item_overview' %}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 pl-6 rounded-md transition duration-300">
-                                <i class="fas fa-boxes-alt mr-3"></i> รายการสิ่งของ
-                            </a>
-                        </li>
-                        {# ลิงก์ไปยังหน้าคำขอยืมที่รอดำเนินการ #}
-                        <li>
-                            <a href="{% url 'pending_loans_view' %}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 pl-6 rounded-md transition duration-300">
-                                <i class="fas fa-hourglass-half mr-3"></i> คำขอยืมที่รอดำเนินการ
-                            </a>
-                        </li>
-                        {# ลิงก์ไปยังหน้ารายการยืมที่กำลังดำเนินการ #}
-                        <li>
-                            <a href="{% url 'active_loans_view' %}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 pl-6 rounded-md transition duration-300">
-                                <i class="fas fa-hand-holding-box mr-3"></i> รายการยืมที่กำลังดำเนินการ
-                            </a>
-                        </li>
-                        {# ลิงก์ไปยังหน้าประวัติการยืม #}
-                        <li>
-                            <a href="{% url 'loan_history_admin_view' %}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 pl-6 rounded-md transition duration-300">
-                                <i class="fas fa-history mr-3"></i> ประวัติการยืม
-                            </a>
-                        </li>
-                        <li>
-                            {% comment %} <a href="{% url 'add_item' %}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded-md transition duration-300">
-                                <i class="fas fa-plus-circle mr-3"></i> เพิ่มประเภทสิ่งของ
-                            </a> {% endcomment %}
-                        </li>
-                        <li>
-                            <a href="{% url 'manage_organization_users' %}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded-md transition duration-300">
-                                <i class="fas fa-users-cog mr-3"></i> จัดการผู้ใช้
-                            </a>
-                        </li>
-                        {# Dropdown แจ้งเตือนสำหรับแอดมินองค์กร #}
-                        <li>
-                            {% comment %} <div class="relative notification-dropdown">
-                                <button id="notification-bell-sidebar" class="w-full flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded-md transition duration-300 focus:outline-none">
-                                    <i class="fas fa-bell mr-3"></i> แจ้งเตือน
-                                    {% if unread_notifications_count > 0 %}
-                                        <span class="ml-auto bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center -mr-2">
-                                            {{ unread_notifications_count }}
-                                        </span>
-                                    {% endif %}
-                                </button>
-                                <div id="notification-dropdown-content-sidebar" class="dropdown-content">
-                                    {% if unread_notifications_count > 0 %}
-                                        {% for notification in request.user.notifications.all|slice:":5" %}
-                                            <a href="#" class="dropdown-item {% if not notification.is_read %}unread{% endif %}" data-notification-id="{{ notification.id }}">
-                                                {{ notification.message }}
-                                                <span class="block text-xs text-gray-500 mt-1">{{ notification.created_at|date:"M d, H:i" }}</span>
-                                            </a>
-                                        {% endfor %}
-                                        <a href="{% url 'user_notifications' %}" class="dropdown-footer text-blue-700 hover:underline">ดูทั้งหมด</a>
-                                    {% else %}
-                                        <div class="p-3 text-gray-600 text-center text-sm">ไม่มีการแจ้งเตือนใหม่</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </li> {% endcomment %}
-                    {% else %} {# ผู้ใช้ทั่วไป #}
-                        <li>
-                            <a href="{% url 'user_dashboard' %}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded-md transition duration-300">
-                                <i class="fas fa-th-large mr-3"></i> ยืม-คืน
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{% url 'my_borrowed_items_history' %}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded-md transition duration-300">
-                                <i class="fas fa-book-reader mr-3"></i> ประวัติการยืมของฉัน
-                            </a>
-                        </li>
-                        {# Dropdown แจ้งเตือนสำหรับผู้ใช้ทั่วไป #}
-                        <li>
-                            {% comment %} <div class="relative notification-dropdown">
-                                <button id="notification-bell-sidebar" class="w-full flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded-md transition duration-300 focus:outline-none">
-                                    <i class="fas fa-bell mr-3"></i> แจ้งเตือน
-                                    {% if unread_notifications_count > 0 %}
-                                        <span class="ml-auto bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center -mr-2">
-                                            {{ unread_notifications_count }}
-                                        </span>
-                                    {% endif %}
-                                </button> {% endcomment %}
-                                <div id="notification-dropdown-content-sidebar" class="dropdown-content">
-                                    {% if unread_notifications_count > 0 %}
-                                        {% for notification in request.user.notifications.all|slice:":5" %}
-                                            <a href="#" class="dropdown-item {% if not notification.is_read %}unread{% endif %}" data-notification-id="{{ notification.id }}">
-                                                {{ notification.message }}
-                                                <span class="block text-xs text-gray-500 mt-1">{{ notification.created_at|date:"M d, H:i" }}</span>
-                                            </a>
-                                        {% endfor %}
-                                        <a href="{% url 'user_notifications' %}" class="dropdown-footer text-blue-700 hover:underline">ดูทั้งหมด</a>
-                                    {% else %}
-                                        <div class="p-3 text-gray-600 text-center text-sm">ไม่มีการแจ้งเตือนใหม่</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </li>
-                    {% endif %}
-                    {# ปุ่มออกจากระบบ #}
-                    <li>
-                        <form method="post" action="{% url 'logout' %}" class="w-full">
-                            {% csrf_token %}
-                            <button type="submit" class="w-full flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded-md transition duration-300 text-left">
-                                <i class="fas fa-sign-out-alt mr-3"></i> ออกจากระบบ
-                            </button>
-                        </form>
-                    </li>
-                {% else %} {# ผู้ใช้ยังไม่ได้ล็อกอิน #}
-                    <li>
-                        <a href="{% url 'login' %}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded-md transition duration-300">
-                            <i class="fas fa-sign-in-alt mr-3"></i> เข้าสู่ระบบ
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{% url 'register_organization' %}" class="flex items-center text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded-md transition duration-300">
-                            <i class="fas fa-building mr-3"></i> ลงทะเบียนองค์กร
-                        </a>
-                    </li>
-                {% endif %}
-            </ul>
-        </nav>
-    </aside>
-
-    <!-- Content Area -->
-    <div class="content-area" id="content-area">
-        {# แถบด้านบนสำหรับปุ่มเปิด Sidebar และแสดงข้อความ #}
-        <header class="bg-white p-4 shadow-md md:hidden flex items-center justify-between">
-            <button id="sidebar-open-btn" class="text-gray-600 focus:outline-none">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                </svg>
-            </button>
-            <h1 class="text-xl font-bold text-gray-800">{% block title_in_header %}{% endblock title_in_header %}</h1>
-            <div></div> {# Placeholder สำหรับจัดกลาง #}
-        </header>
-
-        <!-- Django Messages Display -->
-        <div class="messages-container mt-4 px-4 md:px-0">
-            {% if messages %}
-                <ul class="messages">
-                    {% for message in messages %}
-                        <li{% if message.tags %} class="{{ message.tags }} p-3 mb-2 rounded-md"{% endif %}>
-                            {{ message|safe }}
-                        </li>
-                    {% endfor %}
-                </ul>
+  <!-- Nav -->
+  <nav class="flex flex-col gap-1 flex-grow">
+    {% if user.is_authenticated %}
+      {% if user.is_org_admin %}
+        <a href="{% url 'dashboard' %}" class="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5">
+          <i class="fa-solid fa-chart-line text-indigo-300 group-hover:text-white"></i>
+          <span>หน้าหลัก</span>
+        </a>
+        <a href="{% url 'item_overview' %}" class="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5">
+          <i class="fa-solid fa-boxes-stacked text-indigo-300 group-hover:text-white"></i>
+          <span>รายการสิ่งของ</span>
+        </a>
+        <a href="{% url 'pending_loans_view' %}" class="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5">
+          <i class="fa-solid fa-hourglass-half text-indigo-300 group-hover:text-white"></i>
+          <span>คำขอยืมที่รอดำเนินการ</span>
+        </a>
+        <a href="{% url 'active_loans_view' %}" class="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5">
+          <i class="fa-solid fa-hand-holding-heart text-indigo-300 group-hover:text-white"></i>
+          <span>รายการยืมที่กำลังดำเนินการ</span>
+        </a>
+        <a href="{% url 'loan_history_admin_view' %}" class="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5">
+          <i class="fa-solid fa-clock-rotate-left text-indigo-300 group-hover:text-white"></i>
+          <span>ประวัติการยืม</span>
+        </a>
+        <a href="{% url 'manage_organization_users' %}" class="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5">
+          <i class="fa-solid fa-users-gear text-indigo-300 group-hover:text-white"></i>
+          <span>จัดการผู้ใช้</span>
+        </a>
+      {% else %}
+        <a href="{% url 'user_dashboard' %}" class="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 sidebar-link">
+          <i class="fa-solid fa-th-large text-indigo-300 group-hover:text-white"></i>
+          <span>ยืม-คืน</span>
+        </a>
+        <a href="{% url 'my_borrowed_items_history' %}" class="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5">
+          <i class="fa-solid fa-book-open-reader text-indigo-300 group-hover:text-white"></i>
+          <span>ประวัติการยืมของฉัน</span>
+        </a>
+        <!-- แจ้งเตือน -->
+        <div class="relative">
+          <button id="notification-bell-sidebar" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5">
+            <i class="fa-solid fa-bell text-indigo-300"></i>
+            <span>แจ้งเตือน</span>
+            {% if unread_notifications_count > 0 %}
+              <span class="ml-auto bg-red-500 text-white text-xs font-bold rounded-full h-5 min-w-[1.25rem] px-1.5 flex items-center justify-center">
+                {{ unread_notifications_count }}
+              </span>
             {% endif %}
+          </button>
+          <div id="notification-dropdown-content-sidebar" class="dropdown-content">
+            {% if unread_notifications_count > 0 %}
+              {% for notification in request.user.notifications.all|slice:":5" %}
+                <a href="#" class="dropdown-item {% if not notification.is_read %}unread{% endif %}" data-notification-id="{{ notification.id }}">
+                  {{ notification.message }}
+                  <span class="block text-xs text-gray-500 mt-1">{{ notification.created_at|date:"M d, H:i" }}</span>
+                </a>
+              {% endfor %}
+              <a href="{% url 'user_notifications' %}" class="dropdown-footer text-indigo-700 hover:underline">ดูทั้งหมด</a>
+            {% else %}
+              <div class="p-3 text-gray-600 text-center text-sm">ไม่มีการแจ้งเตือนใหม่</div>
+            {% endif %}
+          </div>
         </div>
+      {% endif %}
+    {% else %}
+      <a href="{% url 'login' %}" class="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5">
+        <i class="fa-solid fa-right-to-bracket text-indigo-300 group-hover:text-white"></i>
+        <span>เข้าสู่ระบบ</span>
+      </a>
+      <a href="{% url 'register_organization' %}" class="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5">
+        <i class="fa-solid fa-building text-indigo-300 group-hover:text-white"></i>
+        <span>ลงทะเบียนองค์กร</span>
+      </a>
+    {% endif %}
+  </nav>
 
-        <!-- Main Content Block -->
-        <main class="py-4 px-4 md:px-0">
-            {% block content %}
-            {# Content from child templates will go here #}
-            {% endblock %}
-        </main>
+  {% if user.is_authenticated %}
+  <!-- Logout ด้านล่างสุด -->
+  <form method="post" action="{% url 'logout' %}" class="mt-auto pt-4 border-t border-white/10">
+    {% csrf_token %}
+    <button type="submit" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-red-600/20 text-left text-red-400 hover:text-red-300">
+      <i class="fa-solid fa-right-from-bracket fa-rotate-180"></i>
+      ออกจากระบบ
+    </button>
+  </form>
+  {% endif %}
+
+  <!-- Footer small -->
+  <div class="mt-4 text-xs text-gray-400">
+    © {{ now|date:"Y" }} Borrowing System
+  </div>
+</aside>
+
+
+  <!-- Content -->
+  <div id="content-area" class="content-area">
+    <!-- Topbar (mobile) -->
+    <header class="sticky top-0 z-30 md:hidden bg-white/80 backdrop-blur border-b border-gray-200">
+      <div class="flex items-center justify-between px-4 py-3">
+        <button id="sidebar-open-btn" class="text-gray-700">
+          <i class="fa-solid fa-bars text-xl"></i>
+        </button>
+        <h1 class="text-base font-semibold text-gray-800">
+          {% block title_in_header %}{% endblock title_in_header %}
+        </h1>
+        <div class="w-6"></div>
+      </div>
+    </header>
+
+    <!-- Container -->
+    <div class="mx-auto max-w-7xl px-4 py-6">
+      <!-- Messages -->
+      <div class="messages-container">
+        {% if messages %}
+          <ul class="messages">
+            {% for message in messages %}
+              <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message|safe }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+
+      <!-- Page content -->
+      <main>
+        {% block content %}{% endblock %}
+      </main>
     </div>
+  </div>
 
-    <!-- JavaScript for Sidebar Toggle and Notifications -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const sidebar = document.getElementById('sidebar');
-            const sidebarOpenBtn = document.getElementById('sidebar-open-btn');
-            const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
-            const sidebarOverlay = document.getElementById('sidebar-overlay');
-            const contentArea = document.getElementById('content-area');
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const sidebar = document.getElementById('sidebar');
+      const openBtn = document.getElementById('sidebar-open-btn');
+      const closeBtn = document.getElementById('sidebar-close-btn');
+      const overlay = document.getElementById('sidebar-overlay');
 
-            // Toggle sidebar on mobile
-            if (sidebarOpenBtn) {
-                sidebarOpenBtn.addEventListener('click', function() {
-                    sidebar.classList.add('open');
-                    sidebarOverlay.classList.remove('hidden');
-                });
-            }
-            if (sidebarCloseBtn) {
-                sidebarCloseBtn.addEventListener('click', function() {
-                    sidebar.classList.remove('open');
-                    sidebarOverlay.classList.add('hidden');
-                });
-            }
-            if (sidebarOverlay) {
-                sidebarOverlay.addEventListener('click', function() {
-                    sidebar.classList.remove('open');
-                    sidebarOverlay.classList.add('hidden');
-                });
-            }
+      const openSidebar = () => { sidebar.classList.add('open'); overlay.classList.remove('hidden'); };
+      const closeSidebar = () => { sidebar.classList.remove('open'); overlay.classList.add('hidden'); };
 
-            // Notification Dropdown Logic
-            function setupNotificationDropdown(bellId, contentId) {
-                const notificationBell = document.getElementById(bellId);
-                const dropdownContent = document.getElementById(contentId);
+      if (openBtn) openBtn.addEventListener('click', openSidebar);
+      if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+      if (overlay) overlay.addEventListener('click', closeSidebar);
 
-                if (notificationBell && dropdownContent) {
-                    notificationBell.addEventListener('click', function(event) {
-                        event.stopPropagation(); // Prevent document click from closing immediately
-                        dropdownContent.classList.toggle('show');
-                    });
+      // Notification dropdown (sidebar)
+      function setupNotificationDropdown(bellId, contentId){
+        const bell = document.getElementById(bellId);
+        const box  = document.getElementById(contentId);
+        if(!bell || !box) return;
 
-                    // Close the dropdown if the user clicks outside of it
-                    window.addEventListener('click', function(event) {
-                        if (!notificationBell.contains(event.target) && !dropdownContent.contains(event.target)) {
-                            dropdownContent.classList.remove('show');
-                        }
-                    });
+        bell.addEventListener('click', (e)=>{ e.stopPropagation(); box.classList.toggle('show'); });
 
-                    // Handle clicks on individual notification items (to mark as read via AJAX)
-                    dropdownContent.querySelectorAll('.dropdown-item').forEach(item => {
-                        item.addEventListener('click', function(event) {
-                            event.preventDefault(); // Prevent default link behavior
-                            const notificationId = this.dataset.notificationId;
-                            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-                            const currentItem = this;
-
-                            fetch(`/notifications/read/${notificationId}/`, { 
-                                method: 'POST',
-                                headers: {
-                                    'X-CSRFToken': csrfToken,
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({})
-                            })
-                            .then(response => {
-                                if (response.ok) {
-                                    currentItem.classList.remove('unread');
-                                    // Find the unread count span related to this bell
-                                    const unreadCountSpan = notificationBell.querySelector('span');
-                                    if (unreadCountSpan) {
-                                        let currentCount = parseInt(unreadCountSpan.textContent);
-                                        currentCount--;
-                                        if (currentCount > 0) {
-                                            unreadCountSpan.textContent = currentCount;
-                                        } else {
-                                            unreadCountSpan.remove(); 
-                                        }
-                                    }
-                                    // Optionally, navigate to the notification details page if link exists
-                                    // window.location.href = currentItem.href; 
-                                } else {
-                                    console.error('Failed to mark notification as read.');
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error marking notification as read:', error);
-                            });
-                        });
-                    });
-                }
-            }
-            // Setup for sidebar notification dropdown
-            setupNotificationDropdown('notification-bell-sidebar', 'notification-dropdown-content-sidebar');
-
-
-            // Smooth scroll for sidebar links pointing to dashboard sections (ยังคงเหลือสำหรับ user_dashboard)
-            document.querySelectorAll('.sidebar-link').forEach(link => {
-                link.addEventListener('click', function(event) {
-                    const href = this.getAttribute('href');
-                    const [baseUrl, hash] = href.split('#');
-
-                    const currentPath = window.location.pathname.endsWith('/') ? window.location.pathname.slice(0, -1) : window.location.pathname;
-                    const linkPath = new URL(baseUrl).pathname.endsWith('/') ? new URL(baseUrl).pathname.slice(0, -1) : new URL(baseUrl).pathname;
-
-
-                    if (linkPath === currentPath) { 
-                        event.preventDefault(); 
-
-                        if (hash) {
-                            const targetElement = document.getElementById(hash);
-                            if (targetElement) {
-                                targetElement.scrollIntoView({
-                                    behavior: 'smooth',
-                                    block: 'start' 
-                                });
-                                
-                                if (window.innerWidth < 768) { 
-                                    sidebar.classList.remove('open');
-                                    sidebarOverlay.classList.add('hidden');
-                                }
-                            }
-                        }
-                    } else {
-                        window.location.href = href;
-                    }
-                });
-            });
+        window.addEventListener('click', (e)=>{
+          if(!box.contains(e.target) && !bell.contains(e.target)){ box.classList.remove('show'); }
         });
-    </script>
+
+        // Mark read via fetch
+        box.querySelectorAll('.dropdown-item').forEach(item=>{
+          item.addEventListener('click', async (e)=>{
+            e.preventDefault();
+            const id = item.dataset.notificationId;
+            const csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+            try{
+              const res = await fetch(`/notifications/read/${id}/`,{
+                method:'POST',
+                headers:{'X-CSRFToken':csrf,'Content-Type':'application/json'},
+                body: JSON.stringify({})
+              });
+              if(res.ok){
+                item.classList.remove('unread');
+                const countSpan = bell.querySelector('span.bg-red-500');
+                if(countSpan){
+                  let n = parseInt(countSpan.textContent||'0')-1;
+                  if(n>0) countSpan.textContent = n;
+                  else countSpan.remove();
+                }
+              }
+            }catch(err){ console.error(err); }
+          });
+        });
+      }
+      setupNotificationDropdown('notification-bell-sidebar','notification-dropdown-content-sidebar');
+
+      // Smooth same-page anchor scroll for links having .sidebar-link
+      document.querySelectorAll('.sidebar-link').forEach(link=>{
+        link.addEventListener('click', (e)=>{
+          const href = link.getAttribute('href');
+          if(!href || !href.includes('#')) return; // normal navigate
+          const [base, hash] = href.split('#');
+          // If base path equals current path, smooth scroll instead of navigate
+          try{
+            const basePath = new URL(base, window.location.origin).pathname.replace(/\/$/,'');
+            const herePath = window.location.pathname.replace(/\/$/,'');
+            if(basePath === herePath){
+              e.preventDefault();
+              const target = document.getElementById(hash);
+              if(target){
+                target.scrollIntoView({behavior:'smooth', block:'start'});
+                if(window.innerWidth < 768) closeSidebar();
+              }
+            }
+          }catch{ /* ignore */ }
+        });
+      });
+    });
+  </script>
 </body>
 </html>
