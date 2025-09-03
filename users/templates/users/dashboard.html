@@ -7,7 +7,7 @@
 <style>
     /* กำหนดรูปภาพพื้นหลังสำหรับส่วนเนื้อหาทั้งหมด */
     .dashboard-bg {
-        background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRjRdCdVCuEGus8EIBKmXvUA9PcJuYKcGrD8Q&sg');
+        background-image: url('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBwgHBgkIBwgKCgkLDRYPDQwMDRsUFRAWIB0iIiAdHx8kKDQsJCYxJx8fLT0tMTU3Ojo6Iys/RD84QzQ5OjcBCgoKDQwNGg8PGjclHyU3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3N//AABEIAJQBCAMBIgACEQEDEQH/xAAaAAADAQEBAQAAAAAAAAAAAAAAAQIDBAcF/8QAHBABAQEBAQEBAQEAAAAAAAAAAAECESEDQTES/8QAGgEAAwEBAQEAAAAAAAAAAAAAAQIDAAQGBf/EABoRAQEBAQEBAQAAAAAAAAAAAAABAhExIQP/2gAMAwEAAhEDEQA/APNS6VLVegtfN4SbR1FvpLTSC1Nov9Lqdp4LS6VOFEGFSCBQ6ALJqNLqKWjE1KqSZikVwKkGRhmLkEi5FJC2jMaZgzFyKSJ2nIvMLMaZiuYnaeYvMEiopIn0c8B+FRjFYw+n9bbvjl+t9JumzGP1vrm3fWv016w1XH+ldWYz0C0HOq+pai0v9Iunba5pDtTaLUWp2nkO0u+laC2iZpXGjHFQocUgUJ0q1FrViqaNUk7TQgYhWpyK4UXDyAMzxpIMxcimYS08RpmelnK85VkTtVmLhSLlUkTpyKEBilYVCdVqMZ/TTl+mm/0rk+l9c+6riMvpWOr6vd9Zacer9dMKggQ7ttTaLU2ui1Hh2p6XR2F6fhgv04AKVExUPAM/5CgtMAtiNUWp6S0RSFEKY1RKoMKqRcicxpIrC08tcxOY0zFJE7VRplEi4pISqkXPPwoakIYtL0UKBMt1erxz/TRdU+Yz+mnN9K0+mnPvTl3XRiM91mrVS5b6tAAGF0dTaOp6paWRXSHSZlKkTFwYFOHChnKZdFqbQ6wqR0dLabgMpenGanIuRMaZh5CCNcxMnrTMUkJVZi5ExpPVZCVWVxMniv4eJ1UBdLpgV1NpFoKMRvTn+ml/Suf6aR3pXMZ7rDdXustOTWnRmJtACRzgEAgsi6BYzhHBgLionP8AVqQtEMitMAqadTaSmkBf0WiAJ5XmJi4MLVSetJESNIrISqzPWkiMrisJVxcTIuHhKr8H9LpHLxX8CemwcPrPd4rVYfTRdU0jP6ac30rT6Vz7rk3p0ZidVHRonParIARyFg04D4DgQIwZUVImKhoyor8SfTwnAVFTWtHh9IjL0QchRZg6cipCi4eQtONJEyNJFIS1WYuJi4pCVUPvEyimKfQQYDo6VK3jdEb05/pppvTm3Ut6UzEfTTHdVqstOXWl8xNoASOIqEqDAoABgScTFQsFcOFFKQpl+jpGY7UnSLWBkYMqRUiYuQ8LTjTMTIuKZJaqRpmIkaRWQlVIr8SfTkP8Lo6BYyo6TMfU7p2st6LaMiN1z7rTdc+q596XzE6rO09VNc1qsMEf4BlQyh0xCtCaC03DipExUGBVQ+kD9AyBN0DpAAJnBFQ0CnmNInK5FJCU40yiRpFJCVUXExSkJTgT0dEDPqejosYIWgxbrHel7rDek9VTMRvTDVXqstVy6q0hVPRaElDiomKgwKcFoTRtCQrQmmXplRUTDNAq+jqYDFV0ETMo4mKaMaoUXIpIWqyuJisqSEtXF5TFHhD7w+pOU/QPsCacrdYx0ujrdYdGr4VqN6C0ZE70w3pe9OfVc+9KZharO07UOe1WQGRwpji0meBRU06jQWjIAQJ0WkMA8LQADAYAYDXADRlRUAUhKvK8gKQlXDAPCj9MAWIAMAH4YAYm3xlowXXhow2x0QculompASODhhmVkqAYEUv0AlMAADP/2Q==');
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
@@ -146,9 +146,10 @@
         <!-- ส่วนตาราง (ถ้าต้องการแสดงข้อมูลเพิ่มเติม) -->
         <hr class="my-10 border-gray-300">
         <section>
-            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-x-2">
-                <i class="fas fa-list-alt text-purple-600"></i> ลิงก์ด่วนสำหรับการจัดการ
-            </h2>
+        <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-x-2">
+    <i class="fas fa-list-alt text-white"></i> ลิงก์ด่วนสำหรับการจัดการ
+</h2>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <a href="{% url 'item_overview' %}" class="bg-purple-100 text-purple-800 p-4 rounded-lg shadow-sm border border-purple-300 flex items-center justify-between transition duration-300 hover:bg-purple-200">
                     <span class="font-medium">ดูและจัดการรายการสิ่งของทั้งหมด</span>

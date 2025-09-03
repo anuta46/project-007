@@ -1,11 +1,11 @@
-# borrowing/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
 from datetime import timedelta
 from django.forms import inlineformset_factory 
-from django.db.models import Q # นำเข้า Q object สำหรับการค้นหาแบบ OR
+from django.db.models import Q # Import Q object for OR queries
+from django.db import transaction # Import transaction for database atomicity
 
 from .forms import ItemForm, AssetForm, LoanRequestForm 
 from .models import Item, Asset, Loan 
@@ -15,8 +15,8 @@ from users.models import Notification, CustomUser
 @login_required
 def add_item(request):
     """
-    View สำหรับ Organization Admin เพื่อเพิ่มประเภทสิ่งของใหม่
-    และสามารถเพิ่มอุปกรณ์แต่ละชิ้น (Assets) ที่ผูกกับประเภทนั้นๆ ได้พร้อมกัน
+    View for Organization Admin to add a new item type
+    and can also add individual assets linked to that item type.
     """
     if not request.user.is_org_admin:
         messages.error(request, "คุณไม่มีสิทธิ์เพิ่มสิ่งของ")
@@ -29,12 +29,13 @@ def add_item(request):
         asset_formset = AssetFormSet(request.POST, prefix='asset')
 
         if item_form.is_valid() and asset_formset.is_valid():
-            item = item_form.save(commit=False)
-            item.organization = request.user.organization
-            item.save()
+            with transaction.atomic():
+                item = item_form.save(commit=False)
+                item.organization = request.user.organization
+                item.save()
 
-            asset_formset.instance = item
-            asset_formset.save()
+                asset_formset.instance = item
+                asset_formset.save()
 
             messages.success(request, f'ประเภทสิ่งของ "{item.name}" และอุปกรณ์ถูกเพิ่มเรียบร้อยแล้ว')
             return redirect('dashboard')
@@ -52,8 +53,8 @@ def add_item(request):
 @login_required
 def edit_item(request, item_id):
     """
-    View สำหรับ Organization Admin เพื่อแก้ไขประเภทสิ่งของ
-    และจัดการ (เพิ่ม/แก้ไข/ลบ) อุปกรณ์แต่ละชิ้น (Assets) ที่ผูกกับประเภทนั้นๆ
+    View for Organization Admin to edit an item type
+    and manage (add/edit/delete) individual assets linked to that item type.
     """
     if not request.user.is_org_admin:
         messages.error(request, "คุณไม่มีสิทธิ์แก้ไขสิ่งของ")
@@ -68,8 +69,9 @@ def edit_item(request, item_id):
         asset_formset = AssetFormSet(request.POST, instance=item, prefix='asset')
 
         if item_form.is_valid() and asset_formset.is_valid():
-            item_form.save() 
-            asset_formset.save() 
+            with transaction.atomic():
+                item_form.save() 
+                asset_formset.save() 
 
             messages.success(request, f'ประเภทสิ่งของ "{item.name}" และอุปกรณ์ถูกแก้ไขเรียบร้อยแล้ว')
             return redirect('dashboard')
@@ -88,8 +90,8 @@ def edit_item(request, item_id):
 @login_required
 def delete_item(request, item_id):
     """
-    View สำหรับ Organization Admin เพื่อลบประเภทสิ่งของ (Item)
-    จะอนุญาตให้ลบได้เฉพาะเมื่อไม่มี Asset หรือ Loan ที่ผูกอยู่กับ Item นั้นๆ
+    View for Organization Admin to delete an item type.
+    Allowed only if no Assets or Loans are linked to that Item.
     """
     if not request.user.is_org_admin:
         messages.error(request, "คุณไม่มีสิทธิ์ลบสิ่งของ")
@@ -113,42 +115,64 @@ def delete_item(request, item_id):
 @login_required
 def borrow_item(request, asset_id):
     """
-    View สำหรับผู้ใช้ทั่วไปเพื่อส่งคำขอยืมอุปกรณ์แต่ละชิ้น (Asset) พร้อมเหตุผล
+    View for general users to submit a loan request for a specific Asset.
     """
     asset = get_object_or_404(Asset, id=asset_id)
     
     if request.method == 'POST':
-        form = LoanRequestForm(request.POST) # ใช้ LoanRequestForm
+        form = LoanRequestForm(request.POST)
         if form.is_valid():
-            if asset.status == 'available':
-                due_date = timezone.now() + timedelta(days=7)
+            # Use a database transaction to prevent race conditions
+            with transaction.atomic():
+                # Re-fetch the asset inside the transaction to ensure its status is up-to-date
+                asset_recheck = Asset.objects.select_for_update().get(id=asset_id)
                 
-                loan = form.save(commit=False) # บันทึกฟอร์มแต่ยังไม่บันทึกเข้า DB
-                loan.asset = asset
-                loan.borrower = request.user
-                loan.status = 'pending'
-                loan.due_date = due_date
-                loan.save()
+                if asset_recheck.status == 'available':
+                    # Extract data from the validated form
+                    borrow_date = form.cleaned_data['borrow_date']
+                    due_date = form.cleaned_data['due_date']
+                    reason = form.cleaned_data['reason']
 
-                asset.status = 'on_loan' # เปลี่ยนสถานะของ Asset เป็น 'on_loan'
-                asset.save()
-
-                messages.success(request, f'คุณได้ส่งคำขอยืมสิ่งของ "{asset.item.name}" (SN/ID: {asset.serial_number or asset.device_id or asset.id}) เรียบร้อยแล้ว โปรดรอการอนุมัติจากผู้ดูแล')
-
-                org_admins = CustomUser.objects.filter(
-                    organization=asset.item.organization, 
-                    is_org_admin=True, 
-                    is_active=True
-                )
-                for admin in org_admins:
-                    Notification.objects.create(
-                        user=admin,
-                        message=f"ผู้ใช้ {request.user.username} ได้ส่งคำขอยืมสิ่งของ \"{asset.item.name}\" (SN/ID: {asset.serial_number or asset.device_id or asset.id}) ใหม่"
+                    # Create the new loan request
+                    loan = Loan.objects.create(
+                        asset=asset_recheck,
+                        borrower=request.user,
+                        reason=reason,
+                        borrow_date=borrow_date,
+                        due_date=due_date,
+                        status='pending'
                     )
-            else:
-                messages.error(request, f'"{asset.item.name}" (SN/ID: {asset.serial_number or asset.device_id or asset.id}) ไม่พร้อมให้ยืมในขณะนี้ (สถานะ: {asset.get_status_display()})')
+
+                    # Update asset status
+                    asset_recheck.status = 'on_loan' 
+                    asset_recheck.save()
+
+                    messages.success(request, f'คุณได้ส่งคำขอยืมสิ่งของ "{asset_recheck.item.name}" (SN/ID: {asset_recheck.serial_number or asset_recheck.device_id or asset_recheck.id}) เรียบร้อยแล้ว โปรดรอการอนุมัติจากผู้ดูแล')
+
+                    # Create notifications for all organization admins
+                    org_admins = CustomUser.objects.filter(
+                        organization=asset_recheck.item.organization, 
+                        is_org_admin=True, 
+                        is_active=True
+                    )
+                    for admin in org_admins:
+                        Notification.objects.create(
+                            user=admin,
+                            message=f"ผู้ใช้ {request.user.username} ได้ส่งคำขอยืมสิ่งของ \"{asset_recheck.item.name}\" (SN/ID: {asset_recheck.serial_number or asset_recheck.device_id or asset_recheck.id}) ใหม่"
+                        )
+                else:
+                    messages.error(request, f'"{asset_recheck.item.name}" (SN/ID: {asset_recheck.serial_number or asset_recheck.device_id or asset_recheck.id}) ไม่พร้อมให้ยืมในขณะนี้ (สถานะ: {asset_recheck.get_status_display()})')
+            
             return redirect('user_dashboard')
-    else: # GET request, แสดงฟอร์ม
+        else:
+            # Re-render the form with validation errors if the form is not valid
+            context = {
+                'asset': asset,
+                'form': form,
+                'MEDIA_URL': 'media/'
+            }
+            return render(request, 'borrowing/borrow_item.html', context)
+    else: # GET request, display the form
         form = LoanRequestForm()
     
     context = {
@@ -156,13 +180,13 @@ def borrow_item(request, asset_id):
         'form': form,
         'MEDIA_URL': 'media/' # Assuming MEDIA_URL is '/media/'
     }
-    return render(request, 'borrowing/borrow_item.html', context) # ต้องสร้าง template นี้
+    return render(request, 'borrowing/borrow_item.html', context)
 
 
 @login_required
 def return_item(request, loan_id):
     """
-    View สำหรับผู้ใช้ทั่วไปเพื่อคืนอุปกรณ์ที่ยืม
+    View for general users to return a borrowed item.
     """
     loan = get_object_or_404(Loan, id=loan_id, borrower=request.user)
 
@@ -185,7 +209,7 @@ def return_item(request, loan_id):
 @login_required
 def approve_loan(request, loan_id):
     """
-    View สำหรับ Organization Admin เพื่ออนุมัติคำขอยืม
+    View for Organization Admin to approve a loan request.
     """
     if not request.user.is_org_admin:
         messages.error(request, "คุณไม่มีสิทธิ์อนุมัติคำขอเหล่านี้")
@@ -220,7 +244,7 @@ def approve_loan(request, loan_id):
 @login_required
 def reject_loan(request, loan_id):
     """
-    View สำหรับ Organization Admin เพื่อปฏิเสธคำขอยืม
+    View for Organization Admin to reject a loan request.
     """
     if not request.user.is_org_admin:
         messages.error(request, "คุณไม่มีสิทธิ์ปฏิเสธคำขอเหล่านี้")
@@ -236,7 +260,7 @@ def reject_loan(request, loan_id):
              loan.asset.status = 'available' 
              loan.asset.save()
         elif loan.asset.status == 'available': 
-            pass 
+             pass 
 
         messages.success(request, f'คำขอยืมสิ่งของ "{loan.asset.item.name}" (SN/ID: {loan.asset.serial_number or loan.asset.device_id or loan.asset.id}) โดย {loan.borrower.username} ได้รับการปฏิเสธแล้ว')
 
@@ -250,11 +274,11 @@ def reject_loan(request, loan_id):
     return redirect('dashboard')
 
 
-# ############## VIEWS สำหรับ REPORTS ##############
+# ############## VIEWS FOR REPORTS ##############
 @login_required
 def weekly_report(request):
     """
-    View สำหรับผู้ดูแลองค์กรเพื่อดูรายงานการยืม-คืนประจำสัปดาห์
+    View for Organization Admin to view a weekly loan report.
     """
     if not request.user.is_org_admin:
         messages.error(request, "คุณไม่มีสิทธิ์เข้าถึงรายงานนี้")
@@ -262,23 +286,20 @@ def weekly_report(request):
 
     organization = request.user.organization
     
-    # คำนวณช่วงเวลา: 7 วันที่ผ่านมา (นับจากวันนี้ถึง 7 วันย้อนหลัง)
     today = timezone.now().date()
-    start_of_week = today - timedelta(days=today.weekday()) # วันจันทร์ของสัปดาห์ปัจจุบัน
-    end_of_week = start_of_week + timedelta(days=6) # วันอาทิตย์ของสัปดาห์ปัจจุบัน
+    start_of_week = today - timedelta(days=today.weekday())
+    end_of_week = start_of_week + timedelta(days=6)
 
-    # ดึงข้อมูล Loan ที่เกิดขึ้นในสัปดาห์นี้
     loans_this_week = Loan.objects.filter(
         asset__item__organization=organization,
         borrow_date__date__range=[start_of_week, end_of_week]
     ).select_related('asset__item', 'borrower').order_by('-borrow_date')
 
-    # สรุปข้อมูล
     total_loans_this_week = loans_this_week.count()
     returned_this_week = loans_this_week.filter(status='returned').count()
     approved_this_week = loans_this_week.filter(status='approved').count()
     pending_this_week = loans_this_week.filter(status='pending').count()
-    overdue_this_week = loans_this_week.filter(status='overdue', due_date__lt=today).count() # เฉพาะที่เกินกำหนดและยังไม่คืน
+    overdue_this_week = loans_this_week.filter(status='overdue', due_date__lt=today).count()
 
     context = {
         'report_title': 'รายงานประจำสัปดาห์',
@@ -297,7 +318,7 @@ def weekly_report(request):
 @login_required
 def monthly_report(request):
     """
-    View สำหรับผู้ดูแลองค์กรเพื่อดูรายงานการยืม-คืนประจำเดือน
+    View for Organization Admin to view a monthly loan report.
     """
     if not request.user.is_org_admin:
         messages.error(request, "คุณไม่มีสิทธิ์เข้าถึงรายงานนี้")
@@ -305,27 +326,21 @@ def monthly_report(request):
 
     organization = request.user.organization
 
-    # คำนวณช่วงเวลา: เดือนปัจจุบัน
     today = timezone.now().date()
-    # หาเดือนและปีของวันปัจจุบัน
     year = today.year
     month = today.month
 
-    # กำหนดวันที่เริ่มต้นและสิ้นสุดของเดือน
     first_day_of_month = today.replace(day=1)
-    # หา last day of month
     if month == 12:
         last_day_of_month = today.replace(year=year + 1, month=1, day=1) - timedelta(days=1)
     else:
         last_day_of_month = today.replace(month=month + 1, day=1) - timedelta(days=1)
 
-    # ดึงข้อมูล Loan ที่เกิดขึ้นในเดือนนี้
     loans_this_month = Loan.objects.filter(
         asset__item__organization=organization,
         borrow_date__date__range=[first_day_of_month, last_day_of_month]
     ).select_related('asset__item', 'borrower').order_by('-borrow_date')
 
-    # สรุปข้อมูล
     total_loans_this_month = loans_this_month.count()
     returned_this_month = loans_this_month.filter(status='returned').count()
     approved_this_month = loans_this_month.filter(status='approved').count()
@@ -346,11 +361,11 @@ def monthly_report(request):
     return render(request, 'borrowing/monthly_report.html', context)
 
 
-# ############## VIEWS สำหรับ ADMIN DASHBOARD ##############
+# ############## VIEWS FOR ADMIN DASHBOARD ##############
 @login_required
 def item_overview(request):
     """
-    View สำหรับ Organization Admin เพื่อดูภาพรวมประเภทสิ่งของและจำนวน Assets
+    View for Organization Admin to get an overview of item types and number of assets.
     """
     if not request.user.is_org_admin:
         messages.error(request, "คุณไม่มีสิทธิ์เข้าถึงหน้านี้")
@@ -369,7 +384,7 @@ def item_overview(request):
 @login_required
 def pending_loans_view(request):
     """
-    View สำหรับ Organization Admin เพื่อดูคำขอยืมที่รอดำเนินการ
+    View for Organization Admin to view pending loan requests.
     """
     if not request.user.is_org_admin:
         messages.error(request, "คุณไม่มีสิทธิ์เข้าถึงหน้านี้")
@@ -391,7 +406,7 @@ def pending_loans_view(request):
 @login_required
 def active_loans_view(request):
     """
-    View สำหรับ Organization Admin เพื่อดูรายการยืมที่กำลังดำเนินการ (อนุมัติแล้ว)
+    View for Organization Admin to view active (approved) loans.
     """
     if not request.user.is_org_admin:
         messages.error(request, "คุณไม่มีสิทธิ์เข้าถึงหน้านี้")
@@ -413,7 +428,7 @@ def active_loans_view(request):
 @login_required
 def loan_history_admin_view(request):
     """
-    View สำหรับ Organization Admin เพื่อดูประวัติการยืมทั้งหมด (รวมที่คืนแล้ว, ปฏิเสธ, เกินกำหนด)
+    View for Organization Admin to view all loan history.
     """
     if not request.user.is_org_admin:
         messages.error(request, "คุณไม่มีสิทธิ์เข้าถึงหน้านี้")
@@ -423,7 +438,7 @@ def loan_history_admin_view(request):
     loan_history = Loan.objects.filter(
         asset__item__organization=organization
     ).exclude(
-        status__in=['pending', 'approved'] # ไม่รวม pending และ approved เพื่อเน้นประวัติ
+        status__in=['pending', 'approved']
     ).select_related('asset__item', 'borrower').order_by('-borrow_date')
 
     context = {

@@ -3,246 +3,286 @@
 {% block title %}ขอยืมสิ่งของ: {{ asset.item.name }} ({{ asset.serial_number|default:asset.device_id }}){% endblock %}
 
 {% block content %}
+
 <div class="max-w-5xl mx-auto my-10 px-4">
-    <!-- Breadcrumb -->
-    <nav class="mb-4 text-sm text-gray-600">
-        <ol class="flex items-center gap-2">
-            <li><a href="{% url 'user_dashboard' %}" class="hover:underline">แดชบอร์ด</a></li>
-            <li class="text-gray-400">/</li>
-            <li class="text-gray-800 font-medium">ขอยืมสิ่งของ</li>
-        </ol>
-    </nav>
+<!-- Breadcrumb -->
+<nav class="mb-4 text-sm text-gray-600">
+<ol class="flex items-center gap-2">
+<li><a href="{% url 'user_dashboard' %}" class="hover:underline">แดชบอร์ด</a></li>
+<li class="text-gray-400">/</li>
+<li class="text-gray-800 font-medium">ขอยืมสิ่งของ</li>
+</ol>
+</nav>
 
-    <!-- HERO -->
-    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-500 text-white p-7 md:p-9 mb-8">
-        <div class="relative z-10">
-            <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">ขอยืมสิ่งของ</h1>
-            <p class="mt-2 text-white/90">
-                คุณกำลังขอยืม: <span class="font-semibold">{{ asset.item.name }}</span>
-                <span class="mx-1">•</span>
-                Serial/ID: <button id="copy-id" type="button" class="inline-flex items-center gap-1 font-semibold underline decoration-white/40 hover:decoration-white" data-copy="{{ asset.serial_number|default:asset.device_id|default:'N/A' }}">
-                    {{ asset.serial_number|default:asset.device_id|default:"N/A" }}
-                    <i class="fas fa-copy text-xs"></i>
-                </button>
-            </p>
-        </div>
-        <div class="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-white/10 blur-2xl"></div>
-        <div class="absolute -left-10 -bottom-10 w-40 h-40 rounded-full bg-white/10 blur-xl"></div>
+<!-- HERO -->
+<div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-500 text-white p-7 md:p-9 mb-8">
+    <div class="relative z-10">
+        <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">ขอยืมสิ่งของ</h1>
+        <p class="mt-2 text-white/90">
+            คุณกำลังขอยืม: <span class="font-semibold">{{ asset.item.name }}</span>
+            <span class="mx-1">•</span>
+            Serial/ID: <button id="copy-id" type="button" class="inline-flex items-center gap-1 font-semibold underline decoration-white/40 hover:decoration-white" data-copy="{{ asset.serial_number|default:asset.device_id|default:'N/A' }}">
+                {{ asset.serial_number|default:asset.device_id|default:"N/A" }}
+                <i class="fas fa-copy text-xs"></i>
+            </button>
+        </p>
     </div>
+    <div class="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-white/10 blur-2xl"></div>
+    <div class="absolute -left-10 -bottom-10 w-40 h-40 rounded-full bg-white/10 blur-xl"></div>
+</div>
 
-    <!-- CONTENT GRID -->
-    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        <!-- ASSET CARD -->
-        <aside class="lg:col-span-2">
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                <div class="aspect-[4/3] bg-gray-100">
-                    {% if asset.item.image %}
-                        <img src="{{ asset.item.image.url }}" alt="{{ asset.item.name }}" class="w-full h-full object-cover">
+<!-- CONTENT GRID -->
+<div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+    <!-- ASSET CARD -->
+    <aside class="lg:col-span-2">
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="aspect-[4/3] bg-gray-100">
+                {% if asset.item.image %}
+                    <img src="{{ asset.item.image.url }}" alt="{{ asset.item.name }}" class="w-full h-full object-cover">
+                {% else %}
+                    <div class="w-full h-full grid place-items-center text-gray-400">
+                        <i class="fas fa-image text-4xl"></i>
+                        <span class="mt-1 text-sm">ไม่มีรูปภาพ</span>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="p-5">
+                <div class="flex items-start justify-between gap-3">
+                    <h2 class="text-xl font-bold text-gray-900 leading-snug">{{ asset.item.name }}</h2>
+
+                    {% if asset.status == 'available' %}
+                        <span class="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-green-100 text-green-800 border border-green-200">
+                            <i class="fas fa-check-circle"></i> พร้อมให้ยืม
+                        </span>
                     {% else %}
-                        <div class="w-full h-full grid place-items-center text-gray-400">
-                            <i class="fas fa-image text-4xl"></i>
-                            <span class="mt-1 text-sm">ไม่มีรูปภาพ</span>
-                        </div>
+                        <span class="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-red-100 text-red-800 border border-red-200">
+                            <i class="fas fa-times-circle"></i> {{ asset.get_status_display }}
+                        </span>
                     {% endif %}
                 </div>
 
-                <div class="p-5">
-                    <div class="flex items-start justify-between gap-3">
-                        <h2 class="text-xl font-bold text-gray-900 leading-snug">{{ asset.item.name }}</h2>
-
-                        {% if asset.status == 'available' %}
-                            <span class="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-green-100 text-green-800 border border-green-200">
-                                <i class="fas fa-check-circle"></i> พร้อมให้ยืม
-                            </span>
-                        {% else %}
-                            <span class="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-red-100 text-red-800 border border-red-200">
-                                <i class="fas fa-times-circle"></i> {{ asset.get_status_display }}
-                            </span>
-                        {% endif %}
+                <dl class="mt-4 grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                        <dt class="text-gray-500">Serial</dt>
+                        <dd class="font-medium text-gray-800">{{ asset.serial_number|default:"-" }}</dd>
                     </div>
+                    <div>
+                        <dt class="text-gray-500">Device ID</dt>
+                        <dd class="font-medium text-gray-800">{{ asset.device_id|default:"-" }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-gray-500">สถานที่จัดเก็บ</dt>
+                        <dd class="font-medium text-gray-800">{{ asset.location|default:"-" }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-gray-500">สภาพ</dt>
+                        <dd class="font-medium text-gray-800">{{ asset.get_condition_display }}</dd>
+                    </div>
+                </dl>
 
-                    <dl class="mt-4 grid grid-cols-2 gap-3 text-sm">
-                        <div>
-                            <dt class="text-gray-500">Serial</dt>
-                            <dd class="font-medium text-gray-800">{{ asset.serial_number|default:"-" }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-gray-500">Device ID</dt>
-                            <dd class="font-medium text-gray-800">{{ asset.device_id|default:"-" }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-gray-500">สถานที่จัดเก็บ</dt>
-                            <dd class="font-medium text-gray-800">{{ asset.location|default:"-" }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-gray-500">สภาพ</dt>
-                            <dd class="font-medium text-gray-800">{{ asset.get_condition_display }}</dd>
-                        </div>
-                    </dl>
+                {% if asset.item.description %}
+                    <p class="mt-4 text-sm text-gray-600">{{ asset.item.description }}</p>
+                {% endif %}
+            </div>
+        </div>
 
-                    {% if asset.item.description %}
-                        <p class="mt-4 text-sm text-gray-600">{{ asset.item.description }}</p>
-                    {% endif %}
-                </div>
+        <!-- TIP -->
+        <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-900 p-4 text-sm">
+            <div class="flex items-start gap-3">
+                <i class="fas fa-lightbulb mt-0.5"></i>
+                <p>โปรดระบุเหตุผลและกำหนดวันส่งคืนให้ชัดเจน เพื่อให้ผู้ดูแลอนุมัติได้รวดเร็วขึ้น</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- FORM CARD -->
+    <section class="lg:col-span-3">
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">ฟอร์มคำขอยืม</h3>
+                <span class="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
+                    <i class="fas fa-shield-check"></i> ปลอดภัยด้วย CSRF
+                </span>
             </div>
 
-            <!-- TIP -->
-            <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-900 p-4 text-sm">
-                <div class="flex items-start gap-3">
-                    <i class="fas fa-lightbulb mt-0.5"></i>
-                    <p>โปรดระบุเหตุผลและกำหนดวันส่งคืนให้ชัดเจน เพื่อให้ผู้ดูแลอนุมัติได้รวดเร็วขึ้น</p>
-                </div>
-            </div>
-        </aside>
+            {# สไตล์สำหรับฟิลด์ (ใช้ได้แม้ไม่ติดตั้ง widget_tweaks) #}
+            <style>
+                form.borrow-form .form-field { margin-bottom: 1rem; }
+                form.borrow-form .form-field label {
+                    display:block; margin-bottom: .4rem; font-weight:600; color:#374151; font-size:.95rem;
+                }
+                form.borrow-form .form-field input,
+                form.borrow-form .form-field select,
+                form.borrow-form .form-field textarea {
+                    width:100%; border:1px solid #d1d5db; border-radius:.7rem; padding:.7rem .9rem;
+                    outline: none; transition: box-shadow .15s, border-color .15s; background:#fff;
+                }
+                form.borrow-form .form-field textarea { min-height: 120px; }
+                form.borrow-form .form-field input:focus,
+                form.borrow-form .form-field select:focus,
+                form.borrow-form .form-field textarea:focus {
+                    border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,.2);
+                }
+                form.borrow-form .errorlist { color:#b91c1c; font-size:.875rem; margin-top:.375rem; }
+            </style>
 
-        <!-- FORM CARD -->
-        <section class="lg:col-span-3">
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-bold text-gray-900">ฟอร์มคำขอยืม</h3>
-                    <span class="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
-                        <i class="fas fa-shield-check"></i> ปลอดภัยด้วย CSRF
-                    </span>
-                </div>
+            <form method="post" class="borrow-form" id="borrow-form">
+                {% csrf_token %}
 
-                {# สไตล์สำหรับฟิลด์ (ใช้ได้แม้ไม่ติดตั้ง widget_tweaks) #}
-                <style>
-                    form.borrow-form .form-field { margin-bottom: 1rem; }
-                    form.borrow-form .form-field label {
-                        display:block; margin-bottom: .4rem; font-weight:600; color:#374151; font-size:.95rem;
-                    }
-                    form.borrow-form .form-field input,
-                    form.borrow-form .form-field select,
-                    form.borrow-form .form-field textarea {
-                        width:100%; border:1px solid #d1d5db; border-radius:.7rem; padding:.7rem .9rem;
-                        outline: none; transition: box-shadow .15s, border-color .15s; background:#fff;
-                    }
-                    form.borrow-form .form-field textarea { min-height: 120px; }
-                    form.borrow-form .form-field input:focus,
-                    form.borrow-form .form-field select:focus,
-                    form.borrow-form .form-field textarea:focus {
-                        border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,.2);
-                    }
-                    form.borrow-form .errorlist { color:#b91c1c; font-size:.875rem; margin-top:.375rem; }
-                </style>
-
-                <form method="post" class="borrow-form" id="borrow-form">
-                    {% csrf_token %}
-
-                    {# วนเรนเดอร์ฟิลด์ทั้งหมดจาก LoanRequestForm #}
-                    {% for field in form %}
-                        <div class="form-field">
-                            <label for="{{ field.id_for_label }}" class="flex items-center gap-2">
-                                {% if field.name == 'reason' %}
-                                    <i class="fas fa-align-left text-gray-400"></i>
-                                {% elif field.name == 'due_date' %}
-                                    <i class="fas fa-calendar-day text-gray-400"></i>
-                                {% else %}
-                                    <i class="fas fa-pen text-gray-400"></i>
-                                {% endif %}
-                                <span>{{ field.label }}</span>
-                            </label>
-
-                            {{ field }}
-
+                {# วนเรนเดอร์ฟิลด์ทั้งหมดจาก LoanRequestForm #}
+                {% for field in form %}
+                    <div class="form-field">
+                        <label for="{{ field.id_for_label }}" class="flex items-center gap-2">
                             {% if field.name == 'reason' %}
-                                <div class="mt-1 flex items-center justify-between text-xs text-gray-500">
-                                    <span>อธิบายวัตถุประสงค์ในการยืมโดยสรุป</span>
-                                    <span id="reason-count">0/500</span>
-                                </div>
+                                <i class="fas fa-align-left text-gray-400"></i>
+                            {% elif field.name == 'due_date' %}
+                                <i class="fas fa-calendar-day text-gray-400"></i>
+                            {% elif field.name == 'borrow_date' %}
+                                <i class="fas fa-calendar-alt text-gray-400"></i>
+                            {% else %}
+                                <i class="fas fa-pen text-gray-400"></i>
                             {% endif %}
+                            <span>{{ field.label }}</span>
+                        </label>
 
-                            {% if field.help_text %}
-                                <p class="text-sm text-gray-500 mt-1">{{ field.help_text }}</p>
-                            {% endif %}
+                        {{ field }}
 
-                            {% for error in field.errors %}
-                                <p class="errorlist">• {{ error }}</p>
-                            {% endfor %}
-                        </div>
-                    {% endfor %}
+                        {% if field.name == 'reason' %}
+                            <div class="mt-1 flex items-center justify-between text-xs text-gray-500">
+                                <span>อธิบายวัตถุประสงค์ในการยืมโดยสรุป</span>
+                                <span id="reason-count">0/500</span>
+                            </div>
+                        {% endif %}
 
-                    {# Non-field errors #}
-                    {% if form.non_field_errors %}
-                        <ul class="errorlist mb-4">
-                            {% for error in form.non_field_errors %}
-                                <li>• {{ error }}</li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
+                        {% if field.help_text %}
+                            <p class="text-sm text-gray-500 mt-1">{{ field.help_text }}</p>
+                        {% endif %}
 
-                    <!-- ACTIONS -->
-                    <div class="mt-6 flex flex-wrap items-center gap-3">
-                        <button type="submit" id="submit-btn"
-                                class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-5 rounded-xl shadow disabled:opacity-60 disabled:cursor-not-allowed">
-                            <i class="fas fa-paper-plane"></i>
-                            <span>ส่งคำขอยืม</span>
-                        </button>
-
-                        <a href="{% url 'user_dashboard' %}"
-                           class="inline-flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2.5 px-5 rounded-xl shadow">
-                            <i class="fas fa-arrow-left"></i> กลับสู่แดชบอร์ด
-                        </a>
+                        {% for error in field.errors %}
+                            <p class="errorlist">• {{ error }}</p>
+                        {% endfor %}
                     </div>
-                </form>
-            </div>
+                {% endfor %}
 
-            <!-- POLICY / NOTE -->
-            <div class="mt-4 rounded-2xl border border-gray-200 bg-white p-4">
-                <div class="flex items-start gap-3 text-sm text-gray-700">
-                    <i class="fas fa-info-circle mt-0.5 text-gray-500"></i>
-                    <p>
-                        เมื่อส่งคำขอยืมแล้ว ระบบจะส่งต่อให้ผู้ดูแลตรวจสอบและอนุมัติ/ปฏิเสธ
-                        คุณสามารถติดตามสถานะได้ที่เมนู <span class="font-semibold">“รายการยืมของฉัน”</span>
-                    </p>
+                {# Non-field errors #}
+                {% if form.non_field_errors %}
+                    <ul class="errorlist mb-4">
+                        {% for error in form.non_field_errors %}
+                            <li>• {{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                <!-- ACTIONS -->
+                <div class="mt-6 flex flex-wrap items-center gap-3">
+                    <button type="submit" id="submit-btn"
+                            class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-5 rounded-xl shadow disabled:opacity-60 disabled:cursor-not-allowed">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>ส่งคำขอยืม</span>
+                    </button>
+
+                    <a href="{% url 'user_dashboard' %}"
+                       class="inline-flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2.5 px-5 rounded-xl shadow">
+                        <i class="fas fa-arrow-left"></i> กลับสู่แดชบอร์ด
+                    </a>
                 </div>
+            </form>
+        </div>
+
+        <!-- POLICY / NOTE -->
+        <div class="mt-4 rounded-2xl border border-gray-200 bg-white p-4">
+            <div class="flex items-start gap-3 text-sm text-gray-700">
+                <i class="fas fa-info-circle mt-0.5 text-gray-500"></i>
+                <p>
+                    เมื่อส่งคำขอยืมแล้ว ระบบจะส่งต่อให้ผู้ดูแลตรวจสอบและอนุมัติ/ปฏิเสธ
+                    คุณสามารถติดตามสถานะได้ที่เมนู <span class="font-semibold">“รายการยืมของฉัน”</span>
+                </p>
             </div>
-        </section>
-    </div>
+        </div>
+    </section>
+</div>
+
 </div>
 
 <!-- Small JS: copy, counter, loading -->
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // Copy Serial/ID
-    const copyBtn = document.getElementById('copy-id');
-    if (copyBtn) {
-        copyBtn.addEventListener('click', async () => {
-            const text = copyBtn.dataset.copy || '';
-            try {
-                await navigator.clipboard.writeText(text);
-                copyBtn.classList.add('text-emerald-200');
-                copyBtn.innerHTML = text + ' <i class="fas fa-check text-xs"></i>';
-                setTimeout(() => {
-                    copyBtn.classList.remove('text-emerald-200');
-                    copyBtn.innerHTML = text + ' <i class="fas fa-copy text-xs"></i>';
-                }, 1500);
-            } catch (e) { console.error(e); }
-        });
-    }
+// Copy Serial/ID
+const copyBtn = document.getElementById('copy-id');
+if (copyBtn) {
+copyBtn.addEventListener('click', async () => {
+const text = copyBtn.dataset.copy || '';
+try {
+// Use a non-deprecated method if possible, but fall back for older browsers
+if (navigator.clipboard) {
+await navigator.clipboard.writeText(text);
+} else {
+const tempInput = document.createElement('textarea');
+tempInput.value = text;
+document.body.appendChild(tempInput);
+tempInput.select();
+document.execCommand('copy');
+document.body.removeChild(tempInput);
+}
 
-    // Reason character counter (assumes max_length=500 ถ้า form กำหนดอื่น ปรับได้)
-    const reasonEl = document.getElementById('id_reason');
-    const counter = document.getElementById('reason-count');
-    if (reasonEl && counter) {
-        const maxLen = reasonEl.getAttribute('maxlength') ? parseInt(reasonEl.getAttribute('maxlength')) : 500;
-        const update = () => {
-            const len = reasonEl.value.length;
-            counter.textContent = `${len}/${maxLen}`;
-        };
-        update();
-        reasonEl.addEventListener('input', update);
-    }
+            copyBtn.classList.add(&#39;text-emerald-200&#39;);
+            copyBtn.innerHTML = text + &#39; &lt;i class=&quot;fas fa-check text-xs&quot;&gt;&lt;/i&gt;&#39;;
+            setTimeout(() =&gt; {
+                copyBtn.classList.remove(&#39;text-emerald-200&#39;);
+                copyBtn.innerHTML = text + &#39; &lt;i class=&quot;fas fa-copy text-xs&quot;&gt;&lt;/i&gt;&#39;;
+            }, 1500);
+        } catch (e) { console.error(e); }
+    });
+}
 
-    // Loading state on submit
-    const form = document.getElementById('borrow-form');
-    const submitBtn = document.getElementById('submit-btn');
-    if (form && submitBtn) {
-        form.addEventListener('submit', () => {
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span> กำลังส่ง...</span>';
-        });
-    }
+// Reason character counter (assumes max_length=500 ถ้า form กำหนดอื่น ปรับได้)
+const reasonEl = document.getElementById(&#39;id_reason&#39;);
+const counter = document.getElementById(&#39;reason-count&#39;);
+if (reasonEl &amp;&amp; counter) {
+    const maxLen = reasonEl.getAttribute(&#39;maxlength&#39;) ? parseInt(reasonEl.getAttribute(&#39;maxlength&#39;)) : 500;
+    const update = () =&gt; {
+        const len = reasonEl.value.length;
+        counter.textContent = `${len}/${maxLen}`;
+    };
+    update();
+    reasonEl.addEventListener(&#39;input&#39;, update);
+}
+
+// Loading state on submit
+const form = document.getElementById(&#39;borrow-form&#39;);
+const submitBtn = document.getElementById(&#39;submit-btn&#39;);
+if (form &amp;&amp; submitBtn) {
+    form.addEventListener(&#39;submit&#39;, () =&gt; {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = &#39;&lt;i class=&quot;fas fa-spinner fa-spin&quot;&gt;&lt;/i&gt;&lt;span&gt; กำลังส่ง...&lt;/span&gt;&#39;;
+    });
+}
+
+// NEW: Set minimum date for both &#39;borrow_date&#39; and &#39;due_date&#39; inputs
+const borrowDateInput = document.getElementById(&#39;id_borrow_date&#39;);
+const dueDateInput = document.getElementById(&#39;id_due_date&#39;);
+
+// Get today&#39;s date in YYYY-MM-DD format
+const today = new Date();
+const year = today.getFullYear();
+const month = (today.getMonth() + 1).toString().padStart(2, &#39;0&#39;);
+const day = today.getDate().toString().padStart(2, &#39;0&#39;);
+const todayDateFormatted = `${year}-${month}-${day}`;
+
+// Set the min attribute for borrow date
+if (borrowDateInput) {
+    borrowDateInput.setAttribute(&#39;min&#39;, todayDateFormatted);
+    borrowDateInput.value = todayDateFormatted; // Pre-fill with today&#39;s date
+}
+
+// Set the min attribute for due date
+if (dueDateInput) {
+    dueDateInput.setAttribute(&#39;min&#39;, todayDateFormatted);
+}
+
 });
 </script>
+
 {% endblock content %}

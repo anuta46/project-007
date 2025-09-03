@@ -1,8 +1,6 @@
-# borrowing/forms.py
-
 from django import forms
-from django.utils import timezone # นำเข้า timezone
-from datetime import timedelta # นำเข้า timedelta
+from django.utils import timezone
+from datetime import timedelta
 from .models import Item, Asset, Loan 
 
 class ItemForm(forms.ModelForm):
@@ -46,8 +44,7 @@ class AssetForm(forms.ModelForm):
         return cleaned_data
 
 class LoanRequestForm(forms.ModelForm):
-    # เพิ่มฟิลด์ due_date เข้ามาในฟอร์มเพื่อให้ผู้ใช้เลือกได้
-    # ใช้ DateInput เพื่อให้แสดงเป็นปฏิทินในเบราว์เซอร์
+    # ไม่ต้องประกาศ borrow_date ที่นี่อีก
     due_date = forms.DateField(
         label="วันที่คืนสิ่งของ",
         widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
@@ -56,7 +53,8 @@ class LoanRequestForm(forms.ModelForm):
 
     class Meta:
         model = Loan
-        fields = ['reason', 'due_date'] # เพิ่ม 'due_date' เข้ามาในฟิลด์ที่ฟอร์มจะจัดการ
+        # ลบ 'borrow_date' ออกจากรายการ fields
+        fields = ['reason', 'due_date']
         labels = {
             'reason': "เหตุผลการยืม",
         }
@@ -68,11 +66,9 @@ class LoanRequestForm(forms.ModelForm):
         due_date = self.cleaned_data.get('due_date')
         if due_date:
             today = timezone.now().date()
-            # ตรวจสอบว่าวันที่คืนไม่ใช่วันที่ในอดีต
             if due_date < today:
                 raise forms.ValidationError("วันที่ครบกำหนดคืนไม่สามารถเป็นวันที่ในอดีตได้")
             
-            # ตรวจสอบว่าวันที่คืนไม่เกิน 30 วันนับจากวันนี้
             max_due_date = today + timedelta(days=30)
             if due_date > max_due_date:
                 raise forms.ValidationError(f"วันที่ครบกำหนดคืนต้องไม่เกิน {max_due_date.strftime('%d/%m/%Y')} (สูงสุด 30 วัน)")
