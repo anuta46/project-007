@@ -5,174 +5,699 @@
 
 {% block content %}
 <style>
-    /* กำหนดรูปภาพพื้นหลังสำหรับส่วนเนื้อหาทั้งหมด */
+    /* Modern CSS Variables */
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --warning-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        --glass-bg: rgba(255, 255, 255, 0.1);
+        --glass-border: rgba(255, 255, 255, 0.2);
+        --shadow-light: 0 8px 32px rgba(31, 38, 135, 0.37);
+        --shadow-heavy: 0 15px 35px rgba(31, 38, 135, 0.5);
+    }
+
+    /* Enhanced Background */
     .dashboard-bg {
-        background-image: url('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBwgHBgkIBwgKCgkLDRYPDQwMDRsUFRAWIB0iIiAdHx8kKDQsJCYxJx8fLT0tMTU3Ojo6Iys/RD84QzQ5OjcBCgoKDQwNGg8PGjclHyU3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3N//AABEIAJQBCAMBIgACEQEDEQH/xAAaAAADAQEBAQAAAAAAAAAAAAAAAQIDBAcF/8QAHBABAQEBAQEBAQEAAAAAAAAAAAECESEDQTES/8QAGgEAAwEBAQEAAAAAAAAAAAAAAQIDAAQGBf/EABoRAQEBAQEBAQAAAAAAAAAAAAABAhExIQP/2gAMAwEAAhEDEQA/APNS6VLVegtfN4SbR1FvpLTSC1Nov9Lqdp4LS6VOFEGFSCBQ6ALJqNLqKWjE1KqSZikVwKkGRhmLkEi5FJC2jMaZgzFyKSJ2nIvMLMaZiuYnaeYvMEiopIn0c8B+FRjFYw+n9bbvjl+t9JumzGP1vrm3fWv016w1XH+ldWYz0C0HOq+pai0v9Iunba5pDtTaLUWp2nkO0u+laC2iZpXGjHFQocUgUJ0q1FrViqaNUk7TQgYhWpyK4UXDyAMzxpIMxcimYS08RpmelnK85VkTtVmLhSLlUkTpyKEBilYVCdVqMZ/TTl+mm/0rk+l9c+6riMvpWOr6vd9Zacer9dMKggQ7ttTaLU2ui1Hh2p6XR2F6fhgv04AKVExUPAM/5CgtMAtiNUWp6S0RSFEKY1RKoMKqRcicxpIrC08tcxOY0zFJE7VRplEi4pISqkXPPwoakIYtL0UKBMt1erxz/TRdU+Yz+mnN9K0+mnPvTl3XRiM91mrVS5b6tAAGF0dTaOp6paWRXSHSZlKkTFwYFOHChnKZdFqbQ6wqR0dLabgMpenGanIuRMaZh5CCNcxMnrTMUkJVZi5ExpPVZCVWVxMniv4eJ1UBdLpgV1NpFoKMRvTn+ml/Suf6aR3pXMZ7rDdXustOTWnRmJtACRzgEAgsi6BYzhHBgLionP8AVqQtEMitMAqadTaSmkBf0WiAJ5XmJi4MLVSetJESNIrISqzPWkiMrisJVxcTIuHhKr8H9LpHLxX8CemwcPrPd4rVYfTRdU0jP6ac30rT6Vz7rk3p0ZidVHRonParIARyFg04D4DgQIwZUVImKhoyor8SfTwnAVFTWtHh9IjL0QchRZg6cipCi4eQtONJEyNJFIS1WYuJi4pCVUPvEyimKfQQYDo6VK3jdEb05/pppvTm3Ut6UzEfTTHdVqstOXWl8xNoASOIqEqDAoABgScTFQsFcOFFKQpl+jpGY7UnSLWBkYMqRUiYuQ8LTjTMTIuKZJaqRpmIkaRWQlVIr8SfTkP8Lo6BYyo6TMfU7p2st6LaMiN1z7rTdc+q596XzE6rO09VNc1qsMEf4BlQyh0xCtCaC03DipExUGBVQ+kD9AyBN0DpAAJnBFQ0CnmNInK5FJCU40yiRpFJCVUXExSkJTgT0dEDPqejosYIWgxbrHel7rDek9VTMRvTDVXqstVy6q0hVPRaElDiomKgwKcFoTRtCQrQmmXplRUTDNAq+jqYDFV0ETMo4mKaMaoUXIpIWqyuJisqSEtXF5TFHhD7w+pOU/QPsCacrdYx0ujrdYdGr4VqN6C0ZE70w3pe9OfVc+9KZharO07UOe1WQGRwpji0meBRU06jQWjIAQJ0WkMA8LQADAYAYDXADRlRUAUhKvK8gKQlXDAPCj9MAWIAMAH4YAYm3xlowXXhow2x0QculompASODhhmVkqAYEUv0AlMAADP/2Q==');
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+        position: relative;
+        min-height: 100vh;
+        overflow-x: hidden;
+    }
+
+    .dashboard-bg::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: 
+            radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+        z-index: 1;
+    }
+
+    /* Floating Animation Elements */
+    .floating-shapes {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .shape {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+        animation: float 6s ease-in-out infinite;
+    }
+
+    .shape:nth-child(1) {
+        width: 100px;
+        height: 100px;
+        top: 20%;
+        left: 10%;
+        animation-delay: 0s;
+    }
+
+    .shape:nth-child(2) {
+        width: 150px;
+        height: 150px;
+        top: 60%;
+        right: 15%;
+        animation-delay: 2s;
+    }
+
+    .shape:nth-child(3) {
+        width: 80px;
+        height: 80px;
+        bottom: 30%;
+        left: 70%;
+        animation-delay: 4s;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-20px) rotate(180deg); }
+    }
+
+    /* Enhanced Container */
+    .dashboard-container {
+        position: relative;
+        z-index: 10;
+        backdrop-filter: blur(10px);
+    }
+
+    /* Modern Hero Section */
+    .hero-section {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 24px;
+        padding: 3rem;
+        margin-bottom: 3rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: var(--shadow-light);
+    }
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: conic-gradient(from 0deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        animation: rotate 10s linear infinite;
+    }
+
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .hero-title {
+        font-size: 3rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1rem;
+        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .hero-subtitle {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1.25rem;
+        font-weight: 500;
+    }
+
+    /* Enhanced Cards */
+    .stats-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 20px;
+        padding: 2rem;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .stats-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+        transform: scaleX(0);
+        transition: transform 0.4s ease;
+    }
+
+    .stats-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .stats-card:hover {
+        transform: translateY(-12px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        background: rgba(255, 255, 255, 0.98);
+    }
+
+    .card-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .card-icon::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: inherit;
+        filter: blur(8px);
+        opacity: 0.3;
+    }
+
+    .card-icon i {
+        position: relative;
+        z-index: 1;
+        color: white;
+    }
+
+    .card-number {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #1f2937;
+        margin: 0.5rem 0;
+        background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .card-label {
+        color: #6b7280;
+        font-weight: 500;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .card-subtitle {
+        color: #9ca3af;
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+    }
+
+    /* Color Themes for Cards */
+    .card-blue .card-icon { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .card-red .card-icon { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .card-yellow .card-icon { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .card-green .card-icon { background: linear-gradient(135deg, #10b981, #059669); }
+
+    /* Info Cards */
+    .info-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .info-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--primary-gradient);
+    }
+
+    .info-card-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f3f4f6;
+    }
+
+    .info-card-title i {
+        color: #667eea;
+    }
+
+    .detail-row {
+        display: flex;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f3f4f6;
+        transition: all 0.2s ease;
+    }
+
+    .detail-row:hover {
+        background: rgba(102, 126, 234, 0.05);
+        border-radius: 8px;
+        padding-left: 0.5rem;
+        margin-left: -0.5rem;
+        margin-right: -0.5rem;
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: #4b5563;
+        min-width: 140px;
+    }
+
+    .detail-value {
+        color: #1f2937;
+        font-weight: 500;
+        flex: 1;
+    }
+
+    /* Enhanced Button */
+    .primary-btn {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        border: none;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .primary-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.6s;
+    }
+
+    .primary-btn:hover::before {
+        left: 100%;
+    }
+
+    .primary-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    /* Quick Links Section */
+    .quick-links-section {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .section-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .quick-link {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: all 0.3s ease;
+        color: white;
+        font-weight: 500;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .quick-link::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transition: left 0.6s;
+    }
+
+    .quick-link:hover::before {
+        left: 100%;
+    }
+
+    .quick-link:hover {
+        transform: translateY(-4px);
+        background: rgba(255, 255, 255, 0.25);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .quick-link i {
+        transition: transform 0.3s ease;
+    }
+
+    .quick-link:hover i {
+        transform: translateX(4px);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .hero-section {
+            padding: 2rem;
+        }
+        
+        .hero-title {
+            font-size: 2rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1rem;
+        }
+        
+        .stats-card {
+            padding: 1.5rem;
+        }
+        
+        .card-number {
+            font-size: 2rem;
+        }
+    }
+
+    /* Animation for cards */
+    .stats-card {
+        animation: fadeInUp 0.6s ease forwards;
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    .stats-card:nth-child(1) { animation-delay: 0.1s; }
+    .stats-card:nth-child(2) { animation-delay: 0.2s; }
+    .stats-card:nth-child(3) { animation-delay: 0.3s; }
+    .stats-card:nth-child(4) { animation-delay: 0.4s; }
+
+    @keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Info cards animation */
+    .info-card {
+        animation: fadeInUp 0.6s ease forwards;
+        animation-delay: 0.5s;
+        opacity: 0;
+        transform: translateY(30px);
     }
 </style>
 
-<!-- ใช้ div ใหม่นี้เพื่อครอบเนื้อหาทั้งหมด และเพิ่มคลาสพื้นหลังที่กำหนดไว้ด้านบน -->
-<div class="dashboard-bg min-h-screen">
-    <div class="max-w-10xl mx-auto py-10 px-4">
-        <!-- Hero / Header -->
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-1000 text-white p-8 md:p-10 mb-8">
-            <div class="absolute inset-0 z-0">
-                <img src="https://thumb.photo-ac.com/9d/9de00fad29c78f1c71cf197aa5cf2b69_t.jpeg" alt="Background image" class="w-full h-full object-cover opacity-30">
-            </div>
-            <div class="relative z-10">
-                <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">
+<!-- Floating Background Shapes -->
+<div class="floating-shapes">
+    <div class="shape"></div>
+    <div class="shape"></div>
+    <div class="shape"></div>
+</div>
+
+<!-- Main Dashboard Content -->
+<div class="dashboard-bg">
+    <div class="dashboard-container max-w-7xl mx-auto py-8 px-4">
+        
+        <!-- Enhanced Hero Section -->
+        <div class="hero-section">
+            <div class="hero-content">
+                <h1 class="hero-title">
                     สวัสดี, ผู้ดูแลระบบ 👋
                 </h1>
-                <p class="mt-2 text-white/90 text-base md:text-lg">
+                <p class="hero-subtitle">
                     ภาพรวมและการจัดการระบบยืม-คืน สำหรับองค์กร {{ organization.name }}
                 </p>
             </div>
-            <div class="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-white/10 blur-2xl"></div>
-            <div class="absolute -left-10 -bottom-10 w-40 h-40 rounded-full bg-white/10 blur-xl"></div>
         </div>
 
-        <!-- Overview Cards -->
-        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-            {# Card 1: รายการยืม-คืน #}
-            <a href="{% url 'loan_history_admin_view' %}" class="block bg-white rounded-xl shadow-md p-6 transform transition duration-300 hover:scale-105 hover:shadow-lg border border-blue-200">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="text-blue-600 text-3xl">
-                        <i class="fas fa-exchange-alt"></i>
-                    </div>
-                    <span class="text-gray-500 text-sm">รายการยืม-คืน</span>
+        <!-- Enhanced Stats Cards -->
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            
+            <!-- Card 1: รายการยืม-คืน -->
+            <a href="{% url 'loan_history_admin_view' %}" class="stats-card card-blue">
+                <div class="card-icon">
+                    <i class="fas fa-exchange-alt"></i>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-900">{{ active_loans.count | default:0 }} / {{ pending_loan_requests | default:0 }}</h3>
-                <p class="text-gray-600 text-sm mt-1">กำลังดำเนินการ / รอดำเนินการ</p>
+                <div class="card-label">รายการยืม-คืน</div>
+                <div class="card-number">{{ active_loans.count | default:0 }} / {{ pending_loan_requests | default:0 }}</div>
+                <div class="card-subtitle">กำลังดำเนินการ / รอดำเนินการ</div>
             </a>
 
-            {# Card 2: รายการค้างคืน (สมมติว่าคุณมีฟิลด์ overdue ใน Loan model และได้คำนวณมาใน view) #}
-            {# ถ้ายังไม่มีการคำนวณ overdue ใน view ต้องเพิ่มใน users/views.py #}
-            <a href="{% url 'pending_loans_view' %}" class="block bg-white rounded-xl shadow-md p-6 transform transition duration-300 hover:scale-105 hover:shadow-lg border border-red-200">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="text-red-600 text-3xl">
-                        <i class="fas fa-bell"></i>
-                    </div>
-                    <span class="text-gray-500 text-sm">คำขอยืมที่รอดำเนินการ</span>
+            <!-- Card 2: คำขอยืมที่รอดำเนินการ -->
+            <a href="{% url 'pending_loans_view' %}" class="stats-card card-red">
+                <div class="card-icon">
+                    <i class="fas fa-bell"></i>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-900">{{ pending_loan_requests | default:0 }}</h3>
-                <p class="text-gray-600 text-sm mt-1">ทั้งหมด</p>
+                <div class="card-label">คำขอยืมที่รอดำเนินการ</div>
+                <div class="card-number">{{ pending_loan_requests | default:0 }}</div>
+                <div class="card-subtitle">ทั้งหมด</div>
             </a>
 
-            {# Card 3: สมาชิกที่ใช้งาน #}
-            <a href="{% url 'manage_organization_users' %}" class="block bg-white rounded-xl shadow-md p-6 transform transition duration-300 hover:scale-105 hover:shadow-lg border border-yellow-200">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="text-yellow-600 text-3xl">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <span class="text-gray-500 text-sm">สมาชิกที่ใช้งาน</span>
+            <!-- Card 3: สมาชิกที่ใช้งาน -->
+            <a href="{% url 'manage_organization_users' %}" class="stats-card card-yellow">
+                <div class="card-icon">
+                    <i class="fas fa-users"></i>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-900">{{ active_users_count | default:0 }}</h3>
-                <p class="text-gray-600 text-sm mt-1">ทั้งหมด</p>
+                <div class="card-label">สมาชิกที่ใช้งาน</div>
+                <div class="card-number">{{ active_users_count | default:0 }}</div>
+                <div class="card-subtitle">ทั้งหมด</div>
             </a>
 
-            {# Card 4: สิ่งของที่ใช้งาน #}
-            <a href="{% url 'item_overview' %}" class="block bg-white rounded-xl shadow-md p-6 transform transition duration-300 hover:scale-105 hover:shadow-lg border border-green-200">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="text-green-600 text-3xl">
-                        <i class="fas fa-boxes-stacked"></i>
-                    </div>
-                    <span class="text-gray-500 text-sm">อุปกรณ์ที่พร้อมให้ยืม</span>
+            <!-- Card 4: อุปกรณ์ที่พร้อมให้ยืม -->
+            <a href="{% url 'item_overview' %}" class="stats-card card-green">
+                <div class="card-icon">
+                    <i class="fas fa-boxes-stacked"></i>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-900">{{ available_assets_count | default:0 }} / {{ total_assets | default:0 }}</h3>
-                <p class="text-gray-600 text-sm mt-1">พร้อมยืม / ทั้งหมด</p>
+                <div class="card-label">อุปกรณ์ที่พร้อมให้ยืม</div>
+                <div class="card-number">{{ available_assets_count | default:0 }} / {{ total_assets | default:0 }}</div>
+                <div class="card-subtitle">พร้อมยืม / ทั้งหมด</div>
             </a>
+            
         </section>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Information Cards -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            
             <!-- รายละเอียดองค์กร -->
-            <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-x-2 border-b-2 pb-2 border-gray-300">
-                    <i class="fas fa-building text-gray-500"></i> รายละเอียดองค์กร
+            <div class="info-card">
+                <h2 class="info-card-title">
+                    <i class="fas fa-building"></i>
+                    รายละเอียดองค์กร
                 </h2>
-                <dl class="space-y-3">
-                    <div class="flex">
-                        <dt class="text-gray-600 font-medium w-32">ชื่อองค์กร:</dt>
-                        <dd class="text-gray-900 font-semibold flex-1">{{ organization.name }}</dd>
+                <div class="space-y-2">
+                    <div class="detail-row">
+                        <div class="detail-label">ชื่อองค์กร:</div>
+                        <div class="detail-value">{{ organization.name }}</div>
                     </div>
-                    <div class="flex">
-                        <dt class="text-gray-600 font-medium w-32">ที่อยู่:</dt>
-                        <dd class="text-gray-900 flex-1">{{ organization.address | default:"-" }}</dd>
+                    <div class="detail-row">
+                        <div class="detail-label">ที่อยู่:</div>
+                        <div class="detail-value">{{ organization.address | default:"-" }}</div>
                     </div>
-                    <div class="flex">
-                        <dt class="text-gray-600 font-medium w-32">ประเภทธุรกิจ:</dt>
-                        <dd class="text-gray-900 flex-1">{{ organization.business_type | default:"-" }}</dd>
+                    <div class="detail-row">
+                        <div class="detail-label">ประเภทธุรกิจ:</div>
+                        <div class="detail-value">{{ organization.business_type | default:"-" }}</div>
                     </div>
-                </dl>
+                </div>
                 <div class="mt-6">
-                    <a href="{% url 'generate_registration_link' %}" class="inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-5 rounded-lg shadow transition duration-300 transform hover:scale-105">
-                        <i class="fas fa-link mr-2"></i> สร้างลิงก์ลงทะเบียนผู้ใช้
+                    <a href="{% url 'generate_registration_link' %}" class="primary-btn">
+                        <i class="fas fa-link"></i>
+                        สร้างลิงก์ลงทะเบียนผู้ใช้
                     </a>
                 </div>
             </div>
 
             <!-- สรุปสถานะองค์กร -->
-            <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-                <h2 class="text-2xl font-bold text-green-800 mb-4 flex items-center gap-x-2 border-b-2 pb-2 border-green-300">
-                    <i class="fas fa-info-circle text-green-600"></i> สรุปสถานะองค์กร
+            <div class="info-card">
+                <h2 class="info-card-title">
+                    <i class="fas fa-chart-pie"></i>
+                    สรุปสถานะองค์กร
                 </h2>
-                <dl class="space-y-3">
-                    <div class="flex">
-                        <dt class="text-gray-600 font-medium w-40">ผู้ใช้ทั้งหมด:</dt>
-                        <dd class="text-gray-900 font-semibold flex-1">{{ active_users_count | default:0 }} <span class="text-gray-500">คน</span></dd>
+                <div class="space-y-2">
+                    <div class="detail-row">
+                        <div class="detail-label">ผู้ใช้ทั้งหมด:</div>
+                        <div class="detail-value">{{ active_users_count | default:0 }} <span class="text-gray-500">คน</span></div>
                     </div>
-                    <div class="flex">
-                        <dt class="text-gray-600 font-medium w-40">ประเภทสิ่งของทั้งหมด:</dt>
-                        <dd class="text-gray-900 font-semibold flex-1">{{ total_item_types | default:0 }} <span class="text-gray-500">ประเภท</span></dd>
+                    <div class="detail-row">
+                        <div class="detail-label">ประเภทสิ่งของทั้งหมด:</div>
+                        <div class="detail-value">{{ total_item_types | default:0 }} <span class="text-gray-500">ประเภท</span></div>
                     </div>
-                    <div class="flex">
-                        <dt class="text-gray-600 font-medium w-40">อุปกรณ์ทั้งหมด:</dt>
-                        <dd class="text-gray-900 font-semibold flex-1">{{ total_assets | default:0 }} <span class="text-gray-500">ชิ้น</span></dd>
+                    <div class="detail-row">
+                        <div class="detail-label">อุปกรณ์ทั้งหมด:</div>
+                        <div class="detail-value">{{ total_assets | default:0 }} <span class="text-gray-500">ชิ้น</span></div>
                     </div>
-                    <div class="flex">
-                        <dt class="text-gray-600 font-medium w-40">คำขอยืมที่รอดำเนินการ:</dt>
-                        <dd class="text-gray-900 font-semibold flex-1">{{ pending_loan_requests | default:0 }} <span class="text-gray-500">รายการ</span></dd>
+                    <div class="detail-row">
+                        <div class="detail-label">คำขอยืมที่รอดำเนินการ:</div>
+                        <div class="detail-value">{{ pending_loan_requests | default:0 }} <span class="text-gray-500">รายการ</span></div>
                     </div>
-                    <div class="flex">
-                        <dt class="text-gray-600 font-medium w-40">รายการยืมที่กำลังดำเนินการ:</dt>
-                        <dd class="text-gray-900 font-semibold flex-1">{{ active_loans.count | default:0 }} <span class="text-gray-500">รายการ</span></dd>
+                    <div class="detail-row">
+                        <div class="detail-label">รายการยืมที่กำลังดำเนินการ:</div>
+                        <div class="detail-value">{{ active_loans.count | default:0 }} <span class="text-gray-500">รายการ</span></div>
                     </div>
-                </dl>
+                </div>
             </div>
+            
         </div>
 
-        <!-- ส่วนตาราง (ถ้าต้องการแสดงข้อมูลเพิ่มเติม) -->
-        <hr class="my-10 border-gray-300">
-        <section>
-        <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-x-2">
-    <i class="fas fa-list-alt text-white"></i> ลิงก์ด่วนสำหรับการจัดการ
-</h2>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <a href="{% url 'item_overview' %}" class="bg-purple-100 text-purple-800 p-4 rounded-lg shadow-sm border border-purple-300 flex items-center justify-between transition duration-300 hover:bg-purple-200">
-                    <span class="font-medium">ดูและจัดการรายการสิ่งของทั้งหมด</span>
+        <!-- Enhanced Quick Links -->
+        <section class="quick-links-section">
+            <h2 class="section-title">
+                <i class="fas fa-bolt"></i>
+                ลิงก์ด่วนสำหรับการจัดการ
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <a href="{% url 'item_overview' %}" class="quick-link">
+                    <span>ดูและจัดการรายการสิ่งของทั้งหมด</span>
                     <i class="fas fa-arrow-right"></i>
                 </a>
-                <a href="{% url 'pending_loans_view' %}" class="bg-yellow-100 text-yellow-800 p-4 rounded-lg shadow-sm border border-yellow-300 flex items-center justify-between transition duration-300 hover:bg-yellow-200">
-                    <span class="font-medium">ตรวจสอบคำขอยืมที่รอดำเนินการ</span>
+                
+                <a href="{% url 'pending_loans_view' %}" class="quick-link">
+                    <span>ตรวจสอบคำขอยืมที่รอดำเนินการ</span>
                     <i class="fas fa-arrow-right"></i>
                 </a>
-                <a href="{% url 'active_loans_view' %}" class="bg-blue-100 text-blue-800 p-4 rounded-lg shadow-sm border border-blue-300 flex items-center justify-between transition duration-300 hover:bg-blue-200">
-                    <span class="font-medium">ดูรายการยืมที่กำลังดำเนินการ</span>
+                
+                <a href="{% url 'active_loans_view' %}" class="quick-link">
+                    <span>ดูรายการยืมที่กำลังดำเนินการ</span>
                     <i class="fas fa-arrow-right"></i>
                 </a>
-                <a href="{% url 'loan_history_admin_view' %}" class="bg-gray-100 text-gray-800 p-4 rounded-lg shadow-sm border border-gray-300 flex items-center justify-between transition duration-300 hover:bg-gray-200">
-                    <span class="font-medium">ดูประวัติการยืมทั้งหมด</span>
+                
+                <a href="{% url 'loan_history_admin_view' %}" class="quick-link">
+                    <span>ดูประวัติการยืมทั้งหมด</span>
                     <i class="fas fa-arrow-right"></i>
                 </a>
-                <a href="{% url 'manage_organization_users' %}" class="bg-orange-100 text-orange-800 p-4 rounded-lg shadow-sm border border-orange-300 flex items-center justify-between transition duration-300 hover:bg-orange-200">
-                    <span class="font-medium">จัดการผู้ใช้ในองค์กร</span>
+                
+                <a href="{% url 'manage_organization_users' %}" class="quick-link">
+                    <span>จัดการผู้ใช้ในองค์กร</span>
                     <i class="fas fa-arrow-right"></i>
                 </a>
             </div>
         </section>
+        
     </div>
 </div>
+
+<script>
+// Add smooth scrolling and enhanced interactions
+document.addEventListener('DOMContentLoaded', function() {
+    // Add loading animation
+    const cards = document.querySelectorAll('.stats-card');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.animationPlayState = 'running';
+            }
+        });
+    });
+
+    cards.forEach(card => {
+        observer.observe(card);
+        
+        // Add click ripple effect
+        card.addEventListener('click', function(e) {
+            const ripple = document.createElement('div');
+            const rect = this.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+            ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+            ripple.classList.add('ripple');
+            
+            this.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+    });
+
+    // Add parallax effect to floating shapes
+    const shapes = document.querySelectorAll('.shape');
+    let scrollY = 0;
+
+    window.addEventListener('scroll', () => {
+        scrollY = window.pageYOffset;
+        
+        shapes.forEach((shape, index) => {
+            const speed = (index + 1) * 0.5;
+            shape.style.transform = `translateY(${scrollY * speed}px) rotate(${scrollY * 0.1}deg)`;
+        });
+    });
+});
+
+// Add CSS for ripple effect
+const style = document.createElement('style');
+style.textContent = `
+    .ripple {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(0);
+        animation: rippleAnimation 0.6s linear;
+        pointer-events: none;
+    }
+    
+    @keyframes rippleAnimation {
+        to {
+            transform: scale(2);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
+</script>
+
 {% endblock content %}

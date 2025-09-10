@@ -5,183 +5,464 @@
 
 {% block content %}
 
+<style>
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+  
+  @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes shimmer {
+    0% { background-position: -200px 0; }
+    100% { background-position: calc(200px + 100%) 0; }
+  }
+  
+  .float-animation {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  .slide-in {
+    animation: slideInUp 0.8s ease-out forwards;
+  }
+  
+  .shimmer-effect {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.2) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    background-size: 200px 100%;
+    animation: shimmer 2s infinite;
+  }
+  
+  .glass-morphism {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .gradient-border {
+    background: linear-gradient(white, white) padding-box,
+                linear-gradient(135deg, #667eea, #764ba2) border-box;
+    border: 2px solid transparent;
+  }
+  
+  .hover-glow:hover {
+    box-shadow: 0 20px 40px rgba(99, 102, 241, 0.4);
+  }
+  
+  .card-hover-effect {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .card-hover-effect:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+  }
+  
+  .status-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+</style>
 
-<div class="max-w-7xl mx-auto my-10 px-4">
-    <!-- Hero / Header -->
-    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-500 text-white p-8 md:p-10 mb-8">
-        <div class="relative z-10">
-            <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">
-                สวัสดี, {{ user.username }} 👋
-            </h1>
-            <p class="mt-2 text-white/90 text-base md:text-lg">
-                สำรวจอุปกรณ์ที่พร้อมให้ยืม จัดการรายการของคุณได้ในที่เดียว
-            </p>
+<div class="max-w-7xl mx-auto my-12 px-4 lg:px-6">
+    <!-- Enhanced Hero Section -->
+    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white p-8 md:p-12 mb-10 shadow-2xl">
+        <!-- Background Elements -->
+        <div class="absolute inset-0">
+            <div class="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-white/10 blur-3xl float-animation"></div>
+            <div class="absolute -left-16 -bottom-16 w-64 h-64 rounded-full bg-white/10 blur-2xl float-animation" style="animation-delay: 1s;"></div>
+            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-white/5 blur-3xl"></div>
         </div>
-        <div class="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-white/10 blur-2xl"></div>
-        <div class="absolute -left-10 -bottom-10 w-40 h-40 rounded-full bg-white/10 blur-xl"></div>
-    </div>
+        
+        <!-- Decorative Pattern -->
+        <div class="absolute inset-0 opacity-30">
+            <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <defs>
+                    <pattern id="hero-pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                        <circle cx="10" cy="10" r="1.5" fill="currentColor" opacity="0.3"/>
+                    </pattern>
+                </defs>
+                <rect width="100" height="100" fill="url(#hero-pattern)"/>
+            </svg>
+        </div>
 
-    <!-- Toolbar: ค้นหา + กรอง -->
-    <form method="get" class="mb-8">
-        <div class="bg-white/80 backdrop-blur rounded-xl border border-gray-200/80 shadow-sm p-4 md:p-5">
-            <div class="grid gap-3 md:gap-4 grid-cols-1 md:grid-cols-12">
-                <div class="md:col-span-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">ค้นหาชื่ออุปกรณ์</label>
-                    <div class="relative">
-                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                        <input type="text" name="q" value="{{ current_query|default:'' }}" placeholder="เช่น Laptop, Router, Projector, SN, ID"
-                               class="w-full pl-10 pr-3 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+        <div class="relative z-10 slide-in">
+            <div class="flex items-start justify-between">
+                <div>
+                    <div class="inline-flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                            <i class="fas fa-user-circle text-2xl"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-3xl md:text-5xl font-black tracking-tight bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+                                สวัสดี, {{ user.username }}
+                            </h1>
+                            <div class="flex items-center gap-2 mt-1">
+                                <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                                <span class="text-green-200 text-sm font-medium">ออนไลน์</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="mt-4 text-white/90 text-lg md:text-xl max-w-2xl leading-relaxed">
+                        ยินดีต้อนรับสู่ระบบยืม-คืนอุปกรณ์ 🚀<br>
+                        <span class="text-blue-200">สำรวจ จัดการ และยืมอุปกรณ์ได้อย่างง่ายดาย</span>
+                    </p>
+                </div>
+                
+                <!-- Floating Icon -->
+                <div class="hidden lg:block">
+                    <div class="w-32 h-32 bg-white/10 rounded-3xl flex items-center justify-center backdrop-blur-sm float-animation">
+                        <i class="fas fa-handshake text-5xl text-white/80"></i>
                     </div>
                 </div>
-                <div class="md:col-span-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">สภาพ</label>
-                    <select name="condition"
-                            class="w-full py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                        <option value="">ทั้งหมด</option>
-                        {# อัปเดตตัวเลือกสภาพให้ตรงกับโมเดล #}
-                        <option value="excellent" {% if current_condition == 'excellent' %}selected{% endif %}>ดีเยี่ยม</option>
-                        <option value="good" {% if current_condition == 'good' %}selected{% endif %}>ดี</option>
-                        <option value="fair" {% if current_condition == 'fair' %}selected{% endif %}>พอใช้</option>
-                        <option value="poor" {% if current_condition == 'poor' %}selected{% endif %}>ชำรุด</option>
-                    </select>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="glass-morphism rounded-2xl p-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-box text-emerald-300"></i>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold">{{ available_assets|length }}</div>
+                            <div class="text-sm text-white/80">อุปกรณ์พร้อมใช้</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="md:col-span-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">สถานะ</label>
-                    <select name="status"
-                            class="w-full py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                        <option value="">ทั้งหมด</option>
-                        <option value="available" {% if current_status == 'available' %}selected{% endif %}>พร้อมให้ยืม</option>
-                        <option value="unavailable" {% if current_status == 'unavailable' %}selected{% endif %}>ไม่พร้อม</option>
-                    </select>
+                
+                <div class="glass-morphism rounded-2xl p-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-clock text-blue-300"></i>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold">24/7</div>
+                            <div class="text-sm text-white/80">พร้อมให้บริการ</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-morphism rounded-2xl p-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-purple-500/20 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-shield-check text-purple-300"></i>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold">100%</div>
+                            <div class="text-sm text-white/80">ความปลอดภัย</div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="mt-4 flex gap-3 justify-end">
-                <a href="." class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">
-                    <i class="fas fa-sync-alt"></i> ล้างตัวกรอง
-                </a>
-                <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow">
-                    <i class="fas fa-filter"></i> ใช้ตัวกรอง
-                </button>
+        </div>
+    </div>
+
+    <!-- Enhanced Search & Filter Section -->
+    <form method="get" class="mb-10 slide-in" style="animation-delay: 0.2s;">
+        <div class="bg-white/90 backdrop-blur-xl rounded-3xl border border-white/50 shadow-xl p-6 md:p-8 hover-glow transition-all duration-500">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-search text-white"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800">ค้นหาและกรองอุปกรณ์</h3>
+            </div>
+            
+            <div class="grid gap-6 grid-cols-1 lg:grid-cols-12">
+                <div class="lg:col-span-6">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">ค้นหาชื่ออุปกรณ์</label>
+                    <div class="relative group">
+                        <div class="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl blur opacity-25 group-hover:opacity-40 transition duration-300"></div>
+                        <div class="relative">
+                            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500"></i>
+                            <input type="text" name="q" value="{{ current_query|default:'' }}" 
+                                   placeholder="เช่น Laptop, Router, Projector, SN, ID"
+                                   class="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-gray-200 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all bg-white/80 backdrop-blur-sm">
+                        </div>
+                    </div>
+                </div>
+                
+                {% comment %} <div class="lg:col-span-3">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">สภาพอุปกรณ์</label>
+                    <div class="relative">
+                        <select name="condition"
+                                class="w-full py-4 px-4 rounded-xl border-2 border-gray-200 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all bg-white/80 backdrop-blur-sm appearance-none cursor-pointer">
+                            <option value="">🔍 ทั้งหมด</option>
+                            <option value="excellent" {% if current_condition == 'excellent' %}selected{% endif %}>⭐ ดีเยี่ยม</option>
+                            <option value="good" {% if current_condition == 'good' %}selected{% endif %}>✅ ดี</option>
+                            <option value="fair" {% if current_condition == 'fair' %}selected{% endif %}>⚠️ พอใช้</option>
+                            <option value="poor" {% if current_condition == 'poor' %}selected{% endif %}>❌ ชำรุด</option>
+                        </select>
+                        <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                    </div>
+                </div>
+                
+                <div class="lg:col-span-3">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">สถานะการใช้งาน</label>
+                    <div class="relative">
+                        <select name="status"
+                                class="w-full py-4 px-4 rounded-xl border-2 border-gray-200 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all bg-white/80 backdrop-blur-sm appearance-none cursor-pointer">
+                            <option value="">🔍 ทั้งหมด</option>
+                            <option value="available" {% if current_status == 'available' %}selected{% endif %}>✅ พร้อมให้ยืม</option>
+                            <option value="unavailable" {% if current_status == 'unavailable' %}selected{% endif %}>❌ ไม่พร้อม</option>
+                        </select>
+                        <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                    </div>
+                </div>
+            </div> {% endcomment %}
+            
+            {% comment %} <div class="mt-8 flex flex-wrap gap-4 justify-between items-center">
+                <div class="text-sm text-gray-600 flex items-center gap-2">
+                    <i class="fas fa-info-circle text-indigo-500"></i>
+                    <span>ใช้ตัวกรองเพื่อค้นหาอุปกรณ์ที่ต้องการได้อย่างรวดเร็ว</span>
+                </div> {% endcomment %}
+                
+                <div class="flex gap-3">
+                    <a href="." class="group inline-flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50 transition-all duration-300">
+                        <i class="fas fa-sync-alt group-hover:rotate-180 transition-transform duration-500"></i> 
+                        <span class="font-medium">ล้างตัวกรอง</span>
+                    </a>
+                    <button type="submit" class="group inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                        <i class="fas fa-filter group-hover:scale-110 transition-transform"></i> 
+                        <span class="font-semibold">ใช้ตัวกรอง</span>
+                    </button>
+                </div>
             </div>
         </div>
     </form>
 
-    <!-- รายการอุปกรณ์ -->
-    <section>
-        <div class="flex items-center justify-between mb-5">
-            <h2 class="text-2xl md:text-3xl font-bold text-gray-900">อุปกรณ์ที่พร้อมให้ยืม</h2>
+    <!-- Enhanced Equipment Section -->
+    <section class="slide-in" style="animation-delay: 0.4s;">
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h2 class="text-3xl md:text-4xl font-black text-gray-900 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                    อุปกรณ์ที่พร้อมให้ยืม
+                </h2>
+                <p class="text-gray-600 mt-2">เลือกอุปกรณ์ที่คุณต้องการใช้งาน</p>
+            </div>
             {% if available_assets %}
-                <span class="inline-flex items-center text-sm px-3 py-1 rounded-full bg-gray-100 text-gray-700 border border-gray-200">
-                    ทั้งหมด {{ available_assets|length }} รายการ
-                </span>
+                <div class="inline-flex items-center gap-2 text-sm px-4 py-2 rounded-full bg-gradient-to-r from-emerald-100 to-blue-100 text-gray-800 border border-emerald-200 shadow-sm">
+                    <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                    <span class="font-semibold">{{ available_assets|length }} รายการพร้อมใช้</span>
+                </div>
             {% endif %}
         </div>
 
         {% if available_assets %}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-8">
             {% for asset in available_assets %}
-            <div class="group relative bg-white rounded-2xl border border-gray-200 hover:border-indigo-300 shadow-sm hover:shadow-lg transition">
-                <!-- รูป -->
-                <div class="aspect-[4/3] overflow-hidden rounded-t-2xl bg-gray-100">
+            <div class="group relative bg-white rounded-3xl border-2 border-gray-100 hover:border-indigo-300 shadow-lg hover:shadow-2xl card-hover-effect overflow-hidden">
+                <!-- Enhanced Image Section -->
+                <div class="relative aspect-[4/3] overflow-hidden rounded-t-3xl bg-gradient-to-br from-gray-50 to-gray-100">
                     {% if asset.item.image %}
                         <img src="{{ asset.item.image.url }}"
                              alt="{{ asset.item.name }}"
-                             class="w-full h-full object-cover group-hover:scale-105 transition">
+                             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
                     {% else %}
-                        <div class="w-full h-full grid place-items-center text-gray-400">
-                            <i class="fas fa-image text-4xl"></i>
-                            <span class="mt-1 text-sm">ไม่มีรูปภาพ</span>
+                        <div class="w-full h-full grid place-items-center text-gray-400 bg-gradient-to-br from-slate-50 to-slate-100">
+                            <div class="text-center">
+                                <i class="fas fa-image text-5xl mb-3 text-gray-300"></i>
+                                <span class="text-sm font-medium text-gray-500">ไม่มีรูปภาพ</span>
+                            </div>
                         </div>
                     {% endif %}
-                </div>
-
-                <!-- เนื้อหา -->
-                <div class="p-5">
-                    <div class="flex items-start justify-between gap-3">
-                        <h3 class="text-lg font-semibold text-gray-900 leading-snug">
-                            {{ asset.item.name }}
-                        </h3>
-
-                        {# Badge สถานะ #}
+                    
+                    <!-- Overlay Gradient -->
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    
+                    <!-- Status Badge -->
+                    <div class="absolute top-4 right-4">
                         {% if asset.status == 'available' %}
-                            <span class="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-green-100 text-green-800 border border-green-200">
+                            <span class="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-full bg-emerald-500/90 text-white backdrop-blur-sm border border-emerald-400/50 shadow-lg status-pulse">
                                 <i class="fas fa-check-circle"></i> พร้อมยืม
                             </span>
                         {% else %}
-                            <span class="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-red-100 text-red-800 border border-red-200">
+                            <span class="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-full bg-red-500/90 text-white backdrop-blur-sm border border-red-400/50 shadow-lg">
                                 <i class="fas fa-times-circle"></i> {{ asset.get_status_display }}
                             </span>
                         {% endif %}
                     </div>
+                </div>
 
-                    <p class="mt-2 text-sm text-gray-600">
-                        {{ asset.item.description|default:"ไม่มีรายละเอียด" }}
+                <!-- Enhanced Content Section -->
+                <div class="p-6">
+                    <div class="flex items-start justify-between gap-3 mb-4">
+                        <h3 class="text-xl font-bold text-gray-900 leading-tight group-hover:text-indigo-600 transition-colors">
+                            {{ asset.item.name }}
+                        </h3>
+                        <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 group-hover:bg-indigo-200 transition-colors">
+                            <i class="fas fa-cube text-sm"></i>
+                        </div>
+                    </div>
+
+                    <p class="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-2">
+                        {{ asset.item.description|default:"ไม่มีรายละเอียดเพิ่มเติม" }}
                     </p>
 
-                    <dl class="mt-4 grid grid-cols-2 gap-3 text-sm">
-                        <div>
-                            <dt class="text-gray-500">รหัสประจำเครื่อง</dt>
-                            <dd class="font-medium text-gray-800">{{ asset.serial_number|default:"-" }}</dd>
+                    <!-- Enhanced Details Grid -->
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-gray-50/80 rounded-xl p-3">
+                            <dt class="text-xs font-medium text-gray-500 mb-1">รหัสประจำเครื่อง</dt>
+                            <dd class="font-bold text-gray-800 text-sm truncate">{{ asset.serial_number|default:"-" }}</dd>
                         </div>
-                        <div>
-                            <dt class="text-gray-500">รหัสอุปกรณ์</dt>
-                            <dd class="font-medium text-gray-800">{{ asset.device_id|default:"-" }}</dd>
+                        <div class="bg-gray-50/80 rounded-xl p-3">
+                            <dt class="text-xs font-medium text-gray-500 mb-1">รหัสอุปกรณ์</dt>
+                            <dd class="font-bold text-gray-800 text-sm truncate">{{ asset.device_id|default:"-" }}</dd>
                         </div>
-                        <div>
-                            <dt class="text-gray-500">สถานที่จัดเก็บ</dt>
-                            <dd class="font-medium text-gray-800">{{ asset.location|default:"-" }}</dd>
+                        <div class="bg-gray-50/80 rounded-xl p-3">
+                            <dt class="text-xs font-medium text-gray-500 mb-1">สถานที่จัดเก็บ</dt>
+                            <dd class="font-bold text-gray-800 text-sm truncate">{{ asset.location|default:"-" }}</dd>
                         </div>
-                        <div>
-                            <dt class="text-gray-500">สภาพ</dt>
-                            <dd class="font-medium text-gray-800">{{ asset.get_condition_display }}</dd>
-                        </div>
-                    </dl>
+                        {% comment %} <div class="bg-gray-50/80 rounded-xl p-3">
+                            <dt class="text-xs font-medium text-gray-500 mb-1">สภาพ</dt>
+                            <dd class="font-bold text-gray-800 text-sm">{{ asset.get_condition_display }}</dd>
+                        </div> {% endcomment %}
+                    </div>
 
-                    <div class="mt-5 flex items-center justify-between">
-                        <div class="text-xs text-gray-500">
-                            ID: {{ asset.id }}
-                        </div>
+                    <!-- Enhanced Footer -->
+                    {% comment %} <div class="flex items-center justify-between">
+                        <div class="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-lg">
+                            <i class="fas fa-tag mr-1"></i>ID: {{ asset.id }}
+                        </div> {% endcomment %}
 
                         {% if asset.status == 'available' %}
                             <a href="{% url 'borrow_item' asset.id %}"
-                               class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg shadow">
-                                <i class="fas fa-handshake"></i> ยืมอุปกรณ์
+                               class="group/btn inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3 px-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                                <i class="fas fa-handshake group-hover/btn:rotate-12 transition-transform"></i> 
+                                <span>ยืมอุปกรณ์</span>
                             </a>
                         {% else %}
-                            <button class="inline-flex items-center gap-2 bg-gray-300 text-gray-600 font-medium py-2 px-4 rounded-lg cursor-not-allowed">
+                            <button class="inline-flex items-center gap-2 bg-gray-200 text-gray-500 font-semibold py-3 px-5 rounded-xl cursor-not-allowed opacity-75">
                                 <i class="fas fa-ban"></i> ไม่พร้อมให้ยืม
                             </button>
                         {% endif %}
                     </div>
                 </div>
 
-                {# เส้นไฮไลต์เมื่อโฮเวอร์ #}
-                <div class="pointer-events-none absolute inset-x-0 -bottom-px h-px bg-gradient-to-r from-transparent via-indigo-300 to-transparent opacity-0 group-hover:opacity-100 transition"></div>
+                <!-- Enhanced Hover Effect Border -->
+                <div class="pointer-events-none absolute inset-0 rounded-3xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    <div class="w-full h-full bg-white rounded-3xl"></div>
+                </div>
             </div>
             {% endfor %}
         </div>
         {% else %}
-            <!-- Empty State -->
-            <div class="bg-white rounded-2xl border border-dashed border-gray-300 p-10 text-center">
-                <div class="mx-auto w-14 h-14 rounded-full bg-gray-100 grid place-items-center text-gray-500">
-                    <i class="fas fa-box-open text-xl"></i>
+            <!-- Enhanced Empty State -->
+            <div class="relative bg-gradient-to-br from-white via-blue-50 to-indigo-50 rounded-3xl border-2 border-dashed border-gray-300 hover:border-indigo-400 p-12 text-center transition-all duration-500 hover:shadow-xl">
+                <!-- Background Pattern -->
+                <div class="absolute inset-0 opacity-10">
+                    <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                        <defs>
+                            <pattern id="empty-pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                                <circle cx="10" cy="10" r="1" fill="currentColor"/>
+                            </pattern>
+                        </defs>
+                        <rect width="100" height="100" fill="url(#empty-pattern)"/>
+                    </svg>
                 </div>
-                <h3 class="mt-4 text-lg font-semibold text-gray-900">ยังไม่มีอุปกรณ์ที่พร้อมให้ยืม</h3>
-                <p class="mt-1 text-gray-600">โปรดติดต่อผู้ดูแลระบบหรือกลับมาตรวจสอบอีกครั้ง</p>
-                <div class="mt-5">
-                    <a href="." class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">
-                        <i class="fas fa-rotate-right"></i> โหลดใหม่
-                    </a>
+                
+                <div class="relative z-10">
+                    <div class="mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-gray-400 mb-6">
+                        <i class="fas fa-box-open text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3">ยังไม่มีอุปกรณ์ที่พร้อมให้ยืม</h3>
+                    <p class="text-gray-600 text-lg mb-8 max-w-md mx-auto">
+                        ในขณะนี้ยังไม่มีอุปกรณ์ที่ตรงกับเงื่อนไขการค้นหาของคุณ
+                    </p>
+                    <div class="flex flex-wrap gap-4 justify-center">
+                        <a href="." class="inline-flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-gray-300 text-gray-700 hover:border-indigo-500 hover:text-indigo-600 transition-all duration-300 hover:shadow-md">
+                            <i class="fas fa-rotate-right"></i> โหลดข้อมูลใหม่
+                        </a>
+                        <button onclick="window.history.back()" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-300 hover:shadow-lg">
+                            <i class="fas fa-arrow-left"></i> กลับหน้าก่อนหน้า
+                        </button>
+                    </div>
                 </div>
             </div>
         {% endif %}
     </section>
 
-    <!-- ลิงก์อื่น ๆ -->
-    <section class="flex flex-wrap justify-center gap-3 mt-10">
-        <a href="{% url 'my_borrowed_items_history' %}" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 px-5 rounded-lg shadow">
-            <i class="fas fa-clock-rotate-left"></i> ประวัติการยืมของฉัน
+    <!-- Enhanced Action Links -->
+    {% comment %} <section class="flex flex-wrap justify-center gap-4 mt-12 slide-in" style="animation-delay: 0.6s;">
+        <a href="{% url 'my_borrowed_items_history' %}" 
+           class="group inline-flex items-center gap-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold py-4 px-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-rotate-1">
+            <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                <i class="fas fa-clock-rotate-left group-hover:rotate-12 transition-transform"></i>
+            </div> {% endcomment %}
+            {% comment %} <div>
+                <div class="text-lg">ประวัติการยืมของฉัน</div>
+                <div class="text-sm text-emerald-100">ตรวจสอบรายการที่เคยยืม</div>
+            </div> {% endcomment %}
         </a>
+        
+        <!-- Additional Quick Actions -->
+        {% comment %} <div class="hidden md:flex items-center gap-4">
+            <div class="w-px h-16 bg-gray-300"></div>
+            <div class="text-center">
+                <div class="text-2xl font-bold text-gray-800">{{ available_assets|length }}</div>
+                <div class="text-sm text-gray-600">อุปกรณ์ทั้งหมด</div>
+            </div>
+        </div> {% endcomment %}
     </section>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Enhanced scroll animations
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('slide-in');
+            }
+        });
+    }, observerOptions);
+    
+    // Observe all cards for animation
+    document.querySelectorAll('.card-hover-effect').forEach(card => {
+        observer.observe(card);
+    });
+    
+    // Enhanced search input focus effects
+    const searchInput = document.querySelector('input[name="q"]');
+    if (searchInput) {
+        searchInput.addEventListener('focus', function() {
+            this.parentElement.parentElement.classList.add('ring-4', 'ring-indigo-500/20');
+        });
+        
+        searchInput.addEventListener('blur', function() {
+            this.parentElement.parentElement.classList.remove('ring-4', 'ring-indigo-500/20');
+        });
+    }
+    
+    // Add loading states for buttons
+    document.querySelectorAll('a[href*="borrow_item"]').forEach(button => {
+        button.addEventListener('click', function() {
+            const icon = this.querySelector('i');
+            const text = this.querySelector('span');
+            
+            icon.className = 'fas fa-spinner fa-spin';
+            text.textContent = 'กำลังประมวลผล...';
+            this.classList.add('opacity-75', 'cursor-wait');
+        });
+    });
+});
+</script>
+
 {% endblock content %}

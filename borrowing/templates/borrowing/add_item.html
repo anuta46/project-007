@@ -10,7 +10,7 @@
     <p class="text-gray-600 mb-10 text-center text-lg md:text-xl max-w-3xl mx-auto leading-relaxed">
         กรอกข้อมูลเกี่ยวกับประเภทสิ่งของและรายละเอียดของอุปกรณ์แต่ละชิ้นที่พร้อมให้ยืมในองค์กรของคุณ
     </p>
-    
+
     <hr class="my-8 border-blue-200"> {# เพิ่มเส้นแบ่งที่ชัดเจนและสีสัน #}
 
     {# สำคัญ: เพิ่ม enctype="multipart/form-data" สำหรับการอัปโหลดไฟล์ #}
@@ -48,8 +48,14 @@
 
         {# ส่วนฟอร์มสำหรับ "อุปกรณ์แต่ละชิ้น" (AssetFormSet) #}
         <div class="p-8 bg-green-50 rounded-2xl shadow-lg border border-green-200"> {# กล่องข้อมูล Asset Formset #}
-            <h2 class="text-3xl font-bold text-green-800 mb-5 pb-3 border-b-2 border-green-300 flex items-center gap-x-3">
-                <i class="fas fa-box-usd text-green-600 text-3xl"></i> เพิ่มอุปกรณ์แต่ละชิ้น
+            <h2 class="text-3xl font-bold text-green-800 mb-5 pb-3 border-b-2 border-green-300 flex items-center justify-between gap-x-3">
+                <div class="flex items-center gap-x-3">
+                    <i class="fas fa-box-usd text-green-600 text-3xl"></i> เพิ่มอุปกรณ์แต่ละชิ้น
+                </div>
+                {# ตัวแสดงผลจำนวนอุปกรณ์ที่ถูกต้อง #}
+                <div id="asset-count-display" class="bg-gray-200 text-gray-700 text-sm font-medium px-4 py-2 rounded-full">
+                    อุปกรณ์: 0 ชิ้น
+                </div>
             </h2>
             <div id="asset-formset-container" class="space-y-6"> {# เพิ่ม space-y เพื่อระยะห่างระหว่างแต่ละ Asset Form #}
                 {{ asset_formset.management_form }} {# สำคัญ: Management form สำหรับ formset #}
@@ -91,7 +97,7 @@
                     </div>
                 {% endfor %}
             </div>
-            
+
             <button type="button" id="add-asset-form" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-full transition duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center text-lg mt-8">
                 <i class="fas fa-plus mr-3"></i> เพิ่มอุปกรณ์อีกชิ้น
             </button>
@@ -160,70 +166,75 @@
     document.addEventListener('DOMContentLoaded', function() {
         const addAssetButton = document.getElementById('add-asset-form');
         const assetFormsetContainer = document.getElementById('asset-formset-container');
-        const totalFormsInput = document.querySelector('input[name="asset-TOTAL_FORMS"]'); // เปลี่ยนชื่อตัวแปรเพื่อความชัดเจน
+        const totalFormsInput = document.querySelector('input[name="asset-TOTAL_FORMS"]');
+        const assetCountDisplay = document.getElementById('asset-count-display');
         
-        // Find the empty form template. It's usually the first form with __prefix__ in its name/id
+        let initialForms = document.querySelectorAll('.asset-form').length;
+        
+        // Function to update the displayed asset count
+        const updateAssetCount = () => {
+            const formCount = document.querySelectorAll('.asset-form').length;
+            assetCountDisplay.textContent = `อุปกรณ์: ${formCount} ชิ้น`;
+        };
+        
+        // Update the count on page load
+        updateAssetCount();
+        
+        // Find the empty form template.
         let formTemplate = document.querySelector('.asset-form');
         if (formTemplate) {
             formTemplate = formTemplate.cloneNode(true);
-            formTemplate.classList.add('hidden'); // Hide the template
-            formTemplate.id = 'empty-form'; // Give it a unique ID
-            formTemplate.innerHTML = formTemplate.innerHTML.replace(/form-field-(\d+)/g, 'form-field-__prefix__'); // Reset field IDs if they have numbers
-
+            formTemplate.classList.add('hidden');
+            formTemplate.id = 'empty-form';
+            formTemplate.innerHTML = formTemplate.innerHTML.replace(/form-field-(\d+)/g, 'form-field-__prefix__');
             formTemplate.querySelectorAll('input, select, textarea').forEach(input => {
-                input.value = ''; // Clear values in the template
-                // Clear any error messages from previous attempts if they somehow persist in the template
+                input.value = '';
                 input.classList.remove('border-red-500'); 
-                input.removeAttribute('id'); // Remove ID to prevent conflicts when cloning
+                input.removeAttribute('id');
             });
             formTemplate.querySelectorAll('.errorlist').forEach(errorList => errorList.innerHTML = '');
             const deleteCheckbox = formTemplate.querySelector('input[name$="-DELETE"]');
-            if (deleteCheckbox) deleteCheckbox.checked = false; // Uncheck DELETE checkbox
-            
-            // Remove the Asset ID paragraph if it exists in the template
+            if (deleteCheckbox) deleteCheckbox.checked = false;
             const assetIdParagraph = formTemplate.querySelector('p.absolute.top-4.right-6');
             if (assetIdParagraph) assetIdParagraph.remove();
-
-            assetFormsetContainer.appendChild(formTemplate); // Add the template to the container (hidden)
+            
+            assetFormsetContainer.appendChild(formTemplate);
         } else {
-             console.error("Form template not found. Dynamic form addition may not work.");
-             // Fallback: If no forms are rendered initially, you might need to create a basic template HTML here
+            console.error("Form template not found. Dynamic form addition may not work.");
         }
-       
+        
         if (addAssetButton && totalFormsInput && formTemplate) {
             addAssetButton.addEventListener('click', function() {
-                const currentForms = parseInt(totalFormsInput.value); // ใช้ totalFormsInput
-                const newForm = formTemplate.cloneNode(true); // Clone the hidden template
-                newForm.classList.remove('hidden'); // Make it visible
-                newForm.id = ''; // Remove the template ID from the new form
+                const currentForms = parseInt(totalFormsInput.value);
+                const newForm = formTemplate.cloneNode(true);
+                newForm.classList.remove('hidden');
+                newForm.id = '';
 
-                // Update form fields names/ids to be unique
                 newForm.innerHTML = newForm.innerHTML.replace(/__prefix__/g, currentForms);
                 
-                // Clear values in the new form (again, for good measure)
                 newForm.querySelectorAll('input, select, textarea').forEach(input => {
                     input.value = '';
                     input.classList.remove('border-red-500'); 
                 });
                 newForm.querySelectorAll('.errorlist').forEach(errorList => errorList.innerHTML = '');
                 const newDeleteCheckbox = newForm.querySelector('input[name$="-DELETE"]');
-                if (newDeleteCheckbox) newDeleteCheckbox.checked = false; // Uncheck DELETE checkbox for new form
+                if (newDeleteCheckbox) newDeleteCheckbox.checked = false;
 
-                // Update heading for new form
                 const formHeading = newForm.querySelector('h3');
                 if (formHeading) {
                     formHeading.textContent = `รายละเอียดอุปกรณ์ #${currentForms + 1}`;
                 }
 
-
                 assetFormsetContainer.appendChild(newForm);
-                totalFormsInput.value = currentForms + 1; // อัปเดตค่า totalFormsInput
+                totalFormsInput.value = currentForms + 1;
+                
+                // Update the count after adding a new form
+                updateAssetCount();
 
-                // Scroll to the new form (optional)
                 newForm.scrollIntoView({ behavior: 'smooth', block: 'end' });
             });
         } else {
-             console.error("Required elements for dynamic form addition not found.");
+            console.error("Required elements for dynamic form addition not found.");
         }
     });
 </script>

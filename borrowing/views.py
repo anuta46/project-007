@@ -3,13 +3,67 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
 from datetime import timedelta
-from django.forms import inlineformset_factory 
+from django.forms import inlineformset_factory
 from django.db.models import Q # Import Q object for OR queries
 from django.db import transaction # Import transaction for database atomicity
 
-from .forms import ItemForm, AssetForm, LoanRequestForm 
-from .models import Item, Asset, Loan 
-from users.models import Notification, CustomUser 
+from .forms import ItemForm, AssetForm, LoanRequestForm
+from .models import Item, Asset, Loan
+from users.models import Notification, CustomUser
+
+
+@login_required
+def dashboard(request):
+    """
+    Main dashboard view for Organization Admins.
+    Displays key statistics and a quick overview.
+    """
+    if not request.user.is_org_admin:
+        messages.error(request, "คุณไม่มีสิทธิ์เข้าถึงหน้านี้")
+        return redirect('user_dashboard')
+
+    organization = request.user.organization
+
+    # Calculate all the metrics needed for the dashboard template
+    pending_loan_requests = Loan.objects.filter(
+        asset__item__organization=organization,
+        status='pending'
+    ).count()
+
+    active_loans = Loan.objects.filter(
+        asset__item__organization=organization,
+        status='approved'
+    )
+
+    total_assets = Asset.objects.filter(
+        item__organization=organization
+    ).count()
+
+    available_assets_count = Asset.objects.filter(
+        item__organization=organization,
+        status='available'
+    ).count()
+
+    total_item_types = Item.objects.filter(
+        organization=organization
+    ).count()
+
+    active_users_count = CustomUser.objects.filter(
+        organization=organization,
+        is_active=True
+    ).count()
+
+    context = {
+        'pending_loan_requests': pending_loan_requests,
+        'active_loans': active_loans,
+        'total_assets': total_assets,
+        'available_assets_count': available_assets_count,
+        'total_item_types': total_item_types,
+        'active_users_count': active_users_count,
+        'organization': organization,
+    }
+
+    return render(request, 'borrowing/dashboard.html', context)
 
 
 @login_required
@@ -22,7 +76,8 @@ def add_item(request):
         messages.error(request, "คุณไม่มีสิทธิ์เพิ่มสิ่งของ")
         return redirect('dashboard')
 
-    AssetFormSet = inlineformset_factory(Item, Asset, form=AssetForm, extra=1, can_delete=True)
+    # แก้ไข: เปลี่ยน can_delete เป็น False เพื่อไม่ให้แสดง checkbox สำหรับการลบ
+    AssetFormSet = inlineformset_factory(Item, Asset, form=AssetForm, extra=1, can_delete=False)
 
     if request.method == 'POST':
         item_form = ItemForm(request.POST, request.FILES)
@@ -34,9 +89,13 @@ def add_item(request):
                 item.organization = request.user.organization
                 item.save()
 
-                asset_formset.instance = item
-                asset_formset.save()
-
+                # Loop through the formset and save only forms with data
+                for form in asset_formset:
+                    if form.cleaned_data and not form.cleaned_data.get('DELETE', False):
+                        asset = form.save(commit=False)
+                        asset.item = item
+                        asset.save()
+            
             messages.success(request, f'ประเภทสิ่งของ "{item.name}" และอุปกรณ์ถูกเพิ่มเรียบร้อยแล้ว')
             return redirect('dashboard')
     else:
@@ -62,7 +121,8 @@ def edit_item(request, item_id):
     
     item = get_object_or_404(Item, id=item_id, organization=request.user.organization)
 
-    AssetFormSet = inlineformset_factory(Item, Asset, form=AssetForm, extra=1, can_delete=True)
+    # แก้ไข: เปลี่ยน can_delete เป็น False เพื่อไม่ให้แสดง checkbox สำหรับการลบ
+    AssetFormSet = inlineformset_factory(Item, Asset, form=AssetForm, extra=1, can_delete=False)
 
     if request.method == 'POST':
         item_form = ItemForm(request.POST, request.FILES, instance=item)
@@ -70,8 +130,8 @@ def edit_item(request, item_id):
 
         if item_form.is_valid() and asset_formset.is_valid():
             with transaction.atomic():
-                item_form.save() 
-                asset_formset.save() 
+                item_form.save()
+                asset_formset.save()
 
             messages.success(request, f'ประเภทสิ่งของ "{item.name}" และอุปกรณ์ถูกแก้ไขเรียบร้อยแล้ว')
             return redirect('dashboard')
@@ -82,7 +142,7 @@ def edit_item(request, item_id):
     context = {
         'item_form': item_form,
         'asset_formset': asset_formset,
-        'item': item, 
+        'item': item,
     }
     return render(request, 'borrowing/edit_item.html', context)
 
@@ -109,7 +169,7 @@ def delete_item(request, item_id):
         return redirect('dashboard')
     
     messages.info(request, f'คุณกำลังจะลบประเภทสิ่งของ "{item.name}" หากต้องการยืนยัน โปรดใช้ปุ่มลบจากหน้าแดชบอร์ด.')
-    return redirect('dashboard') 
+    return redirect('dashboard')
 
 
 @login_required
@@ -129,7 +189,7 @@ def borrow_item(request, asset_id):
                 
                 if asset_recheck.status == 'available':
                     # Extract data from the validated form
-                    borrow_date = form.cleaned_data['borrow_date']
+                    # แก้ไข: ลบ borrow_date ออก เนื่องจาก form ไม่มีแล้ว
                     due_date = form.cleaned_data['due_date']
                     reason = form.cleaned_data['reason']
 
@@ -138,21 +198,21 @@ def borrow_item(request, asset_id):
                         asset=asset_recheck,
                         borrower=request.user,
                         reason=reason,
-                        borrow_date=borrow_date,
+                        borrow_date=timezone.now(),  # กำหนดค่า borrow_date ณ ตอนนี้
                         due_date=due_date,
                         status='pending'
                     )
 
                     # Update asset status
-                    asset_recheck.status = 'on_loan' 
+                    asset_recheck.status = 'on_loan'
                     asset_recheck.save()
 
                     messages.success(request, f'คุณได้ส่งคำขอยืมสิ่งของ "{asset_recheck.item.name}" (SN/ID: {asset_recheck.serial_number or asset_recheck.device_id or asset_recheck.id}) เรียบร้อยแล้ว โปรดรอการอนุมัติจากผู้ดูแล')
 
                     # Create notifications for all organization admins
                     org_admins = CustomUser.objects.filter(
-                        organization=asset_recheck.item.organization, 
-                        is_org_admin=True, 
+                        organization=asset_recheck.item.organization,
+                        is_org_admin=True,
                         is_active=True
                     )
                     for admin in org_admins:
@@ -192,11 +252,11 @@ def return_item(request, loan_id):
 
     if loan.status == 'approved':
         loan.status = 'returned'
-        loan.return_date = timezone.now() 
+        loan.return_date = timezone.now()
         loan.save()
 
         asset = loan.asset
-        asset.status = 'available' 
+        asset.status = 'available'
         asset.save()
 
         messages.success(request, f'คุณได้คืนสิ่งของ "{asset.item.name}" (SN/ID: {asset.serial_number or asset.device_id or asset.id}) เรียบร้อยแล้ว')
@@ -218,12 +278,12 @@ def approve_loan(request, loan_id):
     loan = get_object_or_404(Loan, id=loan_id)
     
     if loan.status == 'pending':
-        if loan.asset.status == 'available': 
+        if loan.asset.status == 'available':
             loan.status = 'approved'
             loan.borrow_date = timezone.now()
             loan.save()
 
-            loan.asset.status = 'on_loan' 
+            loan.asset.status = 'on_loan'
             loan.asset.save()
 
             messages.success(request, f'คำขอยืมสิ่งของ "{loan.asset.item.name}" (SN/ID: {loan.asset.serial_number or loan.asset.device_id or loan.asset.id}) โดย {loan.borrower.username} ได้รับการอนุมัติแล้ว')
@@ -256,11 +316,11 @@ def reject_loan(request, loan_id):
         loan.status = 'rejected'
         loan.save()
         
-        if loan.asset.status == 'on_loan': 
-             loan.asset.status = 'available' 
-             loan.asset.save()
-        elif loan.asset.status == 'available': 
-             pass 
+        if loan.asset.status == 'on_loan':
+            loan.asset.status = 'available'
+            loan.asset.save()
+        elif loan.asset.status == 'available':
+            pass
 
         messages.success(request, f'คำขอยืมสิ่งของ "{loan.asset.item.name}" (SN/ID: {loan.asset.serial_number or loan.asset.device_id or loan.asset.id}) โดย {loan.borrower.username} ได้รับการปฏิเสธแล้ว')
 
@@ -392,7 +452,7 @@ def pending_loans_view(request):
     
     organization = request.user.organization
     pending_loans = Loan.objects.filter(
-        asset__item__organization=organization, 
+        asset__item__organization=organization,
         status='pending'
     ).select_related('asset__item', 'borrower').order_by('-borrow_date')
 
@@ -414,7 +474,7 @@ def active_loans_view(request):
     
     organization = request.user.organization
     active_loans = Loan.objects.filter(
-        asset__item__organization=organization, 
+        asset__item__organization=organization,
         status='approved'
     ).select_related('asset__item', 'borrower').order_by('due_date')
 
