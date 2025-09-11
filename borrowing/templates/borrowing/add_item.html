@@ -1,9 +1,9 @@
-{% extends 'users/base.html' %} {# ขยายจาก base.html เพื่อใช้โครงสร้างและสไตล์พื้นฐาน #}
+{% extends 'users/base.html' %}
 
-{% block title %}เพิ่มประเภทสิ่งของและอุปกรณ์ใหม่{% endblock %} {# กำหนดชื่อหน้าสำหรับแท็บเบราว์เซอร์ #}
+{% block title %}เพิ่มประเภทสิ่งของและอุปกรณ์ใหม่{% endblock %}
 
-{% block content %} {# บล็อก content สำหรับเนื้อหาเฉพาะของหน้านี้ #}
-<div class="bg-gradient-to-br from-white to-blue-50 p-6 md:p-8 lg:p-10 rounded-3xl shadow-2xl max-w-5xl mx-auto my-10 border border-blue-100 animate-fade-in"> {# Container หลักของหน้า - เพิ่ม gradient, shadow, border, animation #}
+{% block content %}
+<div class="bg-gradient-to-br from-white to-blue-50 p-6 md:p-8 lg:p-10 rounded-3xl shadow-2xl max-w-5xl mx-auto my-10 border border-blue-100 animate-fade-in">
     <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6 text-center flex flex-col sm:flex-row items-center justify-center gap-x-3 leading-tight">
         <i class="fas fa-box-open text-indigo-600 text-5xl mb-2 sm:mb-0"></i> <span class="tracking-wide">เพิ่มประเภทสิ่งของ</span> <span class="text-indigo-700">และอุปกรณ์ใหม่</span>
     </h1>
@@ -11,21 +11,20 @@
         กรอกข้อมูลเกี่ยวกับประเภทสิ่งของและรายละเอียดของอุปกรณ์แต่ละชิ้นที่พร้อมให้ยืมในองค์กรของคุณ
     </p>
 
-    <hr class="my-8 border-blue-200"> {# เพิ่มเส้นแบ่งที่ชัดเจนและสีสัน #}
+    <hr class="my-8 border-blue-200">
 
-    {# สำคัญ: เพิ่ม enctype="multipart/form-data" สำหรับการอัปโหลดไฟล์ #}
     <form method="post" enctype="multipart/form-data" class="w-full animate-fade-in-up">
-        {% csrf_token %} {# CSRF token เพื่อความปลอดภัย #}
+        {% csrf_token %}
 
         {# ส่วนฟอร์มสำหรับ "ประเภทสิ่งของ" (ItemForm) #}
-        <div class="p-8 bg-blue-50 rounded-2xl shadow-lg border border-blue-200 mb-10"> {# กล่องข้อมูล Item Form #}
+        <div class="p-8 bg-blue-50 rounded-2xl shadow-lg border border-blue-200 mb-10">
             <h2 class="text-3xl font-bold text-blue-800 mb-5 pb-3 border-b-2 border-blue-300 flex items-center gap-x-3">
                 <i class="fas fa-boxes-stacked text-blue-600 text-3xl"></i> ข้อมูลประเภทสิ่งของ
             </h2>
             {% for field in item_form %}
                 <div class="form-field">
-                    {{ field.label_tag }} {# แสดง Label ของฟิลด์ #}
-                    {{ field }} {# แสดง Widget ของฟิลด์ (input, textarea, select) #}
+                    {{ field.label_tag }}
+                    {{ field }}
                     {% if field.help_text %}
                         <p class="text-sm text-gray-500 mt-1">{{ field.help_text }}</p>
                     {% endif %}
@@ -34,7 +33,6 @@
                     {% endfor %}
                 </div>
             {% endfor %}
-            {# แสดง Non-field errors ของ item_form #}
             {% if item_form.non_field_errors %}
                 <ul class="errorlist mt-4">
                     {% for error in item_form.non_field_errors %}
@@ -47,21 +45,39 @@
         <hr class="my-8 border-blue-200">
 
         {# ส่วนฟอร์มสำหรับ "อุปกรณ์แต่ละชิ้น" (AssetFormSet) #}
-        <div class="p-8 bg-green-50 rounded-2xl shadow-lg border border-green-200"> {# กล่องข้อมูล Asset Formset #}
+        <div class="p-8 bg-green-50 rounded-2xl shadow-lg border border-green-200">
             <h2 class="text-3xl font-bold text-green-800 mb-5 pb-3 border-b-2 border-green-300 flex items-center justify-between gap-x-3">
                 <div class="flex items-center gap-x-3">
                     <i class="fas fa-box-usd text-green-600 text-3xl"></i> เพิ่มอุปกรณ์แต่ละชิ้น
                 </div>
-                {# ตัวแสดงผลจำนวนอุปกรณ์ที่ถูกต้อง #}
                 <div id="asset-count-display" class="bg-gray-200 text-gray-700 text-sm font-medium px-4 py-2 rounded-full">
                     อุปกรณ์: 0 ชิ้น
                 </div>
             </h2>
-            <div id="asset-formset-container" class="space-y-6"> {# เพิ่ม space-y เพื่อระยะห่างระหว่างแต่ละ Asset Form #}
-                {{ asset_formset.management_form }} {# สำคัญ: Management form สำหรับ formset #}
+            <div id="asset-formset-container" class="space-y-6">
+                {{ asset_formset.management_form }}
                 {% for form in asset_formset %}
-                    <div class="asset-form bg-white p-6 rounded-xl shadow-md border border-gray-200 relative animate-slide-in-right"> {# สไตล์สำหรับแต่ละ Asset Form #}
-                        {% if form.instance.pk %}<p class="absolute top-4 right-6 text-gray-500 text-sm font-semibold">Asset ID: {{ form.instance.pk }}</p>{% endif %}
+                    <div class="asset-form bg-white p-6 rounded-xl shadow-md border border-gray-200 relative animate-slide-in-right" data-form-index="{{ forloop.counter0 }}">
+                        {% if form.instance.pk %}
+                            <p class="absolute top-4 right-16 text-gray-500 text-sm font-semibold">Asset ID: {{ form.instance.pk }}</p>
+                            <div class="absolute top-4 right-4">
+                                <button type="button" class="remove-asset-form text-white bg-red-500 hover:bg-red-600 focus:ring-4 focus:ring-red-300 font-medium rounded-full text-sm p-2 text-center inline-flex items-center shadow-md transition-all duration-300 transform hover:scale-110">
+                                    <i class="fas fa-times"></i>
+                                    <span class="sr-only">ลบฟอร์มนี้</span>
+                                </button>
+                            </div>
+                            <div class="mt-4 flex items-center text-red-600 hover:text-red-800 transition-colors duration-200">
+                                {{ form.DELETE }}
+                                <label for="{{ form.DELETE.id_for_label }}" class="ml-2 cursor-pointer font-medium">ทำเครื่องหมายเพื่อลบจากฐานข้อมูล</label>
+                            </div>
+                        {% else %}
+                            <div class="absolute top-4 right-4">
+                                <button type="button" class="remove-asset-form text-white bg-red-500 hover:bg-red-600 focus:ring-4 focus:ring-red-300 font-medium rounded-full text-sm p-2 text-center inline-flex items-center shadow-md transition-all duration-300 transform hover:scale-110">
+                                    <i class="fas fa-times"></i>
+                                    <span class="sr-only">ลบฟอร์มนี้</span>
+                                </button>
+                            </div>
+                        {% endif %}
                         {% for hidden_field in form.hidden_fields %}
                             {{ hidden_field }}
                         {% endfor %}
@@ -80,20 +96,6 @@
                                 </div>
                             {% endfor %}
                         </div>
-                        {% if form.instance.pk %} {# สำหรับ Asset ที่มีอยู่แล้ว #}
-                            <div class="mt-4 flex items-center text-red-600 hover:text-red-800 transition-colors duration-200">
-                                {{ form.DELETE }}
-                                <label for="{{ form.DELETE.id_for_label }}" class="ml-2 cursor-pointer font-medium">ลบ Asset นี้</label>
-                            </div>
-                        {% endif %}
-                        {# แสดง Non-field errors ของแต่ละ Asset form #}
-                        {% if form.non_field_errors %}
-                            <ul class="errorlist mt-4">
-                                {% for error in form.non_field_errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
                     </div>
                 {% endfor %}
             </div>
@@ -101,7 +103,6 @@
             <button type="button" id="add-asset-form" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-full transition duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center text-lg mt-8">
                 <i class="fas fa-plus mr-3"></i> เพิ่มอุปกรณ์อีกชิ้น
             </button>
-            {# แสดง Formset errors (ถ้ามี) #}
             {% if asset_formset.non_form_errors %}
                 <ul class="errorlist mt-6">
                     {% for error in asset_formset.non_form_errors %}
@@ -116,7 +117,6 @@
         </button>
     </form>
 
-    {# ลิงก์กลับไปยังหน้าแดชบอร์ดแอดมิน #}
     <div class="mt-10 pt-8 border-t-2 border-gray-200 flex flex-wrap gap-4 justify-center animate-fade-in-up">
         <a href="{% url 'dashboard' %}" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-8 rounded-full transition duration-300 transform hover:scale-105 shadow-md flex items-center justify-center text-lg">
             <i class="fas fa-arrow-left mr-3"></i> กลับสู่แดชบอร์ด
@@ -157,11 +157,11 @@
 
     /* Additional subtle hover effects for general text elements, if desired */
     .text-indigo-700:hover {
-        color: #4f46e5; /* Slightly darker indigo on hover */
+        color: #4f46e5;
     }
 </style>
 
-{# JavaScript สำหรับการเพิ่มฟอร์ม Asset แบบ Dynamic #}
+{# JavaScript สำหรับการเพิ่มและลบฟอร์ม Asset แบบ Dynamic #}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const addAssetButton = document.getElementById('add-asset-form');
@@ -169,73 +169,89 @@
         const totalFormsInput = document.querySelector('input[name="asset-TOTAL_FORMS"]');
         const assetCountDisplay = document.getElementById('asset-count-display');
         
-        let initialForms = document.querySelectorAll('.asset-form').length;
-        
-        // Function to update the displayed asset count
-        const updateAssetCount = () => {
-            const formCount = document.querySelectorAll('.asset-form').length;
-            assetCountDisplay.textContent = `อุปกรณ์: ${formCount} ชิ้น`;
-        };
-        
-        // Update the count on page load
-        updateAssetCount();
-        
-        // Find the empty form template.
-        let formTemplate = document.querySelector('.asset-form');
-        if (formTemplate) {
-            formTemplate = formTemplate.cloneNode(true);
-            formTemplate.classList.add('hidden');
-            formTemplate.id = 'empty-form';
-            formTemplate.innerHTML = formTemplate.innerHTML.replace(/form-field-(\d+)/g, 'form-field-__prefix__');
-            formTemplate.querySelectorAll('input, select, textarea').forEach(input => {
-                input.value = '';
-                input.classList.remove('border-red-500'); 
-                input.removeAttribute('id');
-            });
-            formTemplate.querySelectorAll('.errorlist').forEach(errorList => errorList.innerHTML = '');
-            const deleteCheckbox = formTemplate.querySelector('input[name$="-DELETE"]');
-            if (deleteCheckbox) deleteCheckbox.checked = false;
-            const assetIdParagraph = formTemplate.querySelector('p.absolute.top-4.right-6');
-            if (assetIdParagraph) assetIdParagraph.remove();
-            
-            assetFormsetContainer.appendChild(formTemplate);
-        } else {
-            console.error("Form template not found. Dynamic form addition may not work.");
-        }
-        
-        if (addAssetButton && totalFormsInput && formTemplate) {
-            addAssetButton.addEventListener('click', function() {
-                const currentForms = parseInt(totalFormsInput.value);
-                const newForm = formTemplate.cloneNode(true);
-                newForm.classList.remove('hidden');
-                newForm.id = '';
+        // Find the empty form template. It might not exist if there are already forms.
+        let emptyFormTemplate = document.getElementById('empty-form');
 
-                newForm.innerHTML = newForm.innerHTML.replace(/__prefix__/g, currentForms);
-                
-                newForm.querySelectorAll('input, select, textarea').forEach(input => {
+        if (!emptyFormTemplate) {
+            // If the empty form doesn't exist (e.g., on edit page with existing assets)
+            // Create one from an existing form to use as a template.
+            const existingForms = document.querySelectorAll('.asset-form');
+            if (existingForms.length > 0) {
+                emptyFormTemplate = existingForms[0].cloneNode(true);
+                emptyFormTemplate.classList.add('hidden');
+                emptyFormTemplate.id = 'empty-form';
+                emptyFormTemplate.innerHTML = emptyFormTemplate.innerHTML.replace(/asset-\d+/g, 'asset-__prefix__');
+                emptyFormTemplate.querySelectorAll('input, select, textarea').forEach(input => {
                     input.value = '';
                     input.classList.remove('border-red-500'); 
+                    input.removeAttribute('id');
+                    input.removeAttribute('name');
                 });
-                newForm.querySelectorAll('.errorlist').forEach(errorList => errorList.innerHTML = '');
-                const newDeleteCheckbox = newForm.querySelector('input[name$="-DELETE"]');
-                if (newDeleteCheckbox) newDeleteCheckbox.checked = false;
-
-                const formHeading = newForm.querySelector('h3');
-                if (formHeading) {
-                    formHeading.textContent = `รายละเอียดอุปกรณ์ #${currentForms + 1}`;
-                }
-
-                assetFormsetContainer.appendChild(newForm);
-                totalFormsInput.value = currentForms + 1;
+                emptyFormTemplate.querySelectorAll('.errorlist').forEach(errorList => errorList.innerHTML = '');
                 
-                // Update the count after adding a new form
-                updateAssetCount();
-
-                newForm.scrollIntoView({ behavior: 'smooth', block: 'end' });
-            });
-        } else {
-            console.error("Required elements for dynamic form addition not found.");
+                // Remove DB-specific elements from the empty template
+                const dbElements = emptyFormTemplate.querySelector('.remove-asset-form');
+                if (dbElements) {
+                    dbElements.remove();
+                }
+                
+                assetFormsetContainer.appendChild(emptyFormTemplate);
+            }
         }
+        
+        const updateAssetCount = () => {
+            const formCount = document.querySelectorAll('.asset-form:not(#empty-form)').length;
+            assetCountDisplay.textContent = `อุปกรณ์: ${formCount} ชิ้น`;
+        };
+        updateAssetCount();
+        
+        const reindexForms = () => {
+            document.querySelectorAll('.asset-form:not(#empty-form)').forEach((form, index) => {
+                const prefix = `asset-${index}`;
+                form.querySelector('h3').textContent = `รายละเอียดอุปกรณ์ #${index + 1}`;
+                form.querySelectorAll('[name]').forEach(input => {
+                    const name = input.name.replace(/asset-\d+/, prefix);
+                    input.name = name;
+                    if (input.id) {
+                        input.id = name.replace(/\[|\]/g, '');
+                    }
+                });
+            });
+            totalFormsInput.value = document.querySelectorAll('.asset-form:not(#empty-form)').length;
+            updateAssetCount();
+        };
+
+        addAssetButton.addEventListener('click', function() {
+            const currentForms = parseInt(totalFormsInput.value);
+            const newForm = emptyFormTemplate.cloneNode(true);
+            newForm.classList.remove('hidden');
+            newForm.id = '';
+            
+            // Fix: The new form's input names needs to be correctly prefixed.
+            newForm.innerHTML = newForm.innerHTML.replace(/__prefix__/g, currentForms);
+            
+            newForm.querySelector('h3').textContent = `รายละเอียดอุปกรณ์ #${currentForms + 1}`;
+            
+            assetFormsetContainer.appendChild(newForm);
+            totalFormsInput.value = currentForms + 1;
+            
+            updateAssetCount();
+            newForm.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        });
+
+        // Use event delegation for a robust solution.
+        // The listener is on the container, but the event is triggered by a child.
+        assetFormsetContainer.addEventListener('click', function(event) {
+            // Check if the clicked element or its closest parent is a remove button.
+            if (event.target.matches('.remove-asset-form') || event.target.closest('.remove-asset-form')) {
+                const formToRemove = event.target.closest('.asset-form');
+                if (formToRemove) {
+                    formToRemove.remove();
+                    reindexForms();
+                }
+            }
+        });
+
     });
 </script>
 {% endblock content %}

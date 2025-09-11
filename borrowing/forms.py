@@ -21,16 +21,15 @@ class ItemForm(forms.ModelForm):
 class AssetForm(forms.ModelForm):
     class Meta:
         model = Asset
-        fields = ['serial_number', 'device_id', 'location', 'condition', 'status']
+        # ลบ 'condition' ออกจาก fields list
+        fields = ['serial_number', 'device_id', 'location', 'status']
         labels = {
             'serial_number': "หมายเลขซีเรียล (SN)",
             'device_id': "ID อุปกรณ์",
             'location': "ตำแหน่งปัจจุบัน",
-            'condition': "สภาพ",
             'status': "สถานะ",
         }
         widgets = {
-            'condition': forms.TextInput(attrs={'placeholder': 'เช่น ใช้งานได้ดี, ชำรุดเล็กน้อย'}),
             'location': forms.TextInput(attrs={'placeholder': 'เช่น ห้องเก็บของ, ชั้น 3, โต๊ะทำงาน'}),
         }
 
@@ -43,8 +42,42 @@ class AssetForm(forms.ModelForm):
             raise forms.ValidationError("ต้องระบุหมายเลขซีเรียล (SN) หรือ ID อุปกรณ์ อย่างใดอย่างหนึ่ง")
         return cleaned_data
 
+
+class AssetCreateForm(forms.ModelForm):
+    # กำหนดให้ field 'item' เป็น ModelChoiceField
+    # เพื่อให้แสดงเป็น dropdown ของ Item
+    item = forms.ModelChoiceField(
+        queryset=Item.objects.all(),
+        label="ประเภทสิ่งของ",
+        help_text="เลือกประเภทสิ่งของที่มีอยู่แล้ว",
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+
+    class Meta:
+        model = Asset
+        # ลบ 'condition' ออกจาก fields list
+        fields = ['item', 'serial_number', 'device_id', 'status', 'location']
+        labels = {
+            'serial_number': 'Serial Number',
+            'device_id': 'Device ID',
+            'status': 'สถานะ',
+            'location': 'สถานที่ตั้ง',
+        }
+        widgets = {
+            'serial_number': forms.TextInput(attrs={'placeholder': 'ไม่จำเป็น'}),
+            'device_id': forms.TextInput(attrs={'placeholder': 'ไม่จำเป็น'}),
+            'location': forms.TextInput(attrs={'placeholder': 'เช่น: ห้อง 101'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+        }
+
+    # ฟังก์ชัน __init__ สำหรับ filter dropdown ให้แสดงเฉพาะ Item ขององค์กรนั้นๆ
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        if user and user.is_authenticated and user.organization:
+            self.fields['item'].queryset = Item.objects.filter(organization=user.organization)
+
 class LoanRequestForm(forms.ModelForm):
-    # ไม่ต้องประกาศ borrow_date ที่นี่อีก
     due_date = forms.DateField(
         label="วันที่คืนสิ่งของ",
         widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
@@ -53,7 +86,6 @@ class LoanRequestForm(forms.ModelForm):
 
     class Meta:
         model = Loan
-        # ลบ 'borrow_date' ออกจากรายการ fields
         fields = ['reason', 'due_date']
         labels = {
             'reason': "เหตุผลการยืม",

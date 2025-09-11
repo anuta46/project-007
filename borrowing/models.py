@@ -1,4 +1,3 @@
-# borrowing/models.py
 from django.db import models
 from users.models import Organization, CustomUser
 from django.db.models import Sum, F
@@ -36,7 +35,6 @@ class Asset(models.Model):
     serial_number = models.CharField(max_length=255, blank=True, null=True, unique=True, verbose_name="หมายเลขซีเรียล")
     device_id = models.CharField(max_length=255, blank=True, null=True, unique=True, verbose_name="ID อุปกรณ์")
     location = models.CharField(max_length=255, blank=True, null=True, verbose_name="ตำแหน่ง")
-    condition = models.CharField(max_length=255, blank=True, null=True, verbose_name="สภาพ")
     STATUS_CHOICES = [
         ('available', 'พร้อมใช้งาน'),
         ('on_loan', 'กำลังถูกยืม'),

@@ -7,7 +7,7 @@ from django.forms import inlineformset_factory
 from django.db.models import Q # Import Q object for OR queries
 from django.db import transaction # Import transaction for database atomicity
 
-from .forms import ItemForm, AssetForm, LoanRequestForm
+from .forms import ItemForm, AssetForm, LoanRequestForm, AssetCreateForm # เพิ่ม AssetCreateForm ที่นี่
 from .models import Item, Asset, Loan
 from users.models import Notification, CustomUser
 
@@ -76,8 +76,8 @@ def add_item(request):
         messages.error(request, "คุณไม่มีสิทธิ์เพิ่มสิ่งของ")
         return redirect('dashboard')
 
-    # แก้ไข: เปลี่ยน can_delete เป็น False เพื่อไม่ให้แสดง checkbox สำหรับการลบ
-    AssetFormSet = inlineformset_factory(Item, Asset, form=AssetForm, extra=1, can_delete=False)
+    # แก้ไข: เปลี่ยน can_delete เป็น True เพื่อให้แสดงช่องทำเครื่องหมายสำหรับลบ
+    AssetFormSet = inlineformset_factory(Item, Asset, form=AssetForm, extra=1, can_delete=True)
 
     if request.method == 'POST':
         item_form = ItemForm(request.POST, request.FILES)
@@ -121,8 +121,8 @@ def edit_item(request, item_id):
     
     item = get_object_or_404(Item, id=item_id, organization=request.user.organization)
 
-    # แก้ไข: เปลี่ยน can_delete เป็น False เพื่อไม่ให้แสดง checkbox สำหรับการลบ
-    AssetFormSet = inlineformset_factory(Item, Asset, form=AssetForm, extra=1, can_delete=False)
+    # แก้ไข: เปลี่ยน can_delete เป็น True เพื่อให้แสดงช่องทำเครื่องหมายสำหรับลบ
+    AssetFormSet = inlineformset_factory(Item, Asset, form=AssetForm, extra=1, can_delete=True)
 
     if request.method == 'POST':
         item_form = ItemForm(request.POST, request.FILES, instance=item)
@@ -145,6 +145,33 @@ def edit_item(request, item_id):
         'item': item,
     }
     return render(request, 'borrowing/edit_item.html', context)
+
+
+@login_required
+def delete_asset(request, asset_id):
+    """
+    View for Organization Admin to delete a specific asset.
+    """
+    if not request.user.is_org_admin:
+        messages.error(request, "คุณไม่มีสิทธิ์ลบอุปกรณ์")
+        return redirect('dashboard')
+    
+    asset = get_object_or_404(Asset, id=asset_id, item__organization=request.user.organization)
+
+    # Check if there are any active loans for this asset
+    if loan.objects.filter(Q(asset=asset) & (Q(status='pending') | Q(status='approved'))).exists():
+        messages.error(request, f'ไม่สามารถลบอุปกรณ์ "{asset.item.name}" (SN/ID: {asset.serial_number or asset.device_id or asset.id}) ได้ เนื่องจากมีการยืมที่ยังใช้งานอยู่ กรุณารอสิ้นสุดการยืมก่อน')
+        return redirect('edit_item', item_id=asset.item.id)
+
+    # Use POST method for deletion for security
+    if request.method == 'POST':
+        item_id_of_asset = asset.item.id
+        asset.delete()
+        messages.success(request, f'อุปกรณ์ "{asset.item.name}" ถูกลบเรียบร้อยแล้ว')
+        return redirect('edit_item', item_id=item_id_of_asset)
+    
+    # If the request is not POST, just redirect back to prevent unauthorized access
+    return redirect('edit_item', item_id=asset.item.id)
 
 
 @login_required
@@ -189,7 +216,6 @@ def borrow_item(request, asset_id):
                 
                 if asset_recheck.status == 'available':
                     # Extract data from the validated form
-                    # แก้ไข: ลบ borrow_date ออก เนื่องจาก form ไม่มีแล้ว
                     due_date = form.cleaned_data['due_date']
                     reason = form.cleaned_data['reason']
 
@@ -422,6 +448,34 @@ def monthly_report(request):
 
 
 # ############## VIEWS FOR ADMIN DASHBOARD ##############
+@login_required
+def add_asset(request):
+    """
+    View for Organization Admin to add a new asset by selecting an existing item type.
+    """
+    if not request.user.is_org_admin:
+        messages.error(request, "คุณไม่มีสิทธิ์เพิ่มอุปกรณ์")
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        form = AssetCreateForm(request.POST, user=request.user)
+        if form.is_valid():
+            asset = form.save(commit=False)
+            asset.status = 'available'  # ตั้งค่าสถานะเริ่มต้นเป็น 'available'
+            asset.save()
+            messages.success(request, f'อุปกรณ์ "{asset.item.name}" ถูกเพิ่มเรียบร้อยแล้ว')
+            return redirect('dashboard')
+    else:
+        # ส่ง user ไปยัง form เพื่อ filter รายการ Item
+        form = AssetCreateForm(user=request.user)
+    
+    context = {
+        'form': form,
+        'organization_name': request.user.organization.name,
+    }
+    return render(request, 'borrowing/add_asset.html', context)
+
+
 @login_required
 def item_overview(request):
     """

@@ -438,6 +438,11 @@
             </div>
             <span class="font-medium">รายการสิ่งของ</span>
           </a>
+
+          <!-- ตัวอย่างการเพิ่มลิงก์ในเมนูสำหรับผู้ดูแลระบบ -->
+<a href="{% url 'add_asset' %}" class="block px-4 py-2 mt-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">
+    เพิ่มอุปกรณ์
+</a>
           <a href="{% url 'pending_loans_view' %}" class="nav-link group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300">
             <div class="w-8 h-8 bg-gradient-to-br from-amber-400 to-amber-500 rounded-lg flex items-center justify-center">
               <i class="fa-solid fa-hourglass-half text-white text-sm"></i>
@@ -486,10 +491,10 @@
                     {{ unread_notifications_count }}
                   </span>
                 {% endif %}
-              </div>
-              <span class="font-medium">แจ้งเตือน</span>
+              </div> {% endcomment %}
+              {% comment %} <span class="font-medium">แจ้งเตือน</span> {% endcomment %}
             </button>
-            <div id="notification-dropdown-content-sidebar" class="dropdown-content"> {% endcomment %}
+            <div id="notification-dropdown-content-sidebar" class="dropdown-content">
               {% if unread_notifications_count > 0 %}
                 {% for notification in request.user.notifications.all|slice:":5" %}
                   <a href="#" class="dropdown-item {% if not notification.is_read %}unread{% endif %}" data-notification-id="{{ notification.id }}">
@@ -501,10 +506,10 @@
                   ดูทั้งหมด
                 </a>
               {% else %}
-                {% comment %} <div class="p-4 text-gray-600 text-center">
+                <div class="p-4 text-gray-600 text-center">
                   <i class="fa-solid fa-bell-slash text-2xl mb-2 text-gray-400"></i>
                   <div class="text-sm">ไม่มีการแจ้งเตือนใหม่</div>
-                </div> {% endcomment %}
+                </div>
               {% endif %}
             </div>
           </div>
@@ -556,7 +561,35 @@
         <h1 class="text-lg font-semibold text-gray-800">
           {% block title_in_header %}{% endblock title_in_header %}
         </h1>
-        <div class="w-10"></div>
+        <!-- Notification button for mobile -->
+        <div class="relative">
+          <button id="notification-bell-topbar" class="text-gray-700 hover:text-gray-900 p-2 hover:bg-white/20 rounded-lg transition-all">
+            <i class="fa-solid fa-bell text-xl"></i>
+            {% if unread_notifications_count > 0 %}
+              <span class="notification-badge absolute -top-1 -right-1 text-white text-xs font-bold rounded-full h-4 min-w-[1rem] px-0.5 flex items-center justify-center text-center">
+                {{ unread_notifications_count }}
+              </span>
+            {% endif %}
+          </button>
+          <div id="notification-dropdown-content-topbar" class="dropdown-content">
+            {% if unread_notifications_count > 0 %}
+              {% for notification in request.user.notifications.all|slice:":5" %}
+                <a href="#" class="dropdown-item {% if not notification.is_read %}unread{% endif %}" data-notification-id="{{ notification.id }}">
+                  <div class="font-medium">{{ notification.message }}</div>
+                  <span class="block text-xs text-gray-500 mt-1">{{ notification.created_at|date:"M d, H:i" }}</span>
+                </a>
+              {% endfor %}
+              <a href="{% url 'user_notifications' %}" class="dropdown-footer text-indigo-600 hover:text-indigo-800 font-medium hover:underline transition-colors">
+                ดูทั้งหมด
+              </a>
+            {% else %}
+              <div class="p-4 text-gray-600 text-center">
+                <i class="fa-solid fa-bell-slash text-2xl mb-2 text-gray-400"></i>
+                <div class="text-sm">ไม่มีการแจ้งเตือนใหม่</div>
+              </div>
+            {% endif %}
+          </div>
+        </div>
       </div>
     </header>
 
@@ -616,7 +649,7 @@
       // Enhanced Notification dropdown (sidebar)
       function setupNotificationDropdown(bellId, contentId){
         const bell = document.getElementById(bellId);
-        const box  = document.getElementById(contentId);
+        const box = document.getElementById(contentId);
         if(!bell || !box) return;
 
         bell.addEventListener('click', (e)=>{ 
@@ -625,11 +658,23 @@
           
           // Add ripple effect
           const ripple = document.createElement('span');
-          ripple.classList.add('absolute', 'inset-0', 'bg-white/20', 'rounded-xl', 'animate-ping');
+          ripple.classList.add('absolute', 'inset-0', 'bg-white/20', 'rounded-full', 'animate-ping');
           bell.appendChild(ripple);
           setTimeout(() => ripple.remove(), 600);
         });
 
         window.addEventListener('click', (e)=>{
           if(!box.contains(e.target) && !bell.contains(e.target)){ 
-            box.classList.remove('show
+            box.classList.remove('show');
+          }
+        });
+      }
+
+      // Initialize dropdowns for both sidebar and topbar if they exist
+      setupNotificationDropdown('notification-bell-sidebar', 'notification-dropdown-content-sidebar');
+      setupNotificationDropdown('notification-bell-topbar', 'notification-dropdown-content-topbar');
+
+    });
+  </script>
+</body>
+</html>

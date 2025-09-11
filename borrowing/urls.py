@@ -27,4 +27,6 @@ urlpatterns = [
     path('active-loans/', views.active_loans_view, name='active_loans_view'),
     # URL ใหม่สำหรับ Organization Admin เพื่อดูประวัติการยืมทั้งหมด
     path('admin/loan-history/', views.loan_history_admin_view, name='loan_history_admin_view'),
+    
+     path('add-asset/', views.add_asset, name='add_asset'),
 ]
