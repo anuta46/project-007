@@ -1,0 +1,144 @@
+{% extends 'users/base.html' %}
+{% block title %}แดชบอร์ดผู้ดูแลระบบ (Superuser){% endblock %}
+{% block title_in_header %}แดชบอร์ดผู้ดูแลระบบ (Superuser){% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto my-8 px-4 lg:px-6">
+  <!-- สรุปภาพรวม -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white border rounded-xl p-5 shadow">
+      <div class="text-gray-500 text-sm">จำนวนองค์กร</div>
+      <div class="text-3xl font-extrabold">{{ org_count }}</div>
+    </div>
+    <div class="bg-white border rounded-xl p-5 shadow">
+      <div class="text-gray-500 text-sm">ผู้ใช้ (ที่ใช้งานอยู่)</div>
+      <div class="text-3xl font-extrabold">{{ active_user_count }} / {{ user_count }}</div>
+    </div>
+    <div class="bg-white border rounded-xl p-5 shadow">
+      <div class="text-gray-500 text-sm">ประเภทสิ่งของ / อุปกรณ์</div>
+      <div class="text-3xl font-extrabold">{{ item_count }} / {{ asset_count }}</div>
+    </div>
+    <div class="bg-white border rounded-xl p-5 shadow">
+      <div class="text-gray-500 text-sm">จำนวนการยืมทั้งหมด</div>
+      <div class="text-3xl font-extrabold">{{ loans_total }}</div>
+    </div>
+  </div>
+
+  <!-- สถานะการยืม -->
+  <div class="flex flex-wrap gap-2 mb-8">
+    <span class="px-3 py-1 rounded-full text-sm bg-yellow-100 text-yellow-800">รอดำเนินการ: {{ loans_pending }}</span>
+    <span class="px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">อนุมัติแล้ว: {{ loans_approved }}</span>
+    <span class="px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800">เกินกำหนด: {{ loans_overdue }}</span>
+    <span class="px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-800">คืนแล้ว: {{ loans_returned }}</span>
+    <span class="px-3 py-1 rounded-full text-sm bg-red-100 text-red-800">ปฏิเสธ: {{ loans_rejected }}</span>
+  </div>
+
+  <!-- องค์กร/สิ่งของยอดนิยมตามจำนวนการยืม -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <div class="bg-white border rounded-xl p-5 shadow">
+      <h3 class="text-lg font-bold mb-4">องค์กรที่มียอดการยืมสูงสุด</h3>
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-gray-500">
+            <th class="text-left py-2">องค์กร</th>
+            <th class="text-right py-2">จำนวนการยืม</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in top_orgs_by_loans %}
+          <tr class="border-t">
+            <td class="py-2">{{ row.asset__item__organization__name }}</td>
+            <td class="py-2 text-right font-semibold">{{ row.total_loans }}</td>
+          </tr>
+          {% empty %}
+          <tr><td class="py-3 text-gray-500" colspan="2">ยังไม่มีข้อมูล</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="bg-white border rounded-xl p-5 shadow">
+      <h3 class="text-lg font-bold mb-4">สิ่งของที่มียอดการยืมสูงสุด</h3>
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-gray-500">
+            <th class="text-left py-2">สิ่งของ</th>
+            <th class="text-right py-2">จำนวนการยืม</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in top_items_by_loans %}
+          <tr class="border-t">
+            <td class="py-2">{{ row.asset__item__name }}</td>
+            <td class="py-2 text-right font-semibold">{{ row.total_loans }}</td>
+          </tr>
+          {% empty %}
+          <tr><td class="py-3 text-gray-500" colspan="2">ยังไม่มีข้อมูล</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- รายการล่าสุด -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white border rounded-xl p-5 shadow">
+      <h3 class="text-lg font-bold mb-4">องค์กรที่ถูกสร้างล่าสุด</h3>
+      <ul class="space-y-2 text-sm">
+        {% for org in recent_orgs %}
+          <li class="border-b pb-2">{{ org.name }}</li>
+        {% empty %}
+          <li class="text-gray-500">ยังไม่มีองค์กร</li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="bg-white border rounded-xl p-5 shadow">
+      <h3 class="text-lg font-bold mb-4">ผู้ใช้ที่สมัครล่าสุด</h3>
+      <ul class="space-y-2 text-sm">
+        {% for u in recent_users %}
+          <li class="border-b pb-2">{{ u.username }} <span class="text-gray-500">({{ u.email }})</span></li>
+        {% empty %}
+          <li class="text-gray-500">ยังไม่มีผู้ใช้</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="bg-white border rounded-xl p-5 shadow mt-6">
+    <h3 class="text-lg font-bold mb-4">รายการยืมล่าสุด</h3>
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm">
+        <thead>
+          <tr class="text-gray-500">
+            <th class="text-left py-2 px-2">สิ่งของ</th>
+            <th class="text-left py-2 px-2">ผู้ยืม</th>
+            <th class="text-left py-2 px-2">วันที่ยืม</th>
+            <th class="text-left py-2 px-2">กำหนดคืน</th>
+            <th class="text-left py-2 px-2">สถานะ</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for loan in recent_loans %}
+          <tr class="border-t">
+            <td class="py-2 px-2">
+              {{ loan.asset.item.name }}
+              {% if loan.asset.serial_number %}(SN: {{ loan.asset.serial_number }})
+              {% elif loan.asset.device_id %}(ID: {{ loan.asset.device_id }}){% endif %}
+            </td>
+            <td class="py-2 px-2">{{ loan.borrower.username }}</td>
+            <td class="py-2 px-2">{{ loan.borrow_date|date:"d/m/Y H:i" }}</td>
+            <td class="py-2 px-2">{{ loan.due_date|date:"d/m/Y" }}</td>
+            <td class="py-2 px-2">{{ loan.get_status_display }}</td>
+          </tr>
+          {% empty %}
+          <tr><td class="py-3 px-2 text-gray-500" colspan="5">ยังไม่มีรายการยืม</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap gap-3 mt-6">
+    <a href="/admin/" class="px-4 py-2 rounded-lg bg-gray-900 text-white">เปิด Django Admin</a>
+  </div>
+</div>
+{% endblock %}

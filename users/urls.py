@@ -15,4 +15,7 @@ urlpatterns = [
     # เพิ่ม URL สำหรับหน้าการแจ้งเตือนและการทำเครื่องหมายว่าอ่านแล้ว
     path('notifications/', views.user_notifications, name='user_notifications'),
     path('notifications/read/<int:notification_id>/', views.mark_notification_as_read, name='mark_notification_as_read'),
+    
+    path('super-dashboard/', views.superuser_dashboard, name='superuser_dashboard'),
+
 ]

@@ -480,6 +480,11 @@
             </div>
             <span class="font-medium">ประวัติการยืมของฉัน</span>
           </a>
+
+           {% if user.is_superuser %}
+  <a href="{% url 'superuser_dashboard' %}" class="...">Superuser Dashboard</a>
+  <a href="/admin/" class="...">Django Admin</a>
+{% endif %}
           
           <!-- Enhanced Notification -->
           {% comment %} <div class="relative">
@@ -592,6 +597,12 @@
         </div>
       </div>
     </header>
+
+    {% if user.is_superuser %}
+  <a href="{% url 'superuser_dashboard' %}" class="...">Superuser Dashboard</a>
+  <a href="/admin/" class="...">Django Admin</a>
+{% endif %}
+
 
     <!-- Enhanced Container -->
     <div class="mx-auto max-w-7xl px-6 py-8">
