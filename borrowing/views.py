@@ -112,17 +112,33 @@ def add_item(request):
 @login_required
 def edit_item(request, item_id):
     """
-    View for Organization Admin to edit an item type
-    and manage (add/edit/delete) individual assets linked to that item type.
+    แก้ไขประเภทสิ่งของ + จัดการอุปกรณ์ด้วย inline formset
+    - ถ้าไม่พบ item ขององค์กรนี้ ให้แจ้งข้อความแล้ว redirect (ไม่โยน 404)
+    - ใช้ extra=0 กันฟอร์มว่าง
+    - ปล่อยให้ formset.save() จัดการลบเมื่อติ๊ก DELETE
     """
     if not request.user.is_org_admin:
         messages.error(request, "คุณไม่มีสิทธิ์แก้ไขสิ่งของ")
         return redirect('dashboard')
-    
-    item = get_object_or_404(Item, id=item_id, organization=request.user.organization)
 
-    # แก้ไข: เปลี่ยน can_delete เป็น True เพื่อให้แสดงช่องทำเครื่องหมายสำหรับลบ
-    AssetFormSet = inlineformset_factory(Item, Asset, form=AssetForm, extra=1, can_delete=True)
+    # ต้องมี organization ผูกกับผู้ใช้
+    if not getattr(request.user, 'organization_id', None):
+        messages.error(request, "บัญชีของคุณยังไม่ถูกผูกกับองค์กร")
+        return redirect('dashboard')
+
+    # แทน get_object_or_404 → จัดการเองเพื่อเลี่ยง 404
+    try:
+        item = Item.objects.get(pk=item_id, organization=request.user.organization)
+    except Item.DoesNotExist:
+        messages.error(request, "ไม่พบสิ่งของนี้ในองค์กรของคุณ หรือถูกลบไปแล้ว")
+        return redirect('item_overview')
+
+    AssetFormSet = inlineformset_factory(
+        Item, Asset,
+        form=AssetForm,
+        extra=0,          # ไม่มีฟอร์มว่างอัตโนมัติ
+        can_delete=True
+    )
 
     if request.method == 'POST':
         item_form = ItemForm(request.POST, request.FILES, instance=item)
@@ -132,20 +148,18 @@ def edit_item(request, item_id):
             with transaction.atomic():
                 item_form.save()
                 asset_formset.save()
-
             messages.success(request, f'ประเภทสิ่งของ "{item.name}" และอุปกรณ์ถูกแก้ไขเรียบร้อยแล้ว')
             return redirect('dashboard')
     else:
         item_form = ItemForm(instance=item)
         asset_formset = AssetFormSet(instance=item, prefix='asset')
-    
+
     context = {
         'item_form': item_form,
         'asset_formset': asset_formset,
         'item': item,
     }
     return render(request, 'borrowing/edit_item.html', context)
-
 
 @login_required
 def delete_asset(request, asset_id):

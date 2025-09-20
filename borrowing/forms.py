@@ -18,14 +18,15 @@ class ItemForm(forms.ModelForm):
             'item_type': forms.TextInput(attrs={'placeholder': 'เช่น อุปกรณ์อิเล็กทรอนิกส์, หนังสือ, เครื่องมือช่าง'})
         }
 
+# borrowing/forms.py
+
 class AssetForm(forms.ModelForm):
     class Meta:
         model = Asset
-        # ลบ 'condition' ออกจาก fields list
         fields = ['serial_number', 'device_id', 'location', 'status']
         labels = {
             'serial_number': "หมายเลขซีเรียล (SN)",
-            'device_id': "ID อุปกรณ์",
+            'device_id': "ID พัสดุและคุรุภัณฑ์",
             'location': "ตำแหน่งปัจจุบัน",
             'status': "สถานะ",
         }
@@ -35,12 +36,24 @@ class AssetForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
+
+        # ✅ ถ้าฟอร์มนี้ถูกติ๊ก "ลบ" ให้ข้าม validation ไปได้เลย
+        if cleaned_data.get('DELETE'):
+            return cleaned_data
+
         serial_number = cleaned_data.get('serial_number')
         device_id = cleaned_data.get('device_id')
 
+        # ✅ ฟอร์ม "ใหม่" ที่ยังว่าง (extra form) ไม่ต้องฟ้อง
+        is_new_blank = (not self.instance.pk) and not serial_number and not device_id and not cleaned_data.get('location')
+        if is_new_blank:
+            return cleaned_data
+
         if not serial_number and not device_id:
             raise forms.ValidationError("ต้องระบุหมายเลขซีเรียล (SN) หรือ ID อุปกรณ์ อย่างใดอย่างหนึ่ง")
+
         return cleaned_data
+
 
 
 class AssetCreateForm(forms.ModelForm):

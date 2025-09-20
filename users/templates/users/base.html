@@ -440,9 +440,9 @@
           </a>
 
           <!-- ตัวอย่างการเพิ่มลิงก์ในเมนูสำหรับผู้ดูแลระบบ -->
-<a href="{% url 'add_asset' %}" class="block px-4 py-2 mt-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">
+{% comment %} <a href="{% url 'add_asset' %}" class="block px-4 py-2 mt-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">
     เพิ่มอุปกรณ์
-</a>
+</a> {% endcomment %}
           <a href="{% url 'pending_loans_view' %}" class="nav-link group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300">
             <div class="w-8 h-8 bg-gradient-to-br from-amber-400 to-amber-500 rounded-lg flex items-center justify-center">
               <i class="fa-solid fa-hourglass-half text-white text-sm"></i>

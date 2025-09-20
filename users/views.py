@@ -17,6 +17,8 @@ from .models import CustomUser, Organization, Notification
 from borrowing.models import Item, Asset, Loan
 from .forms import OrganizationRegistrationForm, UserRegistrationForm, LinkBasedUserRegistrationForm
 from .tokens import account_activation_token
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 
 
 def register_organization(request):
@@ -105,13 +107,15 @@ def user_dashboard(request):
     สำหรับผู้ใช้ทั่วไป: ดูรายการ Asset ในองค์กรของตน
     - ค้นหาด้วย q
     - กรองสถานะด้วย status
+    ค่าเริ่มต้น: โชว์เฉพาะ 'available' (พร้อมยืม)
     """
     organization = request.user.organization
-    queryset = Asset.objects.filter(item__organization=organization)
+    queryset = Asset.objects.filter(item__organization=organization).select_related('item')
 
     # Query params
-    query = request.GET.get('q')
-    status_filter = request.GET.get('status')
+    query = (request.GET.get('q') or '').strip()
+    # default ให้เป็น 'available' แทนที่จะโชว์ของที่ maintenance/retired
+    status_filter = (request.GET.get('status') or 'available').strip().lower()
 
     # ค้นหา
     if query:
@@ -126,19 +130,21 @@ def user_dashboard(request):
     if status_filter == 'available':
         queryset = queryset.filter(status='available')
     elif status_filter == 'unavailable':
-        # แสดงทุกสถานะที่ "ไม่ใช่ available" (เช่น on_loan, maintenance, retired)
-        queryset = queryset.exclude(status='available')
+        queryset = queryset.exclude(status='available')  # on_loan/maintenance/retired
+    elif status_filter == 'all':
+        pass  # แสดงทุกสถานะ
     else:
-        # ค่าเริ่มต้น: ไม่แสดง on_loan
-        queryset = queryset.exclude(status='on_loan')
+        # เผื่อค่าไม่ถูกต้อง → fallback เป็น available
+        queryset = queryset.filter(status='available')
+        status_filter = 'available'
 
     available_assets = queryset.order_by('item__name', 'serial_number', 'device_id')
 
     context = {
         'available_assets': available_assets,
         'MEDIA_URL': settings.MEDIA_URL,
-        'current_query': query or '',
-        'current_status': status_filter or '',
+        'current_query': query,
+        'current_status': status_filter,
     }
     return render(request, 'users/user_dashboard.html', context)
 
