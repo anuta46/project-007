@@ -1,11 +1,16 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+
+
+
+
+
 class Organization(models.Model):
     name = models.CharField(max_length=255, unique=True, verbose_name="ชื่อองค์กร")
     address = models.TextField(verbose_name="ที่อยู่")
     business_type = models.CharField(max_length=255, verbose_name="ประเภทธุรกิจ", blank=True, null=True)
-
+    logo = models.ImageField(upload_to='org_logos/', blank=True, null=True)
     class Meta:
         verbose_name = "องค์กร"
         verbose_name_plural = "องค์กร"
@@ -25,6 +30,9 @@ class CustomUser(AbstractUser):
     is_platform_admin = models.BooleanField(default=False, verbose_name="ผู้ดูแลแพลตฟอร์ม")
     
     phone_number = models.CharField(max_length=20, blank=True, null=True) 
+   
+    # ... ฟิลด์เดิมของคุณ ...
+    profile_image = models.ImageField(upload_to='profiles/', blank=True, null=True)  # << เพิ่มบรรทัดนี้
     
 
     class Meta:
@@ -54,3 +62,5 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification for {self.user.username}: {self.message[:50]}..."
+    
+    

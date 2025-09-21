@@ -1,0 +1,46 @@
+{% extends 'users/base.html' %}
+{% block title %}สมัครสมาชิกผู้ใช้{% endblock %}
+{% block title_in_header %}สมัครสมาชิกผู้ใช้{% endblock title_in_header %}
+
+{% block content %}
+<div class="bg-white p-6 md:p-8 rounded-xl shadow-lg max-w-xl mx-auto my-8 border border-gray-200">
+  <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900 mb-4 text-center">สมัครสมาชิกผู้ใช้</h1>
+  <p class="text-gray-600 text-center mb-6">กรอกข้อมูลให้ครบถ้วน</p>
+
+  <form method="post" class="space-y-4">
+    {% csrf_token %}
+    {% for field in form %}
+      <div>
+        <label for="{{ field.id_for_label }}" class="block text-sm font-semibold mb-1">{{ field.label }}</label>
+        {{ field }}
+        {% for error in field.errors %}
+          <p class="text-red-600 text-sm">{{ error }}</p>
+        {% endfor %}
+      </div>
+    {% endfor %}
+
+    {% if form.non_field_errors %}
+      <div class="bg-red-50 border border-red-200 text-red-700 rounded-xl p-3">
+        {% for error in form.non_field_errors %}<div>• {{ error }}</div>{% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="mt-4">
+    <label class="block font-semibold mb-1">รูปโปรไฟล์ (ไม่บังคับ)</label>
+    {{ form.profile_image }}
+    {% for err in form.profile_image.errors %}
+      <p class="text-red-600 text-sm">{{ err }}</p>
+    {% endfor %}
+  </div>
+
+    <div class="flex items-center justify-center gap-3 pt-2">
+      <button type="submit" class="px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">
+        สมัครสมาชิก
+      </button>
+      <a href="{% url 'organizations_list' %}" class="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">
+        ดูรายชื่อองค์กร
+      </a>
+    </div>
+  </form>
+</div>
+{% endblock content %}

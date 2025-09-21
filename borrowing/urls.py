@@ -1,32 +1,42 @@
 # borrowing/urls.py
 from django.urls import path
+from django.views.generic import RedirectView
 from . import views
 
 urlpatterns = [
-    # URL สำหรับ Organization Admin เพื่อเพิ่มสิ่งของใหม่
+    # ---------- ฝั่งแอดมินองค์กร (จัดการของตัวเอง) ----------
+    path('item-overview/', views.item_overview, name='item_overview'),
     path('add-item/', views.add_item, name='add_item'),
-    # URL สำหรับ Organization Admin เพื่อแก้ไขสิ่งของ
     path('edit-item/<int:item_id>/', views.edit_item, name='edit_item'),
-    # URL สำหรับ Organization Admin เพื่อลบสิ่งของ
     path('delete-item/<int:item_id>/', views.delete_item, name='delete_item'),
-    # URL สำหรับผู้ใช้ทั่วไปเพื่อขอยืมอุปกรณ์
-    path('borrow-item/<int:asset_id>/', views.borrow_item, name='borrow_item'),
-    # URL สำหรับผู้ใช้ทั่วไปเพื่อคืนอุปกรณ์
-    path('return-item/<int:loan_id>/', views.return_item, name='return_item'),
-    # URL สำหรับ Organization Admin เพื่ออนุมัติคำขอยืม
+
+    path('add-asset/', views.add_asset, name='add_asset'),
+    path('delete-asset/<int:asset_id>/', views.delete_asset, name='delete_asset'),
+
     path('approve-loan/<int:loan_id>/', views.approve_loan, name='approve_loan'),
-    # URL สำหรับ Organization Admin เพื่อปฏิเสธคำขอยืม
     path('reject-loan/<int:loan_id>/', views.reject_loan, name='reject_loan'),
 
-    # URL สำหรับ Organization Admin เพื่อดูภาพรวมสิ่งของ
-    path('item-overview/', views.item_overview, name='item_overview'),
-    
-    # URL ใหม่สำหรับ Organization Admin เพื่อดูคำขอยืมที่รอดำเนินการ
+    # ---------- หน้ารายการกู้ยืม (ตั้งชื่อให้ตรงกับ base.html) ----------
+    # pending
     path('pending-loans/', views.pending_loans_view, name='pending_loans_view'),
-    # URL ใหม่สำหรับ Organization Admin เพื่อดูรายการยืมที่กำลังดำเนินการ
+    path('pending-loans/', views.pending_loans_view, name='pending_loans'),  # alias เผื่อชื่อเก่า
+
+    # active
     path('active-loans/', views.active_loans_view, name='active_loans_view'),
-    # URL ใหม่สำหรับ Organization Admin เพื่อดูประวัติการยืมทั้งหมด
+    path('active-loans/', views.active_loans_view, name='active_loans'),     # alias เผื่อชื่อเก่า
+
+    # history (admin)
     path('admin/loan-history/', views.loan_history_admin_view, name='loan_history_admin_view'),
-    
-     path('add-asset/', views.add_asset, name='add_asset'),
+    path('admin/loan-history/', views.loan_history_admin_view, name='loan_history_admin'),  # alias เผื่อชื่อเก่า
+
+    # ---------- ฝั่งผู้ใช้ทั่วไป ----------
+    path('borrow-item/<int:asset_id>/', views.borrow_item, name='borrow_item'),
+    path('return-item/<int:loan_id>/', views.return_item, name='return_item'),
+
+    # ถ้าโปรเจกต์ที่อื่นเคยอ้างอิง 'my_loans' ให้ redirect มาหน้า users ของคุณ
+    path(
+        'my-loans/',
+        RedirectView.as_view(pattern_name='my_borrowed_items_history', permanent=False),
+        name='my_loans',
+    ),
 ]

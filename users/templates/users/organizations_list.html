@@ -1,0 +1,49 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <title>องค์กรทั้งหมด</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <div class="max-w-6xl mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">องค์กรทั้งหมด</h1>
+
+    {% if orgs %}
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+        {% for org in orgs %}
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition p-4 flex flex-col items-center">
+            <div class="relative h-24 w-24 mb-3">
+              {% if org.logo %}
+                <img
+                  src="{{ org.logo.url }}"
+                  alt="{{ org.name }}"
+                  class="h-24 w-24 object-cover rounded-xl border border-gray-200"
+                  onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');"
+                />
+                <div class="hidden h-24 w-24 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-xl font-semibold">
+                  {{ org.name|slice:":1"|upper }}
+                </div>
+              {% else %}
+                <div class="h-24 w-24 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-xl font-semibold">
+                  {{ org.name|slice:":1"|upper }}
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="text-center">
+              <div class="font-semibold">{{ org.name }}</div>
+              {% if org.business_type %}
+                <div class="text-sm text-gray-500 mt-1">{{ org.business_type }}</div>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-gray-500">ยังไม่มีองค์กร</div>
+    {% endif %}
+  </div>
+</body>
+</html>

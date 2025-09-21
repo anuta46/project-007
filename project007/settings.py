@@ -108,9 +108,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'th'
+TIME_ZONE = 'Asia/Bangkok'
 
-TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
@@ -140,7 +140,14 @@ AUTH_USER_MODEL = 'users.CustomUser'
 AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend',)
 
 # กำหนด URL ที่จะเปลี่ยนเส้นทางหลังล็อกอินสำเร็จ
-LOGIN_REDIRECT_URL = 'dashboard' 
+# settings.py
+LOGIN_REDIRECT_URL = '/post-login/'
+
+
 
 # กำหนด URL ที่จะเปลี่ยนเส้นทางหลังล็อกเอาท์สำเร็จ
 LOGOUT_REDIRECT_URL = 'login'
+
+# settings.py
+LOGIN_REDIRECT_URL = '/pick-organization/'
+
