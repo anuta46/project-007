@@ -1,24 +1,44 @@
+# borrowing/forms.py
 from django import forms
 from django.utils import timezone
-from datetime import timedelta
-from .models import Item, Asset, Loan 
+from django.forms import BaseInlineFormSet, inlineformset_factory
+
+from .models import Item, Asset, Loan, ItemCategory
+
+
+# ───────────────────────── Item / Category ─────────────────────────
+
+class ItemCategoryForm(forms.ModelForm):
+    class Meta:
+        model = ItemCategory
+        fields = ['name', 'icon']  # slug สร้างอัตโนมัติใน model.save()
+        labels = {
+            'name': 'ชื่อหมวดอุปกรณ์',
+            'icon': 'ไอคอน (Font Awesome เช่น fa-laptop)',
+        }
+        widgets = {
+            'name': forms.TextInput(attrs={'placeholder': 'เช่น คอมพิวเตอร์, หนังสือ, เครื่องมือช่าง'}),
+            'icon': forms.TextInput(attrs={'placeholder': 'เช่น fa-laptop, fa-screwdriver-wrench'}),
+        }
+
 
 class ItemForm(forms.ModelForm):
     class Meta:
         model = Item
-        fields = ['name', 'description', 'image', 'item_type']
+        fields = ['name', 'description', 'image', 'category']
         labels = {
             'name': "ชื่อประเภทสิ่งของ",
             'description': "รายละเอียดประเภทสิ่งของ",
             'image': "รูปภาพประเภทสิ่งของ",
-            'item_type': "ประเภทกลุ่มสิ่งของ",
+            'category': "หมวดอุปกรณ์",
         }
         widgets = {
             'description': forms.Textarea(attrs={'rows': 3}),
-            'item_type': forms.TextInput(attrs={'placeholder': 'เช่น อุปกรณ์อิเล็กทรอนิกส์, หนังสือ, เครื่องมือช่าง'})
+            'category': forms.Select(attrs={'class': 'form-select'}),
         }
 
-# borrowing/forms.py
+
+# ───────────────────────── Asset ─────────────────────────
 
 class AssetForm(forms.ModelForm):
     class Meta:
@@ -26,7 +46,7 @@ class AssetForm(forms.ModelForm):
         fields = ['serial_number', 'device_id', 'location', 'status']
         labels = {
             'serial_number': "หมายเลขซีเรียล (SN)",
-            'device_id': "ID พัสดุและคุรุภัณฑ์",
+            'device_id': "ID อุปกรณ์/ครุภัณฑ์",
             'location': "ตำแหน่งปัจจุบัน",
             'status': "สถานะ",
         }
@@ -35,32 +55,29 @@ class AssetForm(forms.ModelForm):
         }
 
     def clean(self):
-        cleaned_data = super().clean()
+        cleaned = super().clean()
 
-        # ✅ ถ้าฟอร์มนี้ถูกติ๊ก "ลบ" ให้ข้าม validation ไปได้เลย
-        if cleaned_data.get('DELETE'):
-            return cleaned_data
+        # รองรับกรณีใช้งานใน inline formset (ถ้าติ๊กลบ ให้ข้าม validation อื่น ๆ)
+        if cleaned.get('DELETE'):
+            return cleaned
 
-        serial_number = cleaned_data.get('serial_number')
-        device_id = cleaned_data.get('device_id')
+        sn = (cleaned.get('serial_number') or '').strip()
+        did = (cleaned.get('device_id') or '').strip()
 
-        # ✅ ฟอร์ม "ใหม่" ที่ยังว่าง (extra form) ไม่ต้องฟ้อง
-        is_new_blank = (not self.instance.pk) and not serial_number and not device_id and not cleaned_data.get('location')
+        # ฟอร์มใหม่ที่ยังว่าง (extra form) ไม่ต้องฟ้อง error
+        is_new_blank = (not self.instance.pk) and not sn and not did and not (cleaned.get('location') or '').strip()
         if is_new_blank:
-            return cleaned_data
+            return cleaned
 
-        if not serial_number and not device_id:
-            raise forms.ValidationError("ต้องระบุหมายเลขซีเรียล (SN) หรือ ID อุปกรณ์ อย่างใดอย่างหนึ่ง")
-
-        return cleaned_data
-
+        if not sn and not did:
+            raise forms.ValidationError("ต้องระบุอย่างน้อย 1 ช่อง ระหว่าง Serial Number หรือ Device ID")
+        return cleaned
 
 
 class AssetCreateForm(forms.ModelForm):
-    # กำหนดให้ field 'item' เป็น ModelChoiceField
-    # เพื่อให้แสดงเป็น dropdown ของ Item
+    """ใช้สร้าง Asset ทีละชิ้น (นอกหน้า inline)"""
     item = forms.ModelChoiceField(
-        queryset=Item.objects.all(),
+        queryset=Item.objects.none(),
         label="ประเภทสิ่งของ",
         help_text="เลือกประเภทสิ่งของที่มีอยู่แล้ว",
         widget=forms.Select(attrs={'class': 'form-select'})
@@ -68,7 +85,6 @@ class AssetCreateForm(forms.ModelForm):
 
     class Meta:
         model = Asset
-        # ลบ 'condition' ออกจาก fields list
         fields = ['item', 'serial_number', 'device_id', 'status', 'location']
         labels = {
             'serial_number': 'Serial Number',
@@ -83,38 +99,145 @@ class AssetCreateForm(forms.ModelForm):
             'status': forms.Select(attrs={'class': 'form-select'}),
         }
 
-    # ฟังก์ชัน __init__ สำหรับ filter dropdown ให้แสดงเฉพาะ Item ขององค์กรนั้นๆ
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
-        if user and user.is_authenticated and user.organization:
-            self.fields['item'].queryset = Item.objects.filter(organization=user.organization)
+        if user and getattr(user, 'organization_id', None):
+            self.fields['item'].queryset = Item.objects.filter(
+                organization=user.organization
+            ).order_by('name')
+        else:
+            self.fields['item'].queryset = Item.objects.none()
+
+    def clean(self):
+        cleaned = super().clean()
+        sn = (cleaned.get('serial_number') or '').strip()
+        did = (cleaned.get('device_id') or '').strip()
+        if not sn and not did:
+            raise forms.ValidationError('กรุณาระบุ Serial Number หรือ Device ID อย่างน้อยหนึ่งอย่าง')
+        return cleaned
+
+
+# ───────────── Inline Formset: เพิ่มอุปกรณ์หลายชิ้นในหน้าเดียว ─────────────
+
+class _AssetInlineFormSet(BaseInlineFormSet):
+    """
+    - บังคับให้มีอย่างน้อย 1 ชิ้น (ที่ไม่ถูกติ๊กลบ)
+    - กัน SN/DeviceID ซ้ำกันในชุดเดียวกันก่อนชน DB unique
+    - ปล่อยฟอร์ม extra ที่ว่างจริง ๆ โดยไม่มี error
+    """
+    def clean(self):
+        super().clean()
+
+        valid_forms = []
+        seen_sn = set()
+        seen_did = set()
+        errors = []
+
+        for form in self.forms:
+            if not hasattr(form, 'cleaned_data'):
+                continue
+            cd = form.cleaned_data
+
+            # ข้ามถ้าติ๊กลบ
+            if cd.get('DELETE'):
+                continue
+
+            sn = (cd.get('serial_number') or '').strip()
+            did = (cd.get('device_id') or '').strip()
+            loc = (cd.get('location') or '').strip()
+
+            # ข้าม extra ที่ว่างจริง ๆ
+            if not form.instance.pk and not sn and not did and not loc:
+                continue
+
+            # ต้องมี SN หรือ DID อย่างน้อยหนึ่ง
+            if not sn and not did:
+                form.add_error(None, "กรุณากรอก Serial Number หรือ Device ID อย่างน้อยหนึ่งอย่าง")
+                errors.append(form)
+            else:
+                # กันซ้ำภายใน formset เดียวกัน
+                if sn:
+                    if sn in seen_sn:
+                        form.add_error('serial_number', "หมายเลขซีเรียลซ้ำกับรายการอื่นในชุดนี้")
+                        errors.append(form)
+                    seen_sn.add(sn)
+                if did:
+                    if did in seen_did:
+                        form.add_error('device_id', "Device ID ซ้ำกับรายการอื่นในชุดนี้")
+                        errors.append(form)
+                    seen_did.add(did)
+
+            valid_forms.append(form)
+
+        if len(valid_forms) == 0:
+            raise forms.ValidationError("กรุณาเพิ่มอุปกรณ์อย่างน้อย 1 ชิ้น")
+
+        # รวม error ถ้ามี
+        if errors:
+            raise forms.ValidationError("กรุณาแก้ไขข้อผิดพลาดของอุปกรณ์ในรายการ")
+
+
+AssetFormSet = inlineformset_factory(
+    parent_model=Item,
+    model=Asset,
+    form=AssetForm,
+    formset=_AssetInlineFormSet,
+    fields=['serial_number', 'device_id', 'location', 'status'],
+    extra=1,          # เริ่มด้วย 1 ฟอร์มว่าง
+    can_delete=True,  # ให้ติ๊กลบได้
+    validate_min=True,
+)
+
+
+# ───────────────────────── Loan ─────────────────────────
 
 class LoanRequestForm(forms.ModelForm):
+    start_date = forms.DateField(
+        label="วันที่เริ่มยืม (นัดรับ)",
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        help_text="เลือกวันที่จะมารับอุปกรณ์ (วันนี้หรืออนาคตก็ได้)"
+    )
     due_date = forms.DateField(
         label="วันที่คืนสิ่งของ",
         widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-        help_text="วันที่ครบกำหนดคืนสิ่งของ (ไม่เกิน 30 วันนับจากวันนี้)"
+        help_text="วันที่ครบกำหนดคืน (ไม่เกิน 30 วันนับจากวันเริ่มยืม)"
     )
 
     class Meta:
         model = Loan
-        fields = ['reason', 'due_date']
+        fields = ['reason', 'start_date', 'due_date']
         labels = {
             'reason': "เหตุผลการยืม",
         }
         widgets = {
-            'reason': forms.Textarea(attrs={'rows': 4, 'placeholder': 'โปรดระบุเหตุผลในการยืมสิ่งของนี้อย่างชัดเจน เช่น ใช้สำหรับโครงการ, การเรียนการสอน'}),
+            'reason': forms.Textarea(attrs={
+                'rows': 4,
+                'placeholder': 'โปรดระบุเหตุผล เช่น ใช้สำหรับโครงการ/การเรียนการสอน'
+            })
         }
 
-    def clean_due_date(self):
-        due_date = self.cleaned_data.get('due_date')
-        if due_date:
-            today = timezone.now().date()
-            if due_date < today:
-                raise forms.ValidationError("วันที่ครบกำหนดคืนไม่สามารถเป็นวันที่ในอดีตได้")
-            
-            max_due_date = today + timedelta(days=30)
-            if due_date > max_due_date:
-                raise forms.ValidationError(f"วันที่ครบกำหนดคืนต้องไม่เกิน {max_due_date.strftime('%d/%m/%Y')} (สูงสุด 30 วัน)")
-        return due_date
+    def clean(self):
+        cleaned = super().clean()
+        start_date = cleaned.get('start_date')
+        due_date = cleaned.get('due_date')
+
+        # ถ้ายังไม่กรอกครบทั้งคู่ ปล่อยให้ field-level validation จัดการ
+        if not start_date or not due_date:
+            return cleaned
+
+        today = timezone.now().date()
+
+        # วันเริ่มต้องเป็นวันนี้หรืออนาคต
+        if start_date < today:
+            self.add_error('start_date', "วันเริ่มยืมต้องเป็นวันนี้หรืออนาคต")
+
+        # กำหนดคืนต้อง > เริ่มยืม อย่างน้อย 1 วัน
+        if due_date <= start_date:
+            self.add_error('due_date', "วันครบกำหนดต้องหลังวันเริ่มยืมอย่างน้อย 1 วัน")
+
+        # จำกัดสูงสุด 30 วัน
+        if (due_date - start_date).days > 30:
+            self.add_error('due_date', "ระยะเวลายืมต้องไม่เกิน 30 วัน")
+
+        return cleaned

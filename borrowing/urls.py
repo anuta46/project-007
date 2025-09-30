@@ -32,6 +32,15 @@ urlpatterns = [
     # ---------- ฝั่งผู้ใช้ทั่วไป ----------
     path('borrow-item/<int:asset_id>/', views.borrow_item, name='borrow_item'),
     path('return-item/<int:loan_id>/', views.return_item, name='return_item'),
+    path('categories/add/', views.add_category, name='add_category'),
+    path('loans/<int:loan_id>/start/', views.start_loan, name='start_loan'),
+    
+    path('items/new/', views.add_item, name='add_item'),
+    
+    path('dashboard/', views.dashboard, name='dashboard'),
+    path('org-dashboard/', views.dashboard, name='org_dashboard'),  
+
+
 
     # ถ้าโปรเจกต์ที่อื่นเคยอ้างอิง 'my_loans' ให้ redirect มาหน้า users ของคุณ
     path(

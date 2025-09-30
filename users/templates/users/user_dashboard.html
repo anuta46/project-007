@@ -99,24 +99,23 @@
   }
 
   /* Responsive grid optimization */
+  .equipment-grid {
+    grid-template-columns: repeat(1, 1fr); /* มือถือ แถวละ 1 */
+  }
+
   @media (min-width: 640px) {
     .equipment-grid {
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(2, 1fr); /* Tablet แถวละ 2 */
     }
   }
 
   @media (min-width: 1024px) {
     .equipment-grid {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
-
-  @media (min-width: 1536px) {
-    .equipment-grid {
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(4, 1fr); /* Laptop ขึ้นไป แถวละ 4 */
     }
   }
 </style>
+
 
 <div class="max-w-7xl mx-auto my-8 px-4 lg:px-6">
     <!-- Compact Hero Section -->

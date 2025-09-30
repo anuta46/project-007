@@ -471,7 +471,7 @@
 <div class="dashboard-bg">
     <div class="dashboard-container max-w-7xl mx-auto py-8 px-4">
         
-        <!-- Enhanced Hero Section -->
+        <!-- Hero Section -->
         <div class="hero-section">
             <div class="hero-content">
                 <h1 class="hero-title">
@@ -483,7 +483,7 @@
             </div>
         </div>
 
-        <!-- Enhanced Stats Cards -->
+        <!-- Stats Cards -->
         <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             
             <!-- Card 1: รายการยืม-คืน -->
@@ -492,7 +492,7 @@
                     <i class="fas fa-exchange-alt"></i>
                 </div>
                 <div class="card-label">รายการยืม-คืน</div>
-                <div class="card-number">{{ active_loans.count | default:0 }} / {{ pending_loan_requests | default:0 }}</div>
+                <div class="card-number">{{ active_loans.count|default:0 }} / {{ pending_loan_requests|default:0 }}</div>
                 <div class="card-subtitle">กำลังดำเนินการ / รอดำเนินการ</div>
             </a>
 
@@ -502,7 +502,7 @@
                     <i class="fas fa-bell"></i>
                 </div>
                 <div class="card-label">คำขอยืมที่รอดำเนินการ</div>
-                <div class="card-number">{{ pending_loan_requests | default:0 }}</div>
+                <div class="card-number">{{ pending_loan_requests|default:0 }}</div>
                 <div class="card-subtitle">ทั้งหมด</div>
             </a>
 
@@ -512,7 +512,7 @@
                     <i class="fas fa-users"></i>
                 </div>
                 <div class="card-label">สมาชิกที่ใช้งาน</div>
-                <div class="card-number">{{ active_users_count | default:0 }}</div>
+                <div class="card-number">{{ active_users_count|default:0 }}</div>
                 <div class="card-subtitle">ทั้งหมด</div>
             </a>
 
@@ -522,13 +522,13 @@
                     <i class="fas fa-boxes-stacked"></i>
                 </div>
                 <div class="card-label">อุปกรณ์ที่พร้อมให้ยืม</div>
-                <div class="card-number">{{ available_assets_count | default:0 }} / {{ total_assets | default:0 }}</div>
+                <div class="card-number">{{ available_assets_count|default:0 }} / {{ total_assets|default:0 }}</div>
                 <div class="card-subtitle">พร้อมยืม / ทั้งหมด</div>
             </a>
             
         </section>
 
-        <!-- Information Cards -->
+        <!-- ข้อมูลองค์กร -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
             
             <!-- รายละเอียดองค์กร -->
@@ -544,11 +544,11 @@
                     </div>
                     <div class="detail-row">
                         <div class="detail-label">ที่อยู่:</div>
-                        <div class="detail-value">{{ organization.address | default:"-" }}</div>
+                        <div class="detail-value">{{ organization.address|default:"-" }}</div>
                     </div>
                     <div class="detail-row">
                         <div class="detail-label">ประเภทธุรกิจ:</div>
-                        <div class="detail-value">{{ organization.business_type | default:"-" }}</div>
+                        <div class="detail-value">{{ organization.business_type|default:"-" }}</div>
                     </div>
                 </div>
                 <div class="mt-6">
@@ -568,30 +568,30 @@
                 <div class="space-y-2">
                     <div class="detail-row">
                         <div class="detail-label">ผู้ใช้ทั้งหมด:</div>
-                        <div class="detail-value">{{ active_users_count | default:0 }} <span class="text-gray-500">คน</span></div>
+                        <div class="detail-value">{{ active_users_count|default:0 }} <span class="text-gray-500">คน</span></div>
                     </div>
                     <div class="detail-row">
                         <div class="detail-label">ประเภทสิ่งของทั้งหมด:</div>
-                        <div class="detail-value">{{ total_item_types | default:0 }} <span class="text-gray-500">ประเภท</span></div>
+                        <div class="detail-value">{{ total_item_types|default:0 }} <span class="text-gray-500">ประเภท</span></div>
                     </div>
                     <div class="detail-row">
                         <div class="detail-label">อุปกรณ์ทั้งหมด:</div>
-                        <div class="detail-value">{{ total_assets | default:0 }} <span class="text-gray-500">ชิ้น</span></div>
+                        <div class="detail-value">{{ total_assets|default:0 }} <span class="text-gray-500">ชิ้น</span></div>
                     </div>
                     <div class="detail-row">
                         <div class="detail-label">คำขอยืมที่รอดำเนินการ:</div>
-                        <div class="detail-value">{{ pending_loan_requests | default:0 }} <span class="text-gray-500">รายการ</span></div>
+                        <div class="detail-value">{{ pending_loan_requests|default:0 }} <span class="text-gray-500">รายการ</span></div>
                     </div>
                     <div class="detail-row">
                         <div class="detail-label">รายการยืมที่กำลังดำเนินการ:</div>
-                        <div class="detail-value">{{ active_loans.count | default:0 }} <span class="text-gray-500">รายการ</span></div>
+                        <div class="detail-value">{{ active_loans.count|default:0 }} <span class="text-gray-500">รายการ</span></div>
                     </div>
                 </div>
             </div>
             
         </div>
 
-        <!-- Enhanced Quick Links -->
+        {% comment %} <!-- ลิงก์ด่วน -->
         <section class="quick-links-section">
             <h2 class="section-title">
                 <i class="fas fa-bolt"></i>
@@ -624,10 +624,77 @@
                     <i class="fas fa-arrow-right"></i>
                 </a>
             </div>
-        </section>
-        
+        </section> {% endcomment %}
+
+        <!-- อนุมัติแล้ว / รอผู้ยืมมารับของ -->
+        <div class="mt-12">
+          <div class="bg-white rounded-xl shadow p-6 border border-gray-200">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <i class="fas fa-calendar-check text-emerald-600"></i>
+              รายการ “อนุมัติแล้ว / รอผู้ยืมมารับของ”
+            </h2>
+
+            {% if active_loans %}
+              <div class="overflow-x-auto rounded-lg border border-gray-200">
+                <table class="min-w-full bg-white">
+                  <thead>
+                    <tr class="bg-gray-100 text-gray-700 uppercase text-sm leading-normal font-bold">
+                      <th class="py-3 px-4 text-left">อุปกรณ์</th>
+                      <th class="py-3 px-4 text-left">ผู้ยืม</th>
+                      <th class="py-3 px-4 text-center">ช่วงที่จอง</th>
+                      <th class="py-3 px-4 text-center">สถานะอุปกรณ์</th>
+                      <th class="py-3 px-4 text-right">การกระทำ</th>
+                    </tr>
+                  </thead>
+
+                  <tbody class="text-gray-700 text-sm divide-y divide-gray-100">
+                    {% for loan in active_loans %}
+                      <tr class="hover:bg-gray-50">
+                        <td class="py-3 px-4">
+                          {{ loan.asset.item.name }}
+                          {% if loan.asset.serial_number %}
+                            <span class="text-gray-500"> (SN: {{ loan.asset.serial_number }})</span>
+                          {% elif loan.asset.device_id %}
+                            <span class="text-gray-500"> (ID: {{ loan.asset.device_id }})</span>
+                          {% endif %}
+                        </td>
+
+                        <td class="py-3 px-4">{{ loan.borrower.username }}</td>
+
+                        <td class="py-3 px-4 text-center">
+                          {{ loan.start_date|date:"d/m/Y" }} - {{ loan.due_date|date:"d/m/Y" }}
+                        </td>
+
+                        <td class="py-3 px-4 text-center">
+                          {{ loan.asset.get_status_display }}
+                        </td>
+
+                        <td class="py-3 px-4 text-right space-x-2">
+                          {% if request.user.is_org_admin and loan.status == 'approved' and loan.asset.status == 'available' %}
+                            <form method="post" action="{% url 'start_loan' loan.id %}" class="inline">
+                              {% csrf_token %}
+                              <button class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-sm">
+                                เริ่มยืม/มอบของ
+                              </button>
+                            </form>
+                          {% else %}
+                            <span class="text-gray-400 text-sm italic">—</span>
+                          {% endif %}
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <p class="text-gray-600">ยังไม่มีรายการที่อนุมัติแล้วรอรับของ</p>
+            {% endif %}
+          </div>
+        </div>
+
     </div>
 </div>
+
 
 <script>
 // Add smooth scrolling and enhanced interactions
