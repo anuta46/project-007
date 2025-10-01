@@ -4,25 +4,36 @@ from django.db.models import Q
 from django.utils.text import slugify
 from django.core.exceptions import ValidationError
 from users.models import Organization, CustomUser
-
+from uuid import uuid4
 
 class ItemCategory(models.Model):
-    name = models.CharField(max_length=100, unique=True, verbose_name="ชื่อหมวดหมู่")
+    name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True, blank=True)
-    icon = models.CharField(max_length=50, blank=True, verbose_name="ไอคอน (เช่น fa-laptop)")
-
-    class Meta:
-        verbose_name = "หมวดอุปกรณ์"
-        verbose_name_plural = "หมวดอุปกรณ์"
+    icon = models.CharField(max_length=100, blank=True, null=True)
 
     def __str__(self):
-        return self.name
+        # แสดงไอคอนนำหน้าได้ ถ้ามี
+        return f"{self.icon} {self.name}".strip() if self.icon else self.name
+
+    # สร้าง slug ไม่ซ้ำ (รองรับภาษาไทย)
+    def _make_unique_slug(self):
+        base = slugify(self.name, allow_unicode=True)
+        if not base:
+            base = f"category-{uuid4().hex[:6]}"
+
+        s = base
+        n = 2
+        while ItemCategory.objects.filter(slug=s).exclude(pk=self.pk).exists():
+            s = f"{base}-{n}"
+            n += 1
+        return s
 
     def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)
+        # อัปเดต slug อัตโนมัติทุกครั้งที่ชื่อเปลี่ยน และกันซ้ำให้เรียบร้อย
+        new_slug = slugify(self.name, allow_unicode=True) or None
+        if not self.slug or (new_slug and new_slug != self.slug):
+            self.slug = self._make_unique_slug()
         super().save(*args, **kwargs)
-
 
 class Item(models.Model):
     organization = models.ForeignKey(
@@ -53,7 +64,6 @@ class Item(models.Model):
     def __str__(self):
         return f"{self.name} ({self.organization.name})"
 
-
 class Asset(models.Model):
     item = models.ForeignKey(
         Item, on_delete=models.CASCADE, related_name='assets',
@@ -62,9 +72,7 @@ class Asset(models.Model):
     serial_number = models.CharField(max_length=255, blank=True, null=True, unique=True, verbose_name="หมายเลขซีเรียล")
     device_id = models.CharField(max_length=255, blank=True, null=True, unique=True, verbose_name="ID อุปกรณ์")
     location = models.CharField(max_length=255, blank=True, null=True, verbose_name="ตำแหน่ง")
-    added_at = models.DateTimeField(
-        auto_now_add=True, db_index=True, null=True, verbose_name="วันที่เพิ่มเข้าระบบ"
-    )
+    added_at = models.DateTimeField(auto_now_add=True, db_index=True, null=True, verbose_name="วันที่เพิ่มเข้าระบบ")
 
     STATUS_CHOICES = [
         ('available', 'พร้อมใช้งาน'),
@@ -72,10 +80,7 @@ class Asset(models.Model):
         ('maintenance', 'บำรุงรักษา'),
         ('retired', 'ปลดระวาง'),
     ]
-    status = models.CharField(
-        max_length=20, choices=STATUS_CHOICES,
-        default='available', verbose_name="สถานะ", db_index=True
-    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='available', verbose_name="สถานะ", db_index=True)
 
     class Meta:
         verbose_name = "อุปกรณ์"
@@ -98,7 +103,6 @@ class Asset(models.Model):
             raise ValidationError("ต้องระบุหมายเลขซีเรียลหรือ ID อุปกรณ์อย่างใดอย่างหนึ่ง")
 
     def save(self, *args, **kwargs):
-        # normalize '' -> None
         if self.serial_number == '':
             self.serial_number = None
         if self.device_id == '':
@@ -111,7 +115,6 @@ class Asset(models.Model):
 
         super().save(*args, **kwargs)
 
-        # อัปเดตยอดฝั่ง Item เมื่อมีผลกระทบ
         affected_item_ids = {self.item_id}
         if old_item_id and old_item_id != self.item_id:
             affected_item_ids.add(old_item_id)
@@ -133,7 +136,6 @@ class Asset(models.Model):
             total_quantity=total,
             available_quantity=available
         )
-
 
 class Loan(models.Model):
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, verbose_name="อุปกรณ์", related_name='loans', db_index=True)
@@ -174,22 +176,17 @@ class Loan(models.Model):
 
     def clean(self):
         super().clean()
-
         errors = {}
 
-        # 1) ตรวจช่วงวันพื้นฐาน
-        if self.start_date and self.due_date:
-            if self.due_date < self.start_date:
-                errors['due_date'] = ValidationError("กำหนดคืนต้องไม่น้อยกว่าวันเริ่มใช้")
+        if self.start_date and self.due_date and self.due_date < self.start_date:
+            errors['due_date'] = ValidationError("กำหนดคืนต้องไม่น้อยกว่าวันเริ่มใช้")
 
-        # 2) สถานะที่ต้องมีช่วงวัน
         if self.status in ('approved', 'overdue'):
             if not self.start_date:
                 errors['start_date'] = ValidationError("สถานะนี้ต้องระบุวันที่เริ่มใช้")
             if not self.due_date:
                 errors['due_date'] = ValidationError("สถานะนี้ต้องระบุกำหนดคืน")
 
-        # 3) กันการจอง/อนุมัติซ้อนช่วงกับสินทรัพย์เดียวกัน
         if self.start_date and self.due_date and self.asset_id:
             overlapping_qs = Loan.objects.filter(
                 asset_id=self.asset_id,

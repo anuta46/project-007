@@ -11,31 +11,41 @@ from .models import Item, Asset, Loan, ItemCategory
 class ItemCategoryForm(forms.ModelForm):
     class Meta:
         model = ItemCategory
-        fields = ['name', 'icon']  # slug สร้างอัตโนมัติใน model.save()
-        labels = {
-            'name': 'ชื่อหมวดอุปกรณ์',
-            'icon': 'ไอคอน (Font Awesome เช่น fa-laptop)',
-        }
-        widgets = {
-            'name': forms.TextInput(attrs={'placeholder': 'เช่น คอมพิวเตอร์, หนังสือ, เครื่องมือช่าง'}),
-            'icon': forms.TextInput(attrs={'placeholder': 'เช่น fa-laptop, fa-screwdriver-wrench'}),
-        }
+        fields = ['name', 'icon']   # ให้แน่ใจว่ามี icon
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['icon'].required = False
+        self.fields['icon'].help_text = "เช่น fa-laptop, fa-tag (เว้นว่างได้)"
 
+
+# borrowing/forms.py
+from django import forms
+from .models import Item, ItemCategory
 
 class ItemForm(forms.ModelForm):
     class Meta:
         model = Item
         fields = ['name', 'description', 'image', 'category']
         labels = {
-            'name': "ชื่อประเภทสิ่งของ",
-            'description': "รายละเอียดประเภทสิ่งของ",
-            'image': "รูปภาพประเภทสิ่งของ",
-            'category': "หมวดอุปกรณ์",
+            'name': "ชื่อพัสดุ/คุรุภัณฑ์",
+            'description': "รายละเอียดพัสดุ/คุรุภัณฑ์",
+            'image': "รูปภาพพัสดุ/คุรุภัณฑ์",
+            'category': "หมวดพัสดุ/คุรุภัณฑ์",
         }
         widgets = {
             'description': forms.Textarea(attrs={'rows': 3}),
             'category': forms.Select(attrs={'class': 'form-select'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # เรียงหมวดตามชื่อ
+        self.fields['category'].queryset = ItemCategory.objects.order_by('name')
+        # เปลี่ยน label ของแต่ละตัวเลือกให้โชว์ "ไอคอน ชื่อ" (หรือเฉพาะชื่อถ้าไม่มีไอคอน)
+        self.fields['category'].label_from_instance = (
+            lambda obj: f"{obj.icon} {obj.name}".strip() if obj.icon else obj.name
+        )
+
 
 
 # ───────────────────────── Asset ─────────────────────────

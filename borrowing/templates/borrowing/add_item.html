@@ -1,16 +1,16 @@
 {% extends 'users/base.html' %}
 
-{% block title %}เพิ่มประเภทสิ่งของและอุปกรณ์ใหม่{% endblock %}
+{% block title %}เพิ่มพัสดุ/คุรุภัณฑ์ใหม่{% endblock %}
 
 {% block content %}
 <div class="bg-gradient-to-br from-white to-blue-50 p-6 md:p-8 lg:p-10 rounded-3xl shadow-2xl max-w-5xl mx-auto my-10 border border-blue-100 animate-fade-in">
   <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6 text-center flex flex-col sm:flex-row items-center justify-center gap-x-3 leading-tight">
     <i class="fas fa-box-open text-indigo-600 text-5xl mb-2 sm:mb-0"></i>
-    <span class="tracking-wide">เพิ่มประเภทสิ่งของ</span>
-    <span class="text-indigo-700">และอุปกรณ์ใหม่</span>
+    <span class="tracking-wide">ประเภทพัสดุ/คุรุภัณฑ์</span>
+    <span class="text-indigo-700">ใหม่</span>
   </h1>
   <p class="text-gray-600 mb-10 text-center text-lg md:text-xl max-w-3xl mx-auto leading-relaxed">
-    กรอกข้อมูลเกี่ยวกับประเภทสิ่งของ (เลือกหมวดอุปกรณ์ได้) และรายละเอียดของอุปกรณ์แต่ละชิ้นที่พร้อมให้ยืมในองค์กรของคุณ
+    กรอกข้อมูลเกี่ยวกับพัสดุ/คุรุภัณฑ์ (เลือกหมวดพัสดุ/คุรุภัณฑ์) และรายละเอียดพัสดุ/คุรุภัณฑ์แต่ละชิ้นที่พร้อมให้ยืมในองค์กรของคุณ
   </p>
   
 
@@ -22,7 +22,7 @@
     {# ---------- ฟอร์มประเภทสิ่งของ (ItemForm) ---------- #}
     <div class="p-8 bg-blue-50 rounded-2xl shadow-lg border border-blue-200 mb-10">
       <h2 class="text-3xl font-bold text-blue-800 mb-5 pb-3 border-b-2 border-blue-300 flex items-center gap-x-3">
-        <i class="fas fa-boxes-stacked text-blue-600 text-3xl"></i> ข้อมูลประเภทสิ่งของ
+        <i class="fas fa-boxes-stacked text-blue-600 text-3xl"></i> ข้อมูลพัสดุ/คุรุภัณฑ์
       </h2>
 
       {# แสดง field ทั้งหมดจาก ItemForm (ควรมี: name, description, image, category) #}
@@ -61,10 +61,10 @@
     <div class="p-8 bg-green-50 rounded-2xl shadow-lg border border-green-200">
       <h2 class="text-3xl font-bold text-green-800 mb-5 pb-3 border-b-2 border-green-300 flex items-center justify-between gap-x-3">
         <div class="flex items-center gap-x-3">
-          <i class="fas fa-box text-green-600 text-3xl"></i> เพิ่มอุปกรณ์แต่ละชิ้น
+          {% comment %} <i class="fas fa-box text-green-600 text-3xl"></i> เพิ่มพัสดุ/คุรุภัณฑ์ {% endcomment %}
         </div>
         <div id="asset-count-display" class="bg-gray-200 text-gray-700 text-sm font-medium px-4 py-2 rounded-full shadow-inner">
-          อุปกรณ์: 0 ชิ้น
+          พัสดุ/คุรุภัณฑ์: 0 ชิ้น
         </div>
       </h2>
 
@@ -98,7 +98,7 @@
             {% endfor %}
 
             <h3 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2 border-gray-100">
-              รายละเอียดอุปกรณ์ #{{ forloop.counter }}
+             รายละเอียดพัสดุ/คุรุภัณฑ์ #{{ forloop.counter }}
             </h3>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
@@ -145,7 +145,7 @@
               {{ hidden_field }}
             {% endfor %}
             <h3 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2 border-gray-100">
-              รายละเอียดอุปกรณ์ #__NO__
+           รายละเอียดพัสดุ/คุรุภัณฑ์#__NO__ 
             </h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
               {% for field in ef.visible_fields %}
@@ -169,7 +169,7 @@
 
       <button type="button" id="add-asset-form"
               class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-full transition duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center text-lg mt-8">
-        <i class="fas fa-plus mr-3"></i> เพิ่มอุปกรณ์อีกชิ้น
+        <i class="fas fa-plus mr-3"></i> เพิ่มพัสดุ/คุรุภัณฑ์อีกชิ้น
       </button>
 
       {% if asset_formset.non_form_errors %}
@@ -183,13 +183,13 @@
 
     <button type="submit"
             class="w-full mt-12 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-bold py-4 px-8 rounded-full transition duration-300 transform hover:scale-105 shadow-xl text-xl tracking-wide">
-      <i class="fas fa-save mr-3"></i> บันทึกประเภทสิ่งของและอุปกรณ์ทั้งหมด
+      <i class="fas fa-save mr-3"></i> บันทึกพัสดุ/คุรุภัณฑ์ทั้งหมด
     </button>
   </form>
 
   <div class="mt-10 pt-8 border-t-2 border-gray-200 flex flex-wrap gap-4 justify-center animate-fade-in-up">
     <a href="{% url 'item_overview' %}" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-8 rounded-full transition duration-300 transform hover:scale-105 shadow-md flex items-center justify-center text-lg">
-      <i class="fas fa-list mr-3"></i> ไปหน้ารายการสิ่งของ
+      <i class="fas fa-list mr-3"></i> ไปหน้ารายการพัสดุ/คุรุภัณฑ์
     </a>
     <a href="{% url 'dashboard' %}" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-8 rounded-full transition duration-300 transform hover:scale-105 shadow-md flex items-center justify-center text-lg">
       <i class="fas fa-arrow-left mr-3"></i> กลับสู่แดชบอร์ด

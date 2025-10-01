@@ -1,93 +1,175 @@
 {% extends 'users/base.html' %}
 
-{% block title %}ภาพรวมสิ่งของในองค์กร{% endblock %}
-{% block title_in_header %}ภาพรวมสิ่งของ{% endblock title_in_header %}
+{% block title %}พัสดุ/คุรุภัณฑ์ในองค์กร{% endblock %}
+{% block title_in_header %}พัสดุ/คุรุภัณฑ์{% endblock title_in_header %}
 
 {% block content %}
 <div class="bg-white p-6 md:p-8 lg:p-10 rounded-xl shadow-lg max-w-5xl mx-auto my-8 border border-gray-200">
   <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4 text-center flex items-center justify-center gap-x-3">
-    <i class="fas fa-boxes-stacked text-green-600"></i> ภาพรวมสิ่งของในองค์กร
+    <i class="fas fa-boxes-stacked text-green-600"></i> พัสดุ/คุรุภัณฑ์ทั้งหมดในองค์กร
   </h1>
   <p class="text-gray-700 mb-8 text-center text-lg max-w-2xl mx-auto">
-    จัดการและตรวจสอบสิ่งของทั้งหมดที่มีอยู่ในองค์กรของคุณ
+    จัดการและตรวจสอบพัสดุ/คุรุภัณฑ์ทั้งหมดที่มีอยู่ในองค์กรของคุณ
   </p>
 
   <hr class="my-6 border-gray-300">
 
   <div class="mb-10 p-6 bg-green-50 rounded-xl shadow-md border border-green-200">
     <h2 class="text-2xl font-bold text-green-800 mb-4 border-b-2 pb-2 border-green-300">
-      รายการสิ่งของทั้งหมด
+     พัสดุ/คุรุภัณฑ์ของทั้งหมด
     </h2>
 
     {% if items %}
-      <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
-        <table class="min-w-full bg-white">
-          <thead>
-            <tr class="bg-gray-100 text-gray-700 uppercase text-sm leading-normal font-bold">
-              <th class="py-3 px-6 text-left">ชื่อสิ่งของ</th>
-              <th class="py-3 px-6 text-left">หมวดอุปกรณ์</th>
-              <th class="py-3 px-6 text-center">พร้อมยืม</th>
-              <th class="py-3 px-6 text-center">ทั้งหมด</th>
-              <th class="py-3 px-6 text-center">การกระทำ</th>
-            </tr>
-          </thead>
-          <tbody class="text-gray-700 text-sm divide-y divide-gray-100">
-            {% for item in items %}
-              <tr class="hover:bg-gray-50 transition duration-150 ease-in-out">
-                <td class="py-3 px-6 text-left whitespace-nowrap">
-                  {{ item.name }}
-                </td>
-
-                <!-- แสดงหมวดจาก item.category (มีไอคอนถ้ากำหนดไว้) -->
-                <td class="py-3 px-6 text-left">
+      <div class="space-y-4">
+        {% for item in items %}
+          <div class="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <!-- แถวหัวข้อสรุป -->
+            <div class="flex flex-col md:flex-row items-start md:items-center gap-4 p-4 md:p-5">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-3">
+                  <h3 class="text-lg font-bold text-gray-900 truncate">{{ item.name }}</h3>
                   {% if item.category %}
-                    <span class="inline-flex items-center gap-2">
-                      <i class="fa-solid {{ item.category.icon|default:'fa-tag' }} text-gray-500"></i>
-                      {{ item.category.name }}
+                    <span class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">
+                      <i class="fa-solid {{ item.category.icon|default:'fa-tag' }}"></i> {{ item.category.name }}
                     </span>
-                  {% else %}
-                    -
                   {% endif %}
-                </td>
+                </div>
 
-                <td class="py-3 px-6 text-center font-medium">{{ item.available_quantity }}</td>
-                <td class="py-3 px-6 text-center font-medium">{{ item.total_quantity }}</td>
+                <!-- ค่าจำนวน -->
+                <div class="mt-1 text-sm text-gray-600">
+                  พร้อมยืม: <span class="font-semibold text-gray-800">{{ item.available_quantity }}</span>
+                  <span class="mx-1 text-gray-400">/</span>
+                  ทั้งหมด: <span class="font-semibold text-gray-800">{{ item.total_quantity }}</span>
+                </div>
+              </div>
 
-                <td class="py-3 px-6">
-                  <div class="flex justify-center items-center gap-2">
-                    <a href="{% url 'edit_item' item.id %}"
-                       class="bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold py-2 px-3 rounded-lg transition duration-300 shadow-md flex items-center">
-                      <i class="fas fa-edit mr-1"></i> แก้ไข
-                    </a>
-                    <form method="post" action="{% url 'delete_item' item.id %}"
-                          onsubmit="return confirm('ยืนยันลบประเภทสิ่งของ {{ item.name }} ?');">
-                      {% csrf_token %}
-                      <button type="submit"
-                              class="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition duration-300 shadow-md flex items-center">
-                        <i class="fas fa-trash-alt mr-1"></i> ลบ
-                      </button>
-                    </form>
+              <div class="flex items-center gap-2">
+                <a href="{% url 'edit_item' item.id %}" class="bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold py-2 px-3 rounded-lg transition duration-300 shadow">
+                  <i class="fas fa-edit mr-1"></i> แก้ไข
+                </a>
+                <form method="post" action="{% url 'delete_item' item.id %}"
+                      onsubmit="return confirm('ยืนยันลบประเภทสิ่งของ {{ item.name }} ?');">
+                  {% csrf_token %}
+                  <button type="submit" class="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition duration-300 shadow">
+                    <i class="fas fa-trash-alt mr-1"></i> ลบ
+                  </button>
+                </form>
+                <button type="button"
+                        class="toggle-row bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-semibold py-2 px-3 rounded-lg transition"
+                        data-target="#item-details-{{ item.id }}">
+                  แสดงรายละเอียด / พัสดุ/คุรุภัณฑ์
+                </button>
+              </div>
+            </div>
+
+            <!-- แผงรายละเอียดที่พับ/ขยายได้ -->
+            <div id="item-details-{{ item.id }}" class="hidden border-t border-gray-100">
+              <div class="p-5 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- รูปภาพ -->
+                <div>
+                  <div class="aspect-[4/3] bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
+                    {% if item.image %}
+                      <img src="{{ item.image.url }}" alt="{{ item.name }}" class="w-full h-full object-cover">
+                    {% else %}
+                      <div class="w-full h-full grid place-items-center text-gray-400">
+                        <i class="fas fa-image text-3xl"></i>
+                        <span class="mt-1 text-xs">ไม่มีรูปภาพ</span>
+                      </div>
+                    {% endif %}
                   </div>
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+                </div>
+
+                <!-- รายละเอียด Item -->
+                <div class="md:col-span-2">
+                  <h4 class="text-sm font-semibold text-gray-900 mb-2">พัสดุ/คุรุภัณฑ์</h4>
+                  <dl class="text-sm text-gray-700 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
+                    <div>
+                      <dt class="text-gray-500">ชื่อ</dt>
+                      <dd class="font-medium text-gray-900 break-words">{{ item.name }}</dd>
+                    </div>
+                    <div>
+                      <dt class="text-gray-500">หมวดพัสดุ/คุรุภัณฑ์</dt>
+                      <dd class="font-medium text-gray-900">
+                        {% if item.category %}{{ item.category.name }}{% else %}-{% endif %}
+                      </dd>
+                    </div>
+                    <div class="md:col-span-2">
+                      <dt class="text-gray-500">คำอธิบาย</dt>
+                      <dd class="font-medium text-gray-900 whitespace-pre-line">
+                        {{ item.description|default:"-" }}
+                      </dd>
+                    </div>
+                  </dl>
+
+                  <!-- ตาราง Assets -->
+                  <div class="mt-6">
+                    {% comment %} <h4 class="text-sm font-semibold text-gray-900 mb-2">อุปกรณ์ที่ผูกอยู่ (Assets)</h4> {% endcomment %}
+
+                    {% if item.assets and item.assets|length > 0 %}
+                      <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                        <table class="min-w-full text-sm bg-white">
+                          <thead class="bg-gray-50">
+                            <tr class="text-gray-700">
+                              <th class="px-4 py-2 text-left font-semibold">Serial/Device ID</th>
+                              <th class="px-4 py-2 text-left font-semibold">ตำแหน่ง</th>
+                              <th class="px-4 py-2 text-left font-semibold">สถานะ</th>
+                            </tr>
+                          </thead>
+                          <tbody class="divide-y divide-gray-100">
+                            {% for a in item.assets %}
+                              <tr>
+                                <td class="px-4 py-2">
+                                  {% firstof a.serial_number a.device_id "-" %}
+                                </td>
+                                <td class="px-4 py-2">{{ a.location|default:"-" }}</td>
+                                <td class="px-4 py-2">
+                                  {% if a.status == 'available' %}
+                                    <span class="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800 border border-green-200">พร้อมยืม</span>
+                                  {% elif a.status == 'on_loan' %}
+                                    <span class="px-2 py-0.5 rounded-full text-xs bg-amber-100 text-amber-800 border border-amber-200">ถูกยืมอยู่</span>
+                                  {% else %}
+                                    <span class="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700 border border-gray-200">{{ a.get_status_display }}</span>
+                                  {% endif %}
+                                </td>
+                              </tr>
+                            {% endfor %}
+                          </tbody>
+                        </table>
+                      </div>
+                    {% else %}
+                      {% comment %} <p class="text-gray-600 italic">ยังไม่มีอุปกรณ์ที่ผูกกับประเภทนี้</p> {% endcomment %}
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
       </div>
     {% else %}
-      <p class="text-gray-600 italic py-2">ไม่พบประเภทสิ่งของในองค์กรของคุณ</p>
+      <p class="text-gray-600 italic py-2">ไม่พบพัสดุ/คุรุภัณฑ์ในองค์กรของคุณ</p>
     {% endif %}
   </div>
 
-  <div class="mt-8 pt-6 border-t-2 border-gray-200 flex flex-wrap gap-4 justify-center">
-    <a href="{% url 'dashboard' %}"
-       class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2.5 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-md flex items-center">
+  {% comment %} <div class="mt-8 pt-6 border-t-2 border-gray-200 flex flex-wrap gap-4 justify-center">
+    <a href="{% url 'dashboard' %}" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2.5 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-md flex items-center">
       <i class="fas fa-arrow-left mr-2"></i> กลับสู่แดชบอร์ด
     </a>
-    <a href="{% url 'add_item' %}"
-       class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-md flex items-center">
+    <a href="{% url 'add_item' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-md flex items-center">
       <i class="fas fa-plus-square mr-2"></i> เพิ่มประเภทสิ่งของใหม่
     </a>
   </div>
-</div>
+</div> {% endcomment %}
+
+<script>
+  // ปุ่มพับ/ขยายรายละเอียด
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.toggle-row');
+    if (!btn) return;
+    const target = document.querySelector(btn.dataset.target);
+    if (!target) return;
+    target.classList.toggle('hidden');
+    btn.textContent = target.classList.contains('hidden') ? 'แสดงรายละเอียด / อุปกรณ์' : 'ซ่อนรายละเอียด / อุปกรณ์';
+  });
+</script>
 {% endblock content %}
