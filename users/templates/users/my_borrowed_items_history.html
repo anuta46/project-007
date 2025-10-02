@@ -26,7 +26,7 @@
                   <tr class="bg-gray-100 text-gray-700 uppercase text-sm">
                     <th class="py-3.5 pl-6 pr-3 text-left font-semibold">สิ่งของ (SN/ID)</th>
                     <th class="py-3.5 px-3 text-left font-semibold">สถานะ</th>
-                    <th class="py-3.5 px-3 text-left font-semibold">วันที่ยืม</th>
+                    <th class="py-3.5 px-3 text-left font-semibold">วันเริ่มใช้ / ส่งคำขอ</th>
                     <th class="py-3.5 px-3 text-left font-semibold">วันครบกำหนด</th>
                     <th class="py-3.5 pr-6 pl-3 text-center font-semibold">การกระทำ</th>
                   </tr>
@@ -42,6 +42,7 @@
                           (ID: {{ loan.asset.device_id }})
                         {% endif %}
                       </td>
+
                       <td class="py-3.5 px-3">
                         {% if loan.status == 'approved' %}
                           <span class="px-2 py-1 inline-flex text-xs font-semibold rounded-full bg-green-100 text-green-800">อนุมัติ</span>
@@ -55,10 +56,43 @@
                           <span class="px-2 py-1 inline-flex text-xs font-semibold rounded-full bg-purple-100 text-purple-800">เกินกำหนด</span>
                         {% endif %}
                       </td>
-                      <td class="py-3.5 px-3">{{ loan.borrow_date|default_if_none:"N/A"|date:"M d, Y" }}</td>
-                      <td class="py-3.5 px-3">{{ loan.due_date|date:"M d, Y" }}</td>
+
+                      <!-- ⬇️ แยกสองบรรทัด: เริ่มใช้ / ส่งคำขอ -->
+                      <td class="py-3.5 px-3">
+                        <div class="flex flex-col leading-tight">
+                          <div>
+                            <span class="text-gray-500 text-xs">เริ่มใช้:</span>
+                            <span class="font-medium">
+                              {% if loan.start_date %}
+                                {{ loan.start_date|date:"M d, Y" }}
+                              {% else %}
+                                —
+                              {% endif %}
+                            </span>
+                          </div>
+                          <div class="mt-0.5">
+                            <span class="text-gray-500 text-xs">ส่งคำขอ:</span>
+                            <span class="text-sm">
+                              {{ loan.borrow_date|default_if_none:"N/A"|date:"M d, Y" }}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+
+                      <!-- ⬇️ วันครบกำหนด + ป้ายเกินกำหนด (ถ้ามี) -->
+                      <td class="py-3.5 px-3">
+                        <div class="flex items-center gap-2">
+                          <span class="font-medium">
+                            {{ loan.due_date|default_if_none:"N/A"|date:"M d, Y" }}
+                          </span>
+                          {% if loan.status == 'overdue' and loan.due_date %}
+                            <span class="px-2 py-0.5 text-xs rounded-full bg-purple-100 text-purple-800">เกินกำหนด</span>
+                          {% endif %}
+                        </div>
+                      </td>
+
                       <td class="py-3.5 pr-6 pl-3 text-center">
-                        {% if loan.status == 'approved' %}
+                        {% if loan.status == 'approved' or loan.status == 'overdue' %}
                           <a href="{% url 'return_item' loan.id %}"
                              class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition shadow-md">
                             คืน

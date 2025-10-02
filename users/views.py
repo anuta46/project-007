@@ -10,6 +10,9 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 
+from django.db.models import Q, Count, Exists, OuterRef
+from django.utils import timezone
+
 from .forms import (
     OrganizationRegistrationForm,
     UserRegistrationForm,
@@ -102,21 +105,37 @@ def dashboard(request):
             asset__item__organization=organization, status='pending'
         ).count()
 
+        overdue_count = Loan.objects.filter(
+            asset__item__organization=organization, status='overdue'
+        ).count()
+
         active_users_count = CustomUser.objects.filter(
             organization=organization, is_active=True
         ).count()
 
-        pending_loans = Loan.objects.filter(
-            asset__item__organization=organization, status='pending'
-        ).order_by('-borrow_date')
+        # ⬇️ ปรับ: active = approved + overdue
+        active_loans = (
+            Loan.objects
+            .filter(asset__item__organization=organization, status__in=['approved', 'overdue'])
+            .select_related('asset__item', 'borrower')
+            .order_by('due_date')
+        )
 
-        active_loans = Loan.objects.filter(
-            asset__item__organization=organization, status='approved'
-        ).order_by('due_date')
+        pending_loans = (
+            Loan.objects
+            .filter(asset__item__organization=organization, status='pending')
+            .select_related('asset__item', 'borrower')
+            .order_by('-borrow_date')
+        )
 
-        loan_history = Loan.objects.filter(
-            asset__item__organization=organization
-        ).exclude(status__in=['pending', 'approved']).order_by('-borrow_date')
+        # ⬇️ ปรับ: ย้าย overdue ออกไปจาก history (เพราะยังไม่ปิด)
+        loan_history = (
+            Loan.objects
+            .filter(asset__item__organization=organization)
+            .exclude(status__in=['pending', 'approved', 'overdue'])
+            .select_related('asset__item', 'borrower')
+            .order_by('-borrow_date')
+        )
 
         context = {
             'is_superuser_dashboard': False,
@@ -126,6 +145,7 @@ def dashboard(request):
             'available_assets_count': available_assets_count,
             'on_loan_assets_count': on_loan_assets_count,
             'pending_loan_requests': pending_loan_requests,
+            'overdue_count': overdue_count,               # ✅ เพิ่มไว้ใช้แสดงการ์ด/ป้าย
             'active_users_count': active_users_count,
             'pending_loans': pending_loans,
             'active_loans': active_loans,
@@ -153,6 +173,7 @@ def user_dashboard(request):
     query = (request.GET.get('q') or '').strip()
     status_filter = (request.GET.get('status') or 'available').strip().lower()
 
+    # ค้นหา
     if query:
         queryset = queryset.filter(
             Q(item__name__icontains=query) |
@@ -161,6 +182,7 @@ def user_dashboard(request):
             Q(item__description__icontains=query)
         )
 
+    # กรองสถานะสินทรัพย์ตามตัวกรองเดิม
     if status_filter == 'available':
         queryset = queryset.filter(status='available')
     elif status_filter == 'unavailable':
@@ -171,6 +193,32 @@ def user_dashboard(request):
         queryset = queryset.filter(status='available')
         status_filter = 'available'
 
+    # ====== ใส่ธง "จองแล้ว" ======
+    # นิยาม: มี Loan ที่ status in (pending, approved) และกำหนดช่วงวันที่ครบ
+    today = timezone.localdate()
+
+    overlapping_today = Loan.objects.filter(
+        asset_id=OuterRef('pk'),
+        status__in=['pending', 'approved'],
+        start_date__isnull=False,
+        due_date__isnull=False,
+        start_date__lte=today,
+        due_date__gte=today,
+    )
+
+    future_reservation = Loan.objects.filter(
+        asset_id=OuterRef('pk'),
+        status__in=['pending', 'approved'],
+        start_date__isnull=False,
+        start_date__gt=today,
+    )
+
+    queryset = queryset.annotate(
+        reserved_now=Exists(overlapping_today),
+        reserved_future=Exists(future_reservation),
+    )
+    # ============================
+
     available_assets = queryset.order_by('item__name', 'serial_number', 'device_id')
 
     context = {
@@ -180,7 +228,6 @@ def user_dashboard(request):
         'current_status': status_filter,
     }
     return render(request, 'users/user_dashboard.html', context)
-
 
 # -------------------------------------------------------------------
 # สมัครผู้ใช้ "ผ่านแพลตฟอร์ม" (ไม่ใช้ลิงก์)

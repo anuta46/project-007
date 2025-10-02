@@ -4,72 +4,249 @@
 {% block title %}เลือกองค์กร{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto px-4 py-8 text-gray-900">
+<div class="min-h-screen bg-gray-50 pt-10 pb-16">
+  <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
 
-  {# การ์ดทักทายดึงชื่อจาก request.user #}
-  {% with display_name=request.user.get_full_name|default:request.user.username %}
-  <div class="rounded-2xl p-6 bg-gradient-to-r from-indigo-600 to-fuchsia-500 text-white shadow-xl mb-6">
-    <div class="flex items-center gap-4">
-      <div class="h-12 w-12 rounded-2xl bg-white/20 flex items-center justify-center">
-        <i class="fa-solid fa-user text-white text-xl"></i>
-      </div>
-      <div>
-        <div class="text-2xl font-extrabold">สวัสดี, {{ display_name }}</div>
-        <div class="text-sm opacity-90">
-          เลือกองค์กรด้านล่างเพื่อเริ่มสำรวจและยืมอุปกรณ์
+    {% with display_name=request.user.get_full_name|default:request.user.username %}
+    <div class="relative overflow-hidden rounded-3xl p-8 bg-gradient-to-br from-indigo-600 via-purple-600 to-fuchsia-600 text-white shadow-2xl mb-12">
+      <div class="absolute top-0 right-0 -mt-6 -mr-6 h-48 w-48 rounded-full bg-white/10 blur-3xl opacity-70"></div>
+
+      <div class="relative flex items-center gap-6">
+        <div class="h-16 w-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-xl">
+          <i class="fa-solid fa-building text-white text-2xl"></i>
+        </div>
+        <div>
+          <div class="text-3xl md:text-4xl font-extrabold mb-1">สวัสดีคุณ {{ display_name }} 👋</div>
+          <p class="text-white/90 text-lg">เลือกองค์กรที่คุณต้องการเข้าใช้งาน เพื่อเริ่มต้นระบบยืมอุปกรณ์</p>
         </div>
       </div>
     </div>
-  </div>
-  {% endwith %}
+    {% endwith %}
 
-  <h1 class="text-2xl font-bold mb-6">เลือกองค์กรที่ต้องการยืม</h1>
+    {# START: กล่องค้นหาแบบเต็มแถว #}
+    <div class="mb-10">
+      <div class="w-full p-4 rounded-2xl shadow-xl bg-white/70 backdrop-blur-md border border-gray-100">
+        <div class="flex items-center gap-3 mb-4 text-gray-800">
+          <span class="inline-flex items-center justify-center h-8 w-8 rounded-lg bg-purple-500 text-white shadow-md">
+            <i class="fa-solid fa-search text-sm"></i>
+          </span>
+          <span class="text-xl font-bold">ค้นหาองค์กร</span>
+        </div>
 
-  <form method="post" id="pickOrgForm">
-    {% csrf_token %}
+        <div class="relative w-full">
+          <!-- ไอคอนซ้าย -->
+          <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+
+          <!-- อินพุตค้นหา เต็มความกว้าง -->
+          <input
+            type="text"
+            id="searchOrg"
+            placeholder="ค้นหาชื่อองค์กร, ประเภท, หรือคำหลัก..."
+            class="block w-full pl-11 pr-28 py-3.5 rounded-2xl border border-gray-300 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition text-base"
+            aria-label="ค้นหาองค์กร"
+          />
+
+          <!-- ปุ่มด้านขวาภายในช่อง -->
+          <div class="absolute inset-y-0 right-2 flex items-center gap-2">
+            <button
+              type="button"
+              id="clearSearchBtn"
+              class="inline-flex items-center justify-center h-9 w-9 rounded-xl border border-gray-300 bg-white text-gray-600 shadow-sm hover:bg-gray-100 transition"
+              title="ล้างคำค้นหา"
+              aria-label="ล้างคำค้นหา"
+            >
+              <i class="fa-solid fa-rotate-right text-sm"></i>
+            </button>
+            <button
+              type="button"
+              id="triggerSearchBtn"
+              class="inline-flex items-center justify-center px-4 h-9 rounded-xl bg-purple-600 text-white font-semibold shadow-lg hover:bg-purple-700 transition"
+              title="ค้นหา"
+              aria-label="ค้นหา"
+            >
+              <i class="fa-solid fa-magnifying-glass mr-2 text-sm"></i> ค้นหา
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {# END: กล่องค้นหาแบบเต็มแถว #}
+
     {% if orgs %}
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-        {% for org in orgs %}
-          <label class="group cursor-pointer">
-            <input type="radio" name="organization_id" value="{{ org.id }}" class="peer hidden" required>
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 peer-checked:border-indigo-500 peer-checked:ring-2 peer-checked:ring-indigo-200 hover:shadow-md transition p-4 flex flex-col items-center">
-              <div class="relative h-24 w-24 mb-3">
-                {% if org.logo %}
-                  <img
-                    src="{{ org.logo.url }}"
-                    alt="{{ org.name }}"
-                    class="h-24 w-24 object-cover rounded-xl border border-gray-200"
-                    onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');"
-                  />
-                  <div class="hidden h-24 w-24 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-xl font-semibold">
-                    {{ org.name|slice:":1"|upper }}
-                  </div>
-                {% else %}
-                  <div class="h-24 w-24 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-xl font-semibold">
-                    {{ org.name|slice:":1"|upper }}
-                  </div>
-                {% endif %}
-              </div>
-
-              <div class="text-center">
-                <div class="font-semibold text-gray-900">{{ org.name }}</div>
-                {% if org.business_type %}
-                  <div class="text-sm text-gray-500 mt-1">{{ org.business_type }}</div>
-                {% endif %}
-              </div>
-            </div>
-          </label>
-        {% endfor %}
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-6 text-gray-700">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900">ผลลัพธ์การค้นหา</h2>
+        </div>
+        <div class="flex items-center gap-2 text-sm">
+          <i class="fa-solid fa-building-circle-check text-indigo-600"></i>
+          <span>พบ <span id="orgCount" class="font-semibold">{{ orgs|length }}</span> องค์กรที่เข้าถึงได้</span>
+        </div>
       </div>
 
-      <div class="mt-6">
-        <button type="submit" class="px-5 py-3 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700">
-          เลือกองค์กร
-        </button>
-      </div>
+      <form method="post" id="pickOrgForm">
+        {% csrf_token %}
+        <div id="orgGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {% for org in orgs %}
+            <label class="org-card group cursor-pointer"
+                   data-org-name="{{ org.name|lower }}"
+                   data-org-type="{{ org.business_type|lower|default:'' }}">
+              <input type="radio" name="organization_id" value="{{ org.id }}" class="peer hidden" required>
+
+              <div class="relative h-full bg-white rounded-2xl shadow-lg border-2 border-gray-100 peer-checked:border-purple-600 peer-checked:ring-4 peer-checked:ring-purple-200 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 overflow-hidden">
+                <!-- เช็คมาร์ค -->
+                <div class="absolute top-3 right-3 h-7 w-7 rounded-full bg-purple-600 text-white flex items-center justify-center opacity-0 peer-checked:opacity-100 transition-opacity shadow-lg z-10">
+                  <i class="fa-solid fa-check text-sm"></i>
+                </div>
+
+                <div class="p-6 flex flex-col items-center text-center">
+                  <!-- โลโก้ / ตัวย่อ -->
+                  <div class="relative mb-4">
+                    {% if org.logo %}
+                      <img src="{{ org.logo.url }}" alt="{{ org.name }}"
+                           class="h-24 w-24 object-cover rounded-2xl border-2 border-gray-100 shadow-md transition"
+                           onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');" />
+                      <div class="hidden h-24 w-24 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center text-3xl font-bold shadow-md">
+                        {{ org.name|slice:":1"|upper }}
+                      </div>
+                    {% else %}
+                      <div class="h-24 w-24 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center text-3xl font-bold shadow-md">
+                        {{ org.name|slice:":1"|upper }}
+                      </div>
+                    {% endif %}
+                  </div>
+
+                  <div class="font-bold text-xl text-gray-900 mb-2 line-clamp-2">
+                    {{ org.name }}
+                  </div>
+
+                  {% if org.business_type %}
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-semibold">
+                      <i class="fa-solid fa-tag text-[10px]"></i>
+                      {{ org.business_type }}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <!-- แถบล่างเน้นสี -->
+                <div class="h-1 bg-gradient-to-r from-purple-500 to-indigo-600 transform scale-x-0 group-hover:scale-x-100 peer-checked:scale-x-100 transition-transform origin-left"></div>
+              </div>
+            </label>
+          {% endfor %}
+        </div>
+
+        <!-- ข้อความเมื่อไม่พบผลลัพธ์ -->
+        <div id="noResults" class="hidden text-center py-16">
+          <div class="inline-flex items-center justify-center h-20 w-20 rounded-full bg-gray-200 mb-4">
+            <i class="fa-solid fa-magnifying-glass-minus text-3xl text-gray-500"></i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-2">ไม่พบองค์กรที่ตรงกับคำค้นหา</h3>
+          <p class="text-gray-600">ลองค้นหาด้วยคำอื่นหรือตรวจสอบการสะกดคำ</p>
+        </div>
+
+        <!-- ปุ่มยืนยัน -->
+        <div class="mt-12 flex justify-center">
+          <button type="submit" id="submitButton" disabled
+            class="group relative px-10 py-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-[1.02] transition disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+            <span class="flex items-center gap-3">
+              <i class="fa-solid fa-arrow-right-to-bracket"></i>
+              เข้าสู่ระบบยืมอุปกรณ์
+              <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+            </span>
+          </button>
+        </div>
+      </form>
+
     {% else %}
-      <div class="text-gray-500">ยังไม่มีองค์กรให้เลือก</div>
+      <!-- ไม่มีองค์กร -->
+      <div class="text-center py-20">
+        <div class="inline-flex items-center justify-center h-24 w-24 rounded-full bg-gray-200 mb-6">
+          <i class="fa-solid fa-building text-4xl text-gray-500"></i>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-900 mb-2">ยังไม่มีองค์กรที่คุณเข้าถึงได้</h3>
+        <p class="text-gray-600 mb-6">หากนี่คือความผิดพลาด กรุณาติดต่อผู้ดูแลระบบ</p>
+        <a href="{% url 'home' %}" class="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition shadow-md">
+          <i class="fa-solid fa-home"></i>
+          กลับหน้าหลัก
+        </a>
+      </div>
     {% endif %}
-  </form>
+
+  </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput  = document.getElementById('searchOrg');
+  const orgCards     = document.querySelectorAll('.org-card');
+  const orgCount     = document.getElementById('orgCount');
+  const orgGrid      = document.getElementById('orgGrid');
+  const noResults    = document.getElementById('noResults');
+  const submitButton = document.getElementById('submitButton');
+  const radioButtons = document.querySelectorAll('input[name="organization_id"]');
+
+  const clearBtn  = document.getElementById('clearSearchBtn');
+  const searchBtn = document.getElementById('triggerSearchBtn');
+
+  // 1) อัปเดตสถานะปุ่มยืนยันเมื่อเลือกองค์กร
+  const updateSubmitButtonState = () => {
+    const isChecked = Array.from(radioButtons).some(radio => radio.checked);
+    if (submitButton) submitButton.disabled = !isChecked;
+  };
+  updateSubmitButtonState();
+  radioButtons.forEach(radio => radio.addEventListener('change', updateSubmitButtonState));
+
+  // 2) ฟังก์ชันกรองการ์ดตามคำค้นหา
+  const applyFilter = () => {
+    const searchTerm = (searchInput?.value || '').toLowerCase().trim();
+    let visibleCount = 0;
+
+    orgCards.forEach(card => {
+      const orgName = card.dataset.orgName || '';
+      const orgType = card.dataset.orgType || '';
+      const isMatch = orgName.includes(searchTerm) || orgType.includes(searchTerm);
+
+      if (isMatch) {
+        card.classList.remove('hidden');
+        visibleCount++;
+      } else {
+        card.classList.add('hidden');
+      }
+    });
+
+    if (orgCount) orgCount.textContent = visibleCount;
+
+    if (visibleCount === 0) {
+      orgGrid?.classList.add('hidden');
+      noResults?.classList.remove('hidden');
+    } else {
+      orgGrid?.classList.remove('hidden');
+      noResults?.classList.add('hidden');
+    }
+  };
+
+  // 3) ผูกเหตุการณ์กับอินพุตและปุ่ม
+  if (searchInput) {
+    searchInput.addEventListener('input', applyFilter);
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        applyFilter();
+      }
+    });
+  }
+
+  if (searchBtn) {
+    searchBtn.addEventListener('click', applyFilter);
+  }
+
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      if (!searchInput) return;
+      searchInput.value = '';
+      searchInput.dispatchEvent(new Event('input'));
+      searchInput.focus();
+    });
+  }
+});
+</script>
 {% endblock %}

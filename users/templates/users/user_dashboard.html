@@ -6,369 +6,243 @@
 {% block content %}
 
 <style>
-  @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-8px); }
-  }
-  
-  @keyframes slideInUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  @keyframes shimmer {
-    0% { background-position: -200px 0; }
-    100% { background-position: calc(200px + 100%) 0; }
-  }
-  
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
-  }
-  
-  .float-animation {
-    animation: float 4s ease-in-out infinite;
-  }
-  
-  .slide-in {
-    animation: slideInUp 0.6s ease-out forwards;
-  }
-  
-  .glass-morphism {
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-  }
-  
-  .hover-glow:hover {
-    box-shadow: 0 15px 30px rgba(99, 102, 241, 0.3);
-  }
-  
-  .card-hover-effect {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  .card-hover-effect:hover {
-    transform: translateY(-6px) scale(1.01);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
-  }
-  
-  .status-pulse {
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-
-  /* Optimized image containers */
-  .equipment-image {
-    aspect-ratio: 16/10;
-    overflow: hidden;
-    border-radius: 16px;
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  }
-
-  .equipment-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.5s ease;
-  }
-
-  .equipment-image:hover img {
-    transform: scale(1.05);
-  }
-
-  /* Compact card design */
-  .equipment-card {
-    background: white;
-    border-radius: 20px;
-    border: 2px solid #f1f5f9;
-    transition: all 0.3s ease;
-    overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  }
-
-  .equipment-card:hover {
-    border-color: #6366f1;
-    transform: translateY(-4px);
-    box-shadow: 0 12px 24px rgba(99, 102, 241, 0.15);
-  }
-
-  /* Responsive grid optimization */
-  .equipment-grid {
-    grid-template-columns: repeat(1, 1fr); /* มือถือ แถวละ 1 */
-  }
-
-  @media (min-width: 640px) {
-    .equipment-grid {
-      grid-template-columns: repeat(2, 1fr); /* Tablet แถวละ 2 */
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .equipment-grid {
-      grid-template-columns: repeat(4, 1fr); /* Laptop ขึ้นไป แถวละ 4 */
-    }
-  }
+  @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
+  @keyframes slideInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes shimmer { 0% { background-position: -200px 0; } 100% { background-position: calc(200px + 100%) 0; } }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+  .float-animation { animation: float 4s ease-in-out infinite; }
+  .slide-in { animation: slideInUp 0.6s ease-out forwards; }
+  .glass-morphism { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.2); }
+  .hover-glow:hover { box-shadow: 0 15px 30px rgba(99, 102, 241, 0.3); }
+  .card-hover-effect { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+  .card-hover-effect:hover { transform: translateY(-6px) scale(1.01); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12); }
+  .status-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+  .equipment-image { aspect-ratio: 16/10; overflow: hidden; border-radius: 16px; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); }
+  .equipment-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+  .equipment-image:hover img { transform: scale(1.05); }
+  .equipment-card { background: white; border-radius: 20px; border: 2px solid #f1f5f9; transition: all 0.3s ease; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
+  .equipment-card:hover { border-color: #6366f1; transform: translateY(-4px); box-shadow: 0 12px 24px rgba(99, 102, 241, 0.15); }
+  .equipment-grid { grid-template-columns: repeat(1, 1fr); }
+  @media (min-width: 640px) { .equipment-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1024px) { .equipment-grid { grid-template-columns: repeat(4, 1fr); } }
 </style>
 
-
 <div class="max-w-7xl mx-auto my-8 px-4 lg:px-6">
-    <!-- Compact Hero Section -->
-    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white p-6 md:p-8 mb-8 shadow-xl">
-        <!-- Background Elements -->
-        <div class="absolute inset-0">
-            <div class="absolute -right-16 -top-16 w-48 h-48 rounded-full bg-white/10 blur-2xl float-animation"></div>
-            <div class="absolute -left-12 -bottom-12 w-36 h-36 rounded-full bg-white/10 blur-xl float-animation" style="animation-delay: 1s;"></div>
-        </div>
-
-        <div class="relative z-10 slide-in">
-            <div class="flex items-center justify-between">
-                <div class="flex-1">
-                    <div class="flex items-center gap-3 mb-3">
-                        <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
-                            <i class="fas fa-user-circle text-lg"></i>
-                        </div>
-                        <div>
-                            <h1 class="text-2xl md:text-3xl font-bold">
-                                สวัสดี, {{ user.username }}
-                            </h1>
-                            <div class="flex items-center gap-2">
-                                <div class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
-                                <span class="text-green-200 text-xs font-medium">ออนไลน์</span>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="text-white/90 text-sm md:text-base max-w-xl">
-                        ยินดีต้อนรับสู่ระบบยืม-คืนอุปกรณ์ สำรวจและยืมอุปกรณ์ได้อย่างง่ายดาย
-                    </p>
-                </div>
-                
-                <!-- Compact Stats -->
-                <div class="hidden md:flex items-center gap-4">
-                    <div class="text-center">
-                        <div class="text-2xl font-bold">{{ available_assets|length }}</div>
-                        <div class="text-xs text-white/80">อุปกรณ์พร้อมใช้</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <!-- Compact Hero Section -->
+  <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white p-6 md:p-8 mb-8 shadow-xl">
+    <div class="absolute inset-0">
+      <div class="absolute -right-16 -top-16 w-48 h-48 rounded-full bg-white/10 blur-2xl float-animation"></div>
+      <div class="absolute -left-12 -bottom-12 w-36 h-36 rounded-full bg-white/10 blur-xl float-animation" style="animation-delay: 1s;"></div>
     </div>
 
-    <!-- Compact Search Section -->
-    <form method="get" class="mb-8 slide-in" style="animation-delay: 0.1s;">
-        <div class="bg-white/95 backdrop-blur-xl rounded-2xl border border-white/50 shadow-lg p-6">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-search text-white text-sm"></i>
-                </div>
-                <h3 class="text-lg font-bold text-gray-800">ค้นหาอุปกรณ์</h3>
+    <div class="relative z-10 slide-in">
+      <div class="flex items-center justify-between">
+        <div class="flex-1">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
+              <i class="fas fa-user-circle text-lg"></i>
             </div>
-            
-            <div class="flex gap-3">
-                <div class="flex-1 relative">
-                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500 text-sm"></i>
-                    <input type="text" name="q" value="{{ current_query|default:'' }}" 
-                           placeholder="ค้นหาชื่ออุปกรณ์, รหัส, หรือรายละเอียด..."
-                           class="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all bg-white">
-                </div>
-                <button type="submit" class="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium transition-all duration-300 hover:scale-105 shadow-lg">
-                    <i class="fas fa-search mr-2"></i>ค้นหา
-                </button>
-                <a href="." class="px-4 py-3 rounded-xl border-2 border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50 transition-all duration-300">
-                    <i class="fas fa-sync-alt"></i>
-                </a>
-            </div>
-        </div>
-    </form>
-
-    <!-- Equipment Section -->
-    <section class="slide-in" style="animation-delay: 0.2s;">
-        <div class="flex items-center justify-between mb-6">
             <div>
-                <h2 class="text-2xl md:text-3xl font-bold text-gray-900">
-                    อุปกรณ์ที่พร้อมให้ยืม
-                </h2>
-                <p class="text-gray-600 text-sm mt-1">เลือกอุปกรณ์ที่คุณต้องการใช้งาน</p>
+              <h1 class="text-2xl md:text-3xl font-bold">สวัสดี, {{ user.username }}</h1>
+              <div class="flex items-center gap-2">
+                <div class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
+                <span class="text-green-200 text-xs font-medium">ออนไลน์</span>
+              </div>
             </div>
-            {% if available_assets %}
-                <div class="inline-flex items-center gap-2 text-sm px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                    <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                    <span class="font-medium">{{ available_assets|length }} รายการ</span>
+          </div>
+          <p class="text-white/90 text-sm md:text-base max-w-xl">ยินดีต้อนรับสู่ระบบยืม-คืนอุปกรณ์ สำรวจและยืมอุปกรณ์ได้อย่างง่ายดาย</p>
+        </div>
+
+        <div class="hidden md:flex items-center gap-4">
+          <div class="text-center">
+            <div class="text-2xl font-bold">{{ available_assets|length }}</div>
+            <div class="text-xs text-white/80">อุปกรณ์พร้อมใช้</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Compact Search Section -->
+  <form method="get" class="mb-8 slide-in" style="animation-delay: 0.1s;">
+    <div class="bg-white/95 backdrop-blur-xl rounded-2xl border border-white/50 shadow-lg p-6">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center">
+          <i class="fas fa-search text-white text-sm"></i>
+        </div>
+        <h3 class="text-lg font-bold text-gray-800">ค้นหาอุปกรณ์</h3>
+      </div>
+
+      <div class="flex gap-3">
+        <div class="flex-1 relative">
+          <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500 text-sm"></i>
+          <input type="text" name="q" value="{{ current_query|default:'' }}" placeholder="ค้นหาชื่ออุปกรณ์, รหัส, หรือรายละเอียด..." class="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all bg-white">
+        </div>
+        <button type="submit" class="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium transition-all duration-300 hover:scale-105 shadow-lg">
+          <i class="fas fa-search mr-2"></i>ค้นหา
+        </button>
+        <a href="." class="px-4 py-3 rounded-xl border-2 border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50 transition-all duration-300">
+          <i class="fas fa-sync-alt"></i>
+        </a>
+      </div>
+    </div>
+  </form>
+
+  <!-- Equipment Section -->
+  <section class="slide-in" style="animation-delay: 0.2s;">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-2xl md:text-3xl font-bold text-gray-900">อุปกรณ์ที่พร้อมให้ยืม</h2>
+        <p class="text-gray-600 text-sm mt-1">เลือกอุปกรณ์ที่คุณต้องการใช้งาน</p>
+      </div>
+      {% if available_assets %}
+        <div class="inline-flex items-center gap-2 text-sm px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+          <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+          <span class="font-medium">{{ available_assets|length }} รายการ</span>
+        </div>
+      {% endif %}
+    </div>
+
+    {% if available_assets %}
+      <div class="equipment-grid grid gap-6">
+        {% for asset in available_assets %}
+        <div class="equipment-card group">
+          <!-- Optimized Image Section -->
+          <div class="equipment-image relative">
+            {% if asset.item.image %}
+              <img src="{{ asset.item.image.url }}" alt="{{ asset.item.name }}" loading="lazy" class="transition-transform duration-500">
+            {% else %}
+              <div class="w-full h-full flex items-center justify-center text-gray-400">
+                <div class="text-center">
+                  <i class="fas fa-image text-3xl mb-2"></i>
+                  <span class="text-xs font-medium">ไม่มีรูปภาพ</span>
                 </div>
+              </div>
             {% endif %}
-        </div>
 
-        {% if available_assets %}
-        <div class="equipment-grid grid gap-6">
-            {% for asset in available_assets %}
-            <div class="equipment-card group">
-                <!-- Optimized Image Section -->
-                <div class="equipment-image relative">
-                    {% if asset.item.image %}
-                        <img src="{{ asset.item.image.url }}"
-                             alt="{{ asset.item.name }}"
-                             loading="lazy"
-                             class="transition-transform duration-500">
-                    {% else %}
-                        <div class="w-full h-full flex items-center justify-center text-gray-400">
-                            <div class="text-center">
-                                <i class="fas fa-image text-3xl mb-2"></i>
-                                <span class="text-xs font-medium">ไม่มีรูปภาพ</span>
-                            </div>
-                        </div>
-                    {% endif %}
-                    
-                    <!-- Status Badge -->
-                    <div class="absolute top-3 right-3">
-                        {% if asset.status == 'available' %}
-                            <span class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full bg-emerald-500/90 text-white backdrop-blur-sm">
-                                <i class="fas fa-check-circle"></i> พร้อมยืม
-                            </span>
-                        {% else %}
-                            <span class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full bg-red-500/90 text-white backdrop-blur-sm">
-                                <i class="fas fa-times-circle"></i> ไม่พร้อม
-                            </span>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <!-- Compact Content Section -->
-                <div class="p-4">
-                    <div class="flex items-start justify-between gap-2 mb-3">
-                        <h3 class="text-lg font-bold text-gray-900 leading-tight group-hover:text-indigo-600 transition-colors line-clamp-2">
-                            {{ asset.item.name }}
-                        </h3>
-                        <div class="w-6 h-6 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 flex-shrink-0">
-                            <i class="fas fa-cube text-xs"></i>
-                        </div>
-                    </div>
-
-                    {% if asset.item.description %}
-                    <p class="text-gray-600 text-sm leading-relaxed mb-3 line-clamp-2">
-                        {{ asset.item.description }}
-                    </p>
-                    {% endif %}
-
-                    <!-- Compact Details -->
-                    <div class="space-y-2 mb-4">
-                        {% if asset.serial_number %}
-                        <div class="flex justify-between text-xs">
-                            <span class="text-gray-500">รหัสประจำเครื่อง:</span>
-                            <span class="font-medium text-gray-800 truncate ml-2">{{ asset.serial_number }}</span>
-                        </div>
-                        {% endif %}
-                        {% if asset.device_id %}
-                        <div class="flex justify-between text-xs">
-                            <span class="text-gray-500">รหัสอุปกรณ์:</span>
-                            <span class="font-medium text-gray-800 truncate ml-2">{{ asset.device_id }}</span>
-                        </div>
-                        {% endif %}
-                        {% if asset.location %}
-                        <div class="flex justify-between text-xs">
-                            <span class="text-gray-500">สถานที่:</span>
-                            <span class="font-medium text-gray-800 truncate ml-2">{{ asset.location }}</span>
-                        </div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Action Button -->
-                    {% if asset.status == 'available' %}
-                        <a href="{% url 'borrow_item' asset.id %}"
-                           class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium py-2.5 px-4 rounded-xl transition-all duration-300 hover:scale-105 shadow-md hover:shadow-lg">
-                            <i class="fas fa-handshake text-sm"></i> 
-                            <span>ยืมอุปกรณ์</span>
-                        </a>
-                    {% else %}
-                        <button class="w-full inline-flex items-center justify-center gap-2 bg-gray-200 text-gray-500 font-medium py-2.5 px-4 rounded-xl cursor-not-allowed opacity-75">
-                            <i class="fas fa-ban text-sm"></i> ไม่พร้อมให้ยืม
-                        </button>
-                    {% endif %}
-                </div>
+            <!-- Status Badge (พร้อมยืม / จองแล้ว / ไม่พร้อม) -->
+            <div class="absolute top-3 right-3">
+              {% if asset.status == 'available' %}
+                {% if asset.reserved_now or asset.reserved_future %}
+                  <span class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full bg-amber-500/90 text-white backdrop-blur-sm">
+                    <i class="fas fa-calendar-check"></i> จองแล้ว
+                  </span>
+                {% else %}
+                  <span class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full bg-emerald-500/90 text-white backdrop-blur-sm">
+                    <i class="fas fa-check-circle"></i> พร้อมยืม
+                  </span>
+                {% endif %}
+              {% else %}
+                <span class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full bg-red-500/90 text-white backdrop-blur-sm">
+                  <i class="fas fa-times-circle"></i> ไม่พร้อม
+                </span>
+              {% endif %}
             </div>
-            {% endfor %}
-        </div>
-        {% else %}
-            <!-- Compact Empty State -->
-            <div class="bg-gradient-to-br from-white to-gray-50 rounded-2xl border-2 border-dashed border-gray-300 p-8 text-center">
-                <div class="mx-auto w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-400 mb-4">
-                    <i class="fas fa-box-open text-2xl"></i>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-2">ไม่พบอุปกรณ์</h3>
-                <p class="text-gray-600 mb-6">ยังไม่มีอุปกรณ์ที่ตรงกับเงื่อนไขการค้นหา</p>
-                <div class="flex flex-wrap gap-3 justify-center">
-                    <a href="." class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-gray-300 text-gray-700 hover:border-indigo-500 hover:text-indigo-600 transition-all duration-300">
-                        <i class="fas fa-rotate-right"></i> โหลดใหม่
-                    </a>
-                </div>
+          </div>
+
+          <!-- Compact Content Section -->
+          <div class="p-4">
+            <div class="flex items-start justify-between gap-2 mb-3">
+              <h3 class="text-lg font-bold text-gray-900 leading-tight group-hover:text-indigo-600 transition-colors line-clamp-2">
+                {{ asset.item.name }}
+              </h3>
+              <div class="w-6 h-6 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 flex-shrink-0">
+                <i class="fas fa-cube text-xs"></i>
+              </div>
             </div>
-        {% endif %}
-    </section>
+
+            {% if asset.item.description %}
+            <p class="text-gray-600 text-sm leading-relaxed mb-3 line-clamp-2">
+              {{ asset.item.description }}
+            </p>
+            {% endif %}
+
+            <!-- Compact Details -->
+            <div class="space-y-2 mb-4">
+              {% if asset.serial_number %}
+              <div class="flex justify-between text-xs">
+                <span class="text-gray-500">รหัสประจำเครื่อง:</span>
+                <span class="font-medium text-gray-800 truncate ml-2">{{ asset.serial_number }}</span>
+              </div>
+              {% endif %}
+              {% if asset.device_id %}
+              <div class="flex justify-between text-xs">
+                <span class="text-gray-500">รหัสอุปกรณ์:</span>
+                <span class="font-medium text-gray-800 truncate ml-2">{{ asset.device_id }}</span>
+              </div>
+              {% endif %}
+              {% if asset.location %}
+              <div class="flex justify-between text-xs">
+                <span class="text-gray-500">สถานที่:</span>
+                <span class="font-medium text-gray-800 truncate ml-2">{{ asset.location }}</span>
+              </div>
+              {% endif %}
+            </div>
+
+            <!-- Action Button -->
+            {% if asset.status == 'available' %}
+              {% if asset.reserved_now or asset.reserved_future %}
+                <button class="w-full inline-flex items-center justify-center gap-2 bg-gray-200 text-gray-600 font-medium py-2.5 px-4 rounded-xl cursor-not-allowed opacity-80">
+                  <i class="fas fa-calendar-times text-sm"></i>
+                  <span>จองแล้ว</span>
+                </button>
+              {% else %}
+                <a href="{% url 'borrow_item' asset.id %}" class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium py-2.5 px-4 rounded-xl transition-all duration-300 hover:scale-105 shadow-md hover:shadow-lg">
+                  <i class="fas fa-handshake text-sm"></i>
+                  <span>ยืมอุปกรณ์</span>
+                </a>
+              {% endif %}
+            {% else %}
+              <button class="w-full inline-flex items-center justify-center gap-2 bg-gray-200 text-gray-500 font-medium py-2.5 px-4 rounded-xl cursor-not-allowed opacity-75">
+                <i class="fas fa-ban text-sm"></i> ไม่พร้อมให้ยืม
+              </button>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <!-- Compact Empty State -->
+      <div class="bg-gradient-to-br from-white to-gray-50 rounded-2xl border-2 border-dashed border-gray-300 p-8 text-center">
+        <div class="mx-auto w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-400 mb-4">
+          <i class="fas fa-box-open text-2xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-gray-900 mb-2">ไม่พบอุปกรณ์</h3>
+        <p class="text-gray-600 mb-6">ยังไม่มีอุปกรณ์ที่ตรงกับเงื่อนไขการค้นหา</p>
+        <div class="flex flex-wrap gap-3 justify-center">
+          <a href="." class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-gray-300 text-gray-700 hover:border-indigo-500 hover:text-indigo-600 transition-all duration-300">
+            <i class="fas fa-rotate-right"></i> โหลดใหม่
+          </a>
+        </div>
+      </div>
+    {% endif %}
+  </section>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Intersection Observer for animations
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -20px 0px'
-    };
-    
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('slide-in');
-            }
-        });
-    }, observerOptions);
-    
-    // Observe elements for animation
-    document.querySelectorAll('.equipment-card').forEach(card => {
-        observer.observe(card);
-    });
-    
-    // Loading states for borrow buttons
-    document.querySelectorAll('a[href*="borrow_item"]').forEach(button => {
-        button.addEventListener('click', function() {
-            const icon = this.querySelector('i');
-            const text = this.querySelector('span');
-            
-            if (icon && text) {
-                icon.className = 'fas fa-spinner fa-spin text-sm';
-                text.textContent = 'กำลังดำเนินการ...';
-                this.classList.add('opacity-75', 'cursor-wait');
-            }
-        });
-    });
+  const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -20px 0px' };
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('slide-in'); });
+  }, observerOptions);
+  document.querySelectorAll('.equipment-card').forEach(card => observer.observe(card));
 
-    // Image lazy loading optimization
-    const images = document.querySelectorAll('img[loading="lazy"]');
-    if ('loading' in HTMLImageElement.prototype) {
-        // Browser supports native lazy loading
-        images.forEach(img => {
-            img.addEventListener('load', function() {
-                this.style.opacity = '1';
-            });
-        });
-    } else {
-        // Fallback for browsers that don't support native lazy loading
-        const imageObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const img = entry.target;
-                    img.src = img.dataset.src;
-                    img.classList.remove('lazy');
-                    imageObserver.unobserve(img);
-                }
-            });
-        });
+  document.querySelectorAll('a[href*="borrow_item"]').forEach(button => {
+    button.addEventListener('click', function() {
+      const icon = this.querySelector('i'); const text = this.querySelector('span');
+      if (icon && text) { icon.className = 'fas fa-spinner fa-spin text-sm'; text.textContent = 'กำลังดำเนินการ...'; this.classList.add('opacity-75','cursor-wait'); }
+    });
+  });
 
-        images.forEach(img => imageObserver.observe(img));
-    }
+  const images = document.querySelectorAll('img[loading="lazy"]');
+  if ('loading' in HTMLImageElement.prototype) {
+    images.forEach(img => { img.addEventListener('load', function(){ this.style.opacity = '1'; }); });
+  } else {
+    const imageObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => { if (entry.isIntersecting) { const img = entry.target; img.src = img.dataset.src; img.classList.remove('lazy'); imageObserver.unobserve(img); } });
+    });
+    images.forEach(img => imageObserver.observe(img));
+  }
 });
 </script>
 

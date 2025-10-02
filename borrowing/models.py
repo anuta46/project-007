@@ -138,8 +138,8 @@ class Asset(models.Model):
         )
 
 class Loan(models.Model):
-    asset = models.ForeignKey(Asset, on_delete=models.CASCADE, verbose_name="อุปกรณ์", related_name='loans', db_index=True)
-    borrower = models.ForeignKey(CustomUser, on_delete=models.CASCADE, verbose_name="ผู้ยืม", related_name='loans', db_index=True)
+    asset = models.ForeignKey('borrowing.Asset', on_delete=models.CASCADE, verbose_name="อุปกรณ์", related_name='loans', db_index=True)
+    borrower = models.ForeignKey('users.CustomUser', on_delete=models.CASCADE, verbose_name="ผู้ยืม", related_name='loans', db_index=True)
 
     borrow_date = models.DateTimeField(auto_now_add=True, verbose_name="วันที่ส่งคำขอ")
     start_date = models.DateField(null=True, blank=True, verbose_name="วันที่เริ่มใช้ (จอง)")
@@ -166,6 +166,10 @@ class Loan(models.Model):
         indexes = [
             models.Index(fields=['asset', 'status']),
             models.Index(fields=['asset', 'start_date', 'due_date']),
+            # เสริมให้ค้นไวขึ้นในแดชบอร์ด/ลิสต์
+            models.Index(fields=['status']),
+            models.Index(fields=['borrower']),
+            models.Index(fields=['due_date']),
         ]
 
     def __str__(self):
@@ -174,19 +178,27 @@ class Loan(models.Model):
             rng = f" [{self.start_date} → {self.due_date}]"
         return f"Loan #{self.pk} {self.asset} by {self.borrower}{rng}"
 
+    @property
+    def is_active(self):
+        # กำลังยืมอยู่ (รวมกรณีเกินกำหนด)
+        return self.status in ('approved', 'overdue')
+
     def clean(self):
         super().clean()
         errors = {}
 
+        # กำหนดคืนต้องไม่ก่อนวันเริ่มใช้
         if self.start_date and self.due_date and self.due_date < self.start_date:
             errors['due_date'] = ValidationError("กำหนดคืนต้องไม่น้อยกว่าวันเริ่มใช้")
 
+        # ถ้าจะเป็น approved/overdue ต้องมีช่วงวันที่ครบ
         if self.status in ('approved', 'overdue'):
             if not self.start_date:
                 errors['start_date'] = ValidationError("สถานะนี้ต้องระบุวันที่เริ่มใช้")
             if not self.due_date:
                 errors['due_date'] = ValidationError("สถานะนี้ต้องระบุกำหนดคืน")
 
+        # กันจอง/อนุมัติทับช่วง (บล็อก pending และ approved ที่คาบเกี่ยวช่วง)
         if self.start_date and self.due_date and self.asset_id:
             overlapping_qs = Loan.objects.filter(
                 asset_id=self.asset_id,
@@ -197,6 +209,15 @@ class Loan(models.Model):
             if overlapping_qs.exists():
                 errors['start_date'] = ValidationError("ช่วงเวลานี้ทับกับการจอง/อนุมัติเดิมของอุปกรณ์ชิ้นนี้")
                 errors['due_date'] = ValidationError("กรุณาเลือกช่วงอื่นที่ไม่ทับซ้อน")
+
+        # กันเคสมี overdue ของชิ้นนี้ค้างอยู่ (ต้องจัดการคืนก่อน)
+        if self.asset_id:
+            has_overdue = Loan.objects.filter(
+                asset_id=self.asset_id,
+                status='overdue'
+            ).exclude(pk=self.pk).exists()
+            if has_overdue:
+                errors['asset'] = ValidationError("อุปกรณ์นี้ยังไม่ถูกคืน (สถานะเกินกำหนด) กรุณาจัดการรายการที่ค้างก่อน")
 
         if errors:
             raise ValidationError(errors)
